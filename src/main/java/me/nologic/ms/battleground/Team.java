@@ -1,6 +1,8 @@
 package me.nologic.ms.battleground;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,20 +10,32 @@ import java.util.List;
 public class Team {
 
     private String name;
-    private int size;
     private List<Player> players;
     private int lifepool;
+    private String hexColor;
 
-    private List<Loadout> loadouts;
+    // Ну тут всё ясно, не?
+    private List<Location> respawnLocations;
 
-    public Team(String name, int maxPlayers, int lifepool) {
+    // Лоадауты, или "стартовые наборы"
+    private List<PlayerInventory> loadouts;
+
+    public Team(String name, int lifepool, String hexColor) {
         players = new ArrayList<>();
         this.name = name;
-        this.size = maxPlayers;
         this.lifepool = lifepool;
     }
 
-    public void join(Player player) {
+    public void addLoadout(String encodedLoadoutBase64) {
+        // декодирование из b64
+        this.loadouts.add();
+    }
+
+    public void addRespawnPoint(Location location) {
+        this.respawnLocations.add(location);
+    }
+
+    public void connect(Player player) {
         if (players.size() == size) {
             player.sendMessage("Команда заполнена.");
             return;
@@ -37,6 +51,10 @@ public class Team {
 
     public List<Player> getPlayers() {
         return this.players;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
 }
