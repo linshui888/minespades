@@ -12,10 +12,10 @@ public final class Minespades extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         this.bm = new BattlegroundManager(this);
         PaperCommandManager pcm = new PaperCommandManager(this);
-        pcm.registerDependency(Minespades.class, this);
-        pcm.registerCommand(new MinespadesCommand());
+        pcm.registerCommand(new MinespadesCommand(this));
         pcm.getCommandCompletions().registerCompletion("battlegrounds", c -> ImmutableList.copyOf(getConfig().getStringList("Battlegrounds")));
     }
 

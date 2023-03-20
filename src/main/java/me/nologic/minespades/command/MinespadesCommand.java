@@ -9,13 +9,16 @@ import org.bukkit.entity.Player;
 @CommandAlias("minespades|ms")
 public class MinespadesCommand extends BaseCommand {
 
-    @Dependency("Minespades")
-    private Minespades plugin;
+    private final Minespades plugin;
+
+    public MinespadesCommand(Minespades plugin) {
+        this.plugin = plugin;
+    }
 
     @Subcommand("create")
-    public class Create {
+    public class Create extends BaseCommand {
 
-        @Subcommand("battleground|arena") @Syntax("ШЛОМО ХОТЕТЬ КУШАТЬ") @CommandCompletion("foobar")
+        @Subcommand("battleground|arena") @CommandCompletion("<name>")
         public void onCreateBattleground(String name) {
             plugin.getBattlegroundManager().getEditor().create(name);
             plugin.getBattlegroundManager().load(name);
@@ -29,15 +32,14 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("update")
-    public class Update {
+    public class Update extends BaseCommand {
 
         @Subcommand("battleground|arena")
-        public class Battleground {
+        public class Battleground extends BaseCommand {
 
             @Subcommand("volume")
             public void onUpdateBattlegroundVolume(Player player, String battlegroundName) {
                 plugin.getBattlegroundManager().getEditor().addVolumeEditor(player, battlegroundName);
-                player.sendMessage("Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите /ms save, чтобы сохранить карту.");
             }
 
         }
@@ -49,7 +51,6 @@ public class MinespadesCommand extends BaseCommand {
         BattlegroundEditor editor = plugin.getBattlegroundManager().getEditor();
         editor.updateVolume(player);
         editor.removeVolumeEditor(player);
-        player.sendMessage("Обновление карты завершено. (Действительно ли?)");
     }
 
 }

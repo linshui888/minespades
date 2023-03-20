@@ -63,7 +63,7 @@ public class BattlegroundEditor implements Listener {
         World world = player.getWorld();
         String battlegroundName = this.session.get(player);
         if (grids[0] == null || grids[1] == null) {
-            player.sendMessage("ты дайббаёйееббб");
+            player.sendMessage("Необходимо указать два угла кубоида.");
             return;
         }
 
@@ -81,7 +81,7 @@ public class BattlegroundEditor implements Listener {
                 }
             }
             statement.executeBatch();
-            Bukkit.getLogger().info("Будет ли это говно работать?");
+            player.sendMessage("Обновление карты завершено. (Действительно ли?)");
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -96,7 +96,7 @@ public class BattlegroundEditor implements Listener {
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK -> {
                     volumeGrids.get(event.getPlayer())[0] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
-                    event.getPlayer().sendMessage("Указан первый угол кубоида: " + event.getClickedBlock().getLocation());
+                    event.getPlayer().sendMessage("Указан первый угол кубоида: " + event.getClickedBlock().getLocation().toVector());
                 }
                 case RIGHT_CLICK_BLOCK -> {
                     volumeGrids.get(event.getPlayer())[1] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
@@ -110,12 +110,13 @@ public class BattlegroundEditor implements Listener {
     private final HashMap<Player, String> session;
     public void addVolumeEditor(Player player, String battlegroundName) {
         if (volumeGrids.containsKey(player) || session.containsKey(player)) {
-            player.sendMessage("Вы уже редактируете арену " + battlegroundName + "!");
+            player.sendMessage("В данный момент уже редактируется карта " + session.get(player) + ".");
             return;
         }
 
-        this.volumeGrids.put(player, new Location[1]);
+        this.volumeGrids.put(player, new Location[2]);
         this.session.put(player, battlegroundName);
+        player.sendMessage("Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите /ms save, чтобы сохранить карту.");
     }
 
     public void removeVolumeEditor(Player player) {
