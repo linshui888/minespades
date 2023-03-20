@@ -1,6 +1,6 @@
 name: Minespades
 version: '${project.version}'
-main: me.nologic.ms.Minespades
+main: me.nologic.minespades.Minespades
 api-version: 1.19
 authors: [ NoLogic ]
 description: Modern battlegrounds plugin.
