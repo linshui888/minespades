@@ -11,12 +11,11 @@ import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 
 /**
- * BattlegroundInitializer подготавливает арены к использованию по их прямому назначению.
+ * BattlegroundLoader подготавливает арены к использованию по их прямому назначению.
  * В этом классе создаются новые инстанции арен, загружаются их настройки и прочая
  * информация, которая требуется для игры: блоки арены, команды, расположение
  * точек респавна, мета-данные тайл-энтитей и т. д.
@@ -29,49 +28,59 @@ public class BattlegroundLoader {
     private final Minespades plugin;
     private Battleground battleground;
 
-    public Battleground load(String battlegroundName) {
-        this.battleground = new Battleground();
-        BattlegroundData data = new BattlegroundData(plugin, battlegroundName);
-        return prepareBattleground(data);
+    public Battleground load(String name) {
+        this.battleground = new Battleground(name);
+        return prepareBattleground();
     }
 
     // TODO: Загрузка тайл-энтитей и их даты.
-    private Battleground prepareBattleground(BattlegroundData data) {
-        try {
-            this.init(data.getData(Table.PREFERENCES));
-            this.construct(data.getData(Table.VOLUME));
-            this.setupTeams(data.getData(Table.TEAMS));
+    private Battleground prepareBattleground() {
+        this.loadSettings();
+        this.construct();
+        this.setupTeams();
+        return battleground;
+    }
+
+    private Connection connect() throws SQLException {
+        return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battleground.getName() + ".db");
+    }
+
+    /* Инициализация полей арены. */
+    private void loadSettings() {
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) { // todo next()
+            this.battleground.setWorld(Bukkit.getWorld(statement.executeQuery(Table.PREFERENCES.getSelectStatement()).getString("world")));
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /* Размещение блоков в мире, который указан в настроках, по координатам, которые считываются из таблицы volume. */
+    private void construct() {
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+            ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
+            while(blocks.next()) {
+                int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");
+                Material material = Material.valueOf(blocks.getString("material"));
+                this.battleground.getWorld().setType(x, y, z, material);
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void setupTeams() {
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+            ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
+            while (teams.next()) {
+                Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
+                Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
+                Arrays.stream(teams.getString("respawnLocations").split(", ")).toList().forEach(loc -> team.add(decodeLocation(loc)));
+                this.battleground.addTeam(team);
+            }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
 
-        return battleground;
-    }
-
-    /* Инициализация полей арены. */
-    private void init(ResultSet settings) throws SQLException {
-        this.battleground.setWorld(Bukkit.getWorld(settings.getString("world")));
-    }
-
-    /* Размещение блоков в мире, который указан в настроках, по координатам, которые считываются из таблицы volume. */
-    private void construct(ResultSet blocks) throws SQLException {
-        while(blocks.next()) {
-            int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");
-            Material material = Material.valueOf(blocks.getString("material"));
-            this.battleground.getWorld().setType(x, y, z, material);
-        }
-    }
-
-    /* Загрузка и создание команд. */
-    private void setupTeams(ResultSet teams) throws SQLException {
-        while (teams.next()) {
-            Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-
-            Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
-            Arrays.stream(teams.getString("respawnLocations").split(", ")).toList().forEach(loc -> team.add(decodeLocation(loc)));
-
-            this.battleground.addTeam(team);
-        }
     }
 
     private Location decodeLocation(String encoded) {

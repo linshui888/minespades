@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -92,7 +93,7 @@ public class BattlegroundEditor implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (volumeGrids.containsKey(event.getPlayer())) {
-            if (event.getPlayer().getInventory().getItemInMainHand().getType() != Material.GOLDEN_SWORD) return;
+            if (event.getPlayer().getInventory().getItemInMainHand().getType() != Material.GOLDEN_SWORD && event.getHand() == EquipmentSlot.OFF_HAND) return;
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK -> {
                     volumeGrids.get(event.getPlayer())[0] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
@@ -100,7 +101,7 @@ public class BattlegroundEditor implements Listener {
                 }
                 case RIGHT_CLICK_BLOCK -> {
                     volumeGrids.get(event.getPlayer())[1] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
-                    event.getPlayer().sendMessage("Указан второй угол кубоида: " + event.getClickedBlock().getLocation());
+                    event.getPlayer().sendMessage("Указан второй угол кубоида: " + event.getClickedBlock().getLocation().toVector());
                 }
             }
         }
