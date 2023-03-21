@@ -47,8 +47,10 @@ public class BattlegroundLoader {
 
     /* Инициализация полей арены. */
     private void loadSettings() {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) { // todo next()
-            this.battleground.setWorld(Bukkit.getWorld(statement.executeQuery(Table.PREFERENCES.getSelectStatement()).getString("world")));
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+            ResultSet prefs = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
+            prefs.next();
+            this.battleground.setWorld(Bukkit.getWorld(prefs.getString("world")));
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
