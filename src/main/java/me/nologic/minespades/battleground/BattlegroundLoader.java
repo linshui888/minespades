@@ -36,8 +36,8 @@ public class BattlegroundLoader {
     // TODO: Загрузка тайл-энтитей и их даты.
     private Battleground prepareBattleground() {
         this.loadSettings();
-        this.construct();
-        this.setupTeams();
+        this.loadMap();
+        this.loadTeams();
         return battleground;
     }
 
@@ -57,7 +57,7 @@ public class BattlegroundLoader {
     }
 
     /* Размещение блоков в мире, который указан в настроках, по координатам, которые считываются из таблицы volume. */
-    private void construct() {
+    private void loadMap() {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
             while(blocks.next()) {
@@ -70,7 +70,7 @@ public class BattlegroundLoader {
         }
     }
 
-    private void setupTeams() {
+    private void loadTeams() {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {

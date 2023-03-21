@@ -17,10 +17,10 @@ import java.util.Objects;
 
 /**
  * BattlegroundEditor берёт на себя задачу создания новых арен и редактирования существующих.
- * <p> Для удобства пользования BattlegroundEditor и BattlegroundInitializer были разделены
+ * <p> Для удобства пользования BattlegroundEditor и BattlegroundLoader были разделены
  * на два класса. Что эти классы делают — вполне ясно по названию. В редакторе редактируется
  * не сам объект арены, загруженный в JVM, а информация о ней, хранимая в директории плагина.
- * Очевидно, что для применения иземённых настроек, необходима перезагрузка рабочей арены.
+ * Очевидно, что для применения изменённых настроек, необходима перезагрузка рабочей арены.
  * @see BattlegroundLoader
  */
 public class BattlegroundEditor implements Listener {
@@ -34,18 +34,29 @@ public class BattlegroundEditor implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    /** Создание файлов арены в директории плагина с последующей её инициализацией. */
-    public void create(String battlegroundName) {
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db");
-            Statement statement = connection.createStatement();
-            for (Table table : Table.values()) statement.addBatch(table.getCreateStatement());
-            statement.executeBatch();
-            statement.close();
-            connection.close();
+    public void create(Player player, String battlegroundName) {
+        try (Connection connection = connect(battlegroundName); Statement statement = connection.createStatement()) {
+
+            for (Table table : Table.values()) {
+                statement.executeUpdate(table.getCreateStatement());
+            }
+
+            PreparedStatement pst = connection.prepareStatement(Table.PREFERENCES.getInsertStatement());
+            pst.setString(1, player.getWorld().getName());
+            pst.executeUpdate();
+
+            player.sendMessage("§7Арена успешно создана, но теперь её нужно настроить. Минимальные требования для запуска арены таковы: §cдве команды с настроенными точками возрождения и карта блоков§r.");
+            player.sendMessage("Чтобы обновить карту блоков, напишите §6/ms edit volume");
+            player.sendMessage("Чтобы создать команды, напишите §6/ms create team <название_команды>");
+            player.sendMessage("Для запуска арены используйте §6/ms launch <название_арены>");
+
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void createTeam(Player player, String teamName) {
+
     }
 
     private Connection connect(String battlegroundName) {

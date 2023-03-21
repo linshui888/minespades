@@ -15,13 +15,18 @@ public class MinespadesCommand extends BaseCommand {
         this.plugin = plugin;
     }
 
+    @Subcommand("launch")
+    @CommandCompletion("@battlegrounds")
+    public void launch(Player player, String battlegroundName) {
+        plugin.getBattlegroundManager().launch(battlegroundName);
+    }
+
     @Subcommand("create")
     public class Create extends BaseCommand {
 
         @Subcommand("battleground|arena") @CommandCompletion("<name>")
-        public void onCreateBattleground(String name) {
-            plugin.getBattlegroundManager().getEditor().create(name);
-            plugin.getBattlegroundManager().load(name);
+        public void onCreateBattleground(Player player, String name) {
+            plugin.getBattlegroundManager().getEditor().create(player, name);
         }
 
         @Subcommand("team")
@@ -31,13 +36,14 @@ public class MinespadesCommand extends BaseCommand {
 
     }
 
-    @Subcommand("update")
+    @Subcommand("edit")
     public class Update extends BaseCommand {
 
         @Subcommand("battleground|arena")
         public class Battleground extends BaseCommand {
 
             @Subcommand("volume")
+            @CommandCompletion("@battlegrounds")
             public void onUpdateBattlegroundVolume(Player player, String battlegroundName) {
                 plugin.getBattlegroundManager().getEditor().addVolumeEditor(player, battlegroundName);
             }

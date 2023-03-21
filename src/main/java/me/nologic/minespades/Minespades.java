@@ -23,6 +23,4 @@ public final class Minespades extends JavaPlugin {
         return this.bm;
     }
 
-
-
 }

@@ -7,19 +7,19 @@ import me.nologic.minespades.battleground.BattlegroundLoader;
 public class BattlegroundManager {
 
     private final BattlegroundEditor editor;
-    private final BattlegroundLoader initializer;
+    private final BattlegroundLoader loader;
 
-    public BattlegroundManager(Minespades plugin) {
+    public BattlegroundManager (Minespades plugin) {
         this.editor = new BattlegroundEditor(plugin);
-        this.initializer = new BattlegroundLoader(plugin);
+        this.loader = new BattlegroundLoader(plugin);
     }
 
     public BattlegroundEditor getEditor() {
         return editor;
     }
 
-    public Battleground load(String name) {
-        return initializer.load(name);
+    public Battleground launch(String name) {
+        return loader.load(name);
     }
 
 }
