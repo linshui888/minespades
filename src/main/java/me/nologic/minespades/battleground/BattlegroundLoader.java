@@ -75,8 +75,8 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
                 Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
-                Arrays.stream(teams.getString("respawnLocations").split(", ")).toList().forEach(loc -> team.add(decodeLocation(loc)));
+                // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
+                Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.add(decodeLocation(loc)));
                 this.battleground.addTeam(team);
             }
         } catch (SQLException ex) {
@@ -86,8 +86,8 @@ public class BattlegroundLoader {
     }
 
     private Location decodeLocation(String encoded) {
-        String s = Base64Coder.decodeString(encoded);
-        String[] split = s.split(", ");
+        String decoded = Base64Coder.decodeString(encoded);
+        String[] split = decoded.replace(',', '.').split("; ");
 
         double x = Double.parseDouble(split[0]), y = Double.parseDouble(split[1]), z = Double.parseDouble(split[2]);
         float yaw = Float.parseFloat(split[3]), pitch = Float.parseFloat(split[4]);

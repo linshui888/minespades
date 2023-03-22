@@ -21,17 +21,28 @@ public class MinespadesCommand extends BaseCommand {
         plugin.getBattlegroundManager().launch(battlegroundName);
     }
 
+    @Subcommand("add")
+    public class Add extends BaseCommand {
+
+        @Subcommand("respawn")
+        public void onAddRespawn(Player player) {
+            BattlegroundEditor editor = plugin.getBattlegroundManager().getEditor();
+            editor.addRespawnPoint(player);
+        }
+
+    }
+
     @Subcommand("create")
     public class Create extends BaseCommand {
 
-        @Subcommand("battleground|arena") @CommandCompletion("<name>")
-        public void onCreateBattleground(Player player, String name) {
-            plugin.getBattlegroundManager().getEditor().create(player, name);
+        @Subcommand("battleground") @CommandCompletion("<name>")
+        public void onCreateBattleground(Player player, String battlegroundName) {
+            plugin.getBattlegroundManager().getEditor().create(player, battlegroundName);
         }
 
         @Subcommand("team")
-        public void onCreateTeam(Player player, @Optional String battlegroundName, String name) {
-
+        public void onCreateTeam(Player player, String teamName) {
+            plugin.getBattlegroundManager().getEditor().createTeam(player, teamName);
         }
 
     }
@@ -39,13 +50,17 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("edit")
     public class Update extends BaseCommand {
 
-        @Subcommand("battleground|arena")
+        @Subcommand("battleground")
         public class Battleground extends BaseCommand {
 
             @Subcommand("volume")
-            @CommandCompletion("@battlegrounds")
-            public void onUpdateBattlegroundVolume(Player player, String battlegroundName) {
-                plugin.getBattlegroundManager().getEditor().addVolumeEditor(player, battlegroundName);
+            public void onEditBattlegroundVolume(Player player) {
+                plugin.getBattlegroundManager().getEditor().addVolumeEditor(player);
+            }
+
+            @Subcommand("team")
+            public void onEditTeam(Player player, String teamName) {
+                plugin.getBattlegroundManager().getEditor().setTargetTeam(player, teamName);
             }
 
         }
@@ -54,9 +69,7 @@ public class MinespadesCommand extends BaseCommand {
 
     @Subcommand("save")
     public void onSave(Player player) {
-        BattlegroundEditor editor = plugin.getBattlegroundManager().getEditor();
-        editor.updateVolume(player);
-        editor.removeVolumeEditor(player);
+        new Thread(() -> plugin.getBattlegroundManager().getEditor().updateVolume(player)).start();
     }
 
 }
