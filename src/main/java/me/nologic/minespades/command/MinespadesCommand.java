@@ -35,7 +35,7 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("create")
     public class Create extends BaseCommand {
 
-        @Subcommand("battleground") @CommandCompletion("<name>")
+        @Subcommand("battleground")
         public void onCreateBattleground(Player player, String battlegroundName) {
             plugin.getBattlegroundManager().getEditor().create(player, battlegroundName);
         }
@@ -48,7 +48,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("edit")
-    public class Update extends BaseCommand {
+    public class Edit extends BaseCommand {
 
         @Subcommand("battleground")
         public class Battleground extends BaseCommand {
@@ -71,6 +71,12 @@ public class MinespadesCommand extends BaseCommand {
     public void onSave(Player player) {
         player.sendMessage("§7Сохранение карты займёт какое-то время.");
         new Thread(() -> plugin.getBattlegroundManager().getEditor().saveVolume(player)).start();
+    }
+
+    @Subcommand("join")
+    @CommandCompletion("@battlegrounds")
+    public void onJoin(Player player, String battlegroundName) {
+        plugin.getGameMaster().connect(player, battlegroundName);
     }
 
 }

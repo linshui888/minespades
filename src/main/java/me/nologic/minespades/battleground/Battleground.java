@@ -32,19 +32,24 @@ public final class Battleground {
         return this.world;
     }
 
+    public boolean isLaunchable() {
+        return teams.size() >= 2;
+    }
+
+    public boolean isConnectable() {
+        return launched;
+    }
+
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
-    public void connect(Player player, Team target) {
+    public void connect(Player player) {
         if (!launched) return;
-        if (autoAssign) {
-            Team smallestTeam = null;
-            for (Team team : teams)
-                if (smallestTeam == null) smallestTeam = team;
-                else if (smallestTeam.getPlayers().size() > team.getPlayers().size()) smallestTeam = team;
-            if (smallestTeam != null)
-                smallestTeam.connect(player);
-        } else {
-            target.connect(player);
-        }
+
+        Team smallestTeam = null;
+        for (Team team : teams)
+            if (smallestTeam == null) smallestTeam = team;
+            else if (smallestTeam.getPlayers().size() > team.getPlayers().size()) smallestTeam = team;
+        if (smallestTeam != null)
+            smallestTeam.connect(player);
     }
 
     public void disconnect(Player player) {

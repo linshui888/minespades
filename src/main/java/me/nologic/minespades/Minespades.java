@@ -18,7 +18,7 @@ public final class Minespades extends JavaPlugin {
         this.gameMaster = new GameMaster();
         PaperCommandManager pcm = new PaperCommandManager(this);
         pcm.registerCommand(new MinespadesCommand(this));
-        pcm.getCommandCompletions().registerCompletion("battlegrounds", c -> getConfig().getStringList("Battlegrounds"));
+        pcm.getCommandCompletions().registerCompletion("battlegrounds", c -> gameMaster.getEnabledBattlegrounds());
         this.enableBattlegrounds();
     }
 
@@ -26,11 +26,15 @@ public final class Minespades extends JavaPlugin {
         return this.battlegrounder;
     }
 
+    public GameMaster getGameMaster() {
+        return this.gameMaster;
+    }
+
     private void enableBattlegrounds() {
         Bukkit.getLogger().info("Minespades пытается автоматически загрузить сохранённые арены.");
-        getConfig().getStringList("Battlegrounds").forEach(name -> {
-            gameMaster.addBattleground(battlegrounder.enable(name));
-        });
+        getConfig().getStringList("Battlegrounds").forEach(name ->
+                gameMaster.addBattleground(battlegrounder.enable(name))
+        );
     }
 
 }
