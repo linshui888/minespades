@@ -15,12 +15,8 @@ import java.util.List;
  * */
 public final class Battleground {
 
-    private final String name;
     private final List<Team> teams;
     private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, skipDeathScreen, colorfulEnding, airStrike;
-    private World world;
-
-    private boolean launched = false;
 
     public Battleground(String battlegroundName) {
         this.name = battlegroundName;
@@ -55,11 +51,19 @@ public final class Battleground {
 
     }
 
-    void setWorld(World world) {
+    private boolean launched = false;
+    public void setLaunched(boolean launched) {
+        this.launched = launched;
+    }
+
+    private World world;
+    public void setWorld(World world) {
         this.world = world;
     }
 
+    private final String name;
     public String getName() {
-        return name;
+        return this.name;
     }
+
 }

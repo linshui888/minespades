@@ -50,8 +50,9 @@ public class BattlegroundEditor implements Listener {
             player.sendMessage("§7Чтобы создать команду, напишите §6/ms create team <название_команды>");
             player.sendMessage("§7Для запуска арены используйте §6/ms launch <название_арены>");
 
-            this.battlegroundEditSession.put(player, battlegroundName);
-            // TODO: Название арены должно добавляться в конфиг.
+            battlegroundEditSession.put(player, battlegroundName);
+            plugin.getConfig().set("Battlegrounds", plugin.getConfig().getStringList("Battlegrounds").add(battlegroundName));
+            plugin.saveConfig();
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -104,7 +105,7 @@ public class BattlegroundEditor implements Listener {
         return conn;
     }
 
-    public void updateVolume(Player player) {
+    public void saveVolume(Player player) {
         Location[] grids = volumeGrids.get(player);
         World world = player.getWorld();
         String battlegroundName = this.battlegroundEditSession.get(player);
@@ -114,6 +115,7 @@ public class BattlegroundEditor implements Listener {
         }
 
         int i = 0;
+        long startTime = System.currentTimeMillis();
         try (Connection connection = this.connect(battlegroundName);
              PreparedStatement statement = connection.prepareStatement("INSERT INTO volume(x, y, z, material) VALUES(?,?,?,?);")) {
             for (int x = Math.min(grids[0].getBlockX(), grids[1].getBlockX()); x != Math.max(grids[0].getBlockX(), grids[1].getBlockX()); x++) {
@@ -128,7 +130,9 @@ public class BattlegroundEditor implements Listener {
                 }
             }
             statement.executeBatch();
-            player.sendMessage("§7Карта сохранена. (блоков: §3" + i + "§7)");
+            long totalTime = System.currentTimeMillis() - startTime;
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§5%d б.§8, §5%d с.§8)", i, totalTime));
             this.volumeGrids.remove(player);
         } catch (SQLException ex) {
             ex.printStackTrace();

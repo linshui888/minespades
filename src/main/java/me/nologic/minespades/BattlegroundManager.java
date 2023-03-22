@@ -18,7 +18,7 @@ public class BattlegroundManager {
         return editor;
     }
 
-    public Battleground launch(String name) {
+    public Battleground enable(String name) {
         return loader.load(name);
     }
 

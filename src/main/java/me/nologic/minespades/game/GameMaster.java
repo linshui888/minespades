@@ -6,12 +6,11 @@ import java.util.List;
 
 public class GameMaster {
 
-    /** Рабочие арены. */
-    private List<Battleground> battlegrounds;
+    private List<Battleground> workingBattlegrounds;
 
-    /** Запуск арены. */
-    public void launch(Battleground battleground) {
-        this.battlegrounds.add(battleground);
+    public void addBattleground(Battleground battleground) {
+        this.workingBattlegrounds.add(battleground);
+        battleground.setLaunched(true);
     }
 
 }

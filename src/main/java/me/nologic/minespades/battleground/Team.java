@@ -14,10 +14,8 @@ public class Team {
     private final List<Player> players;
     private final String       hexColor;
 
-    // Ну тут всё ясно, не?
     private final List<Location> respawnLocations;
 
-    // Лоадауты, или "стартовые наборы"
     private final List<Inventory> loadouts;
 
     public Team(String name, int lifepool, String hexColor) {
@@ -29,26 +27,20 @@ public class Team {
         this.hexColor = hexColor;
     }
 
-    public void add(Location location) {
+    public void addRespawnPoint(Location location) {
         this.respawnLocations.add(location);
     }
 
-    public void add(Inventory loadout) {
+    public void addLoadout(Inventory loadout) {
         this.loadouts.add(loadout);
     }
 
     public void connect(Player player) {
-        if (players.size() == 32) {
-            player.sendMessage("Команда заполнена.");
-            return;
-        }
-        this.players.add(player);
-        player.sendMessage("Вы зашли за команду " + name + "!");
+        if (players.size() < 32) this.players.add(player); else player.sendMessage("В команде нет места.");
     }
 
     public void disconnect(Player player) {
         this.players.remove(player);
-        player.sendMessage("Вы покинули команду " + name + ".");
     }
 
     public List<Player> getPlayers() {
@@ -57,6 +49,10 @@ public class Team {
 
     public String getName() {
         return this.name;
+    }
+
+    public int getLifepool() {
+        return lifepool;
     }
 
 }

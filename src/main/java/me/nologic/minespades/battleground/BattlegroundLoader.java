@@ -12,7 +12,9 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * BattlegroundLoader подготавливает арены к использованию по их прямому назначению.
@@ -30,15 +32,26 @@ public class BattlegroundLoader {
 
     public Battleground load(String name) {
         this.battleground = new Battleground(name);
-        return prepareBattleground();
+        this.loadPreferences();
+        this.loadVolume();
+        this.loadTeams().forEach(team -> battleground.addTeam(team));
+        return battleground;
     }
 
-    // TODO: Загрузка тайл-энтитей и их даты.
-    private Battleground prepareBattleground() {
-        this.loadSettings();
-        this.loadMap();
-        this.loadTeams();
-        return battleground;
+    private List<Team> loadTeams() {
+        List<Team> list = new ArrayList<>();
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+            ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
+            while (teams.next()) {
+                Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
+                // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
+                Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnPoint(decodeLocation(loc)));
+                list.add(team);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return list;
     }
 
     private Connection connect() throws SQLException {
@@ -46,7 +59,7 @@ public class BattlegroundLoader {
     }
 
     /* Инициализация полей арены. */
-    private void loadSettings() {
+    private void loadPreferences() {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet prefs = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
             prefs.next();
@@ -56,8 +69,7 @@ public class BattlegroundLoader {
         }
     }
 
-    /* Размещение блоков в мире, который указан в настроках, по координатам, которые считываются из таблицы volume. */
-    private void loadMap() {
+    private void loadVolume() {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
             while(blocks.next()) {
@@ -68,21 +80,6 @@ public class BattlegroundLoader {
         } catch (SQLException exception) {
             exception.printStackTrace();
         }
-    }
-
-    private void loadTeams() {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
-            ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
-            while (teams.next()) {
-                Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
-                Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.add(decodeLocation(loc)));
-                this.battleground.addTeam(team);
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-
     }
 
     private Location decodeLocation(String encoded) {
