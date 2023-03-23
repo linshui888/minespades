@@ -118,9 +118,9 @@ public class BattlegroundEditor implements Listener {
         long startTime = System.currentTimeMillis();
         try (Connection connection = this.connect(battlegroundName);
              PreparedStatement statement = connection.prepareStatement("INSERT INTO volume(x, y, z, material) VALUES(?,?,?,?);")) {
-            for (int x = Math.min(grids[0].getBlockX(), grids[1].getBlockX()); x != Math.max(grids[0].getBlockX(), grids[1].getBlockX()); x++) {
-                for (int y = Math.min(grids[0].getBlockY(), grids[1].getBlockY()); y != Math.max(grids[0].getBlockY(), grids[1].getBlockY()); y++) {
-                    for (int z = Math.min(grids[0].getBlockZ(), grids[1].getBlockZ()); z != Math.max(grids[0].getBlockZ(), grids[1].getBlockZ()); z++) {
+            for (int x = Math.min(grids[0].getBlockX(), grids[1].getBlockX()); x <= Math.max(grids[0].getBlockX(), grids[1].getBlockX()); x++) {
+                for (int y = Math.min(grids[0].getBlockY(), grids[1].getBlockY()); y <= Math.max(grids[0].getBlockY(), grids[1].getBlockY()); y++) {
+                    for (int z = Math.min(grids[0].getBlockZ(), grids[1].getBlockZ()); z <= Math.max(grids[0].getBlockZ(), grids[1].getBlockZ()); z++) {
                         statement.setInt(1, x);
                         statement.setInt(2, y);
                         statement.setInt(3, z);

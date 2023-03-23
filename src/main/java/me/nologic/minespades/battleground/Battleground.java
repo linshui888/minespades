@@ -1,10 +1,10 @@
 package me.nologic.minespades.battleground;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -23,38 +23,37 @@ public final class Battleground {
         this.teams = new ArrayList<>();
     }
 
-    public void addTeam(Team team) {
-        this.teams.add(team);
-        Bukkit.getLogger().info("Добавлена команда " + team.getName() + "!");
+    // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
+    public void join(Player player) {
+        this.getSmallestTeam().join(player);
     }
 
-    public World getWorld() {
-        return this.world;
+    public void quit(Player player) {
+
+    }
+
+    public void addTeam(Team team) {
+        this.teams.add(team);
     }
 
     public boolean isLaunchable() {
         return teams.size() >= 2;
     }
-
     public boolean isConnectable() {
         return launched;
     }
 
-    // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
-    public void connect(Player player) {
-        if (!launched) return;
-
-        Team smallestTeam = null;
-        for (Team team : teams)
-            if (smallestTeam == null) smallestTeam = team;
-            else if (smallestTeam.getPlayers().size() > team.getPlayers().size()) smallestTeam = team;
-        if (smallestTeam != null)
-            smallestTeam.connect(player);
+    private Team getSmallestTeam() {
+        return teams.stream().min(Comparator.comparingInt(Team::size)).orElse(null);
     }
 
-    public void disconnect(Player player) {
-
+    public void broadcast(String message) {
+        for (Team team : teams) {
+            team.getPlayers().forEach(p -> p.sendMessage(message));
+        }
     }
+
+    /* Fields. */
 
     private boolean launched = false;
     public void setLaunched(boolean launched) {
@@ -65,10 +64,18 @@ public final class Battleground {
     public void setWorld(World world) {
         this.world = world;
     }
+    public World getWorld() {
+        return this.world;
+    }
 
     private final String name;
-    public String getName() {
+    public String getBattlegroundName() {
         return this.name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
 }

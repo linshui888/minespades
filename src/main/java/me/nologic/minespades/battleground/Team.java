@@ -6,6 +6,7 @@ import org.bukkit.inventory.Inventory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Team {
 
@@ -13,6 +14,8 @@ public class Team {
     private final int          lifepool;
     private final List<Player> players;
     private final String       hexColor;
+
+    private final Random random;
 
     private final List<Location> respawnLocations;
 
@@ -25,9 +28,10 @@ public class Team {
         this.name = name;
         this.lifepool = lifepool;
         this.hexColor = hexColor;
+        this.random = new Random();
     }
 
-    public void addRespawnPoint(Location location) {
+    public void addRespawnLocation(Location location) {
         this.respawnLocations.add(location);
     }
 
@@ -35,12 +39,22 @@ public class Team {
         this.loadouts.add(loadout);
     }
 
-    public void connect(Player player) {
-        if (players.size() < 32) this.players.add(player); else player.sendMessage("В команде нет места.");
+    private int size = 0;
+    public int size() {
+        return size;
+    }
+
+    public void join(Player player) {
+        this.players.add(player); size++;
+        player.teleport(getRandomRespawnLocation());
+    }
+
+    public Location getRandomRespawnLocation() {
+        return respawnLocations.get(random.nextInt(respawnLocations.size()));
     }
 
     public void disconnect(Player player) {
-        this.players.remove(player);
+        this.players.remove(player); size--;
     }
 
     public List<Player> getPlayers() {

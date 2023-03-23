@@ -45,7 +45,7 @@ public class BattlegroundLoader {
             while (teams.next()) {
                 Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
                 // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
-                Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnPoint(decodeLocation(loc)));
+                Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);
             }
         } catch (SQLException ex) {
@@ -55,7 +55,7 @@ public class BattlegroundLoader {
     }
 
     private Connection connect() throws SQLException {
-        return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battleground.getName() + ".db");
+        return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battleground.getBattlegroundName() + ".db");
     }
 
     /* Инициализация полей арены. */
