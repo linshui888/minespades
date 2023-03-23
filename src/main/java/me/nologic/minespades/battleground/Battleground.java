@@ -24,8 +24,8 @@ public final class Battleground {
     }
 
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
-    public void join(Player player) {
-        this.getSmallestTeam().join(player);
+    public BattlegroundPlayer join(Player player) {
+        return this.getSmallestTeam().join(player);
     }
 
     public void quit(Player player) {

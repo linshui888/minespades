@@ -10,6 +10,7 @@ import java.util.Random;
 
 public class Team {
 
+    private final Battleground battleground;
     private final String       name;
     private final int          lifepool;
     private final List<Player> players;
@@ -21,7 +22,8 @@ public class Team {
 
     private final List<Inventory> loadouts;
 
-    public Team(String name, int lifepool, String hexColor) {
+    public Team(Battleground battleground, String name, int lifepool, String hexColor) {
+        this.battleground = battleground;
         this.players = new ArrayList<>();
         this.loadouts = new ArrayList<>();
         this.respawnLocations = new ArrayList<>();
@@ -44,9 +46,10 @@ public class Team {
         return size;
     }
 
-    public void join(Player player) {
+    public BattlegroundPlayer join(Player player) {
         this.players.add(player); size++;
         player.teleport(getRandomRespawnLocation());
+        return new BattlegroundPlayer(battleground, this, player);
     }
 
     public Location getRandomRespawnLocation() {
