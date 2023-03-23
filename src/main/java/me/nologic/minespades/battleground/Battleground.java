@@ -1,5 +1,7 @@
 package me.nologic.minespades.battleground;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -43,11 +45,11 @@ public final class Battleground {
         return launched;
     }
 
-    private Team getSmallestTeam() {
+    public Team getSmallestTeam() {
         return teams.stream().min(Comparator.comparingInt(Team::size)).orElse(null);
     }
 
-    public void broadcast(String message) {
+    public void broadcast(TextComponent message) {
         for (Team team : teams) {
             team.getPlayers().forEach(p -> p.sendMessage(message));
         }

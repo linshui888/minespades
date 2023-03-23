@@ -4,7 +4,13 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,7 +34,19 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
-        event.getBattleground().broadcast(String.format("%s был убит игроком %s..", event.getPlayer().name().color(TextColor.fromHexString("FF8000")), event.getKiller().name().color(TextColor.fromHexString("61de2a"))));
+        final TextComponent textComponent = Component.text("You're a ")
+                .color(TextColor.color(0x443344))
+                .append(Component.text("Bunny", NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text("! Press "))
+                .append(
+                        Component.keybind("key.jump")
+                                .color(NamedTextColor.LIGHT_PURPLE)
+                                .decoration(TextDecoration.BOLD, true)
+                )
+                .append(Component.text(" to jump!"));
+        Component player = event.getPlayer().name().color(TextColor.fromHexString("FF8000"));
+        Component killer = event.getKiller().name().color(TextColor.fromHexString("61de2a"));
+        event.getBattleground().broadcast(textComponent);
         switch (event.getRespawnMethod()) {
             case QUICK -> event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
             case AOS -> event.getPlayer().sendMessage("не реализовано...");

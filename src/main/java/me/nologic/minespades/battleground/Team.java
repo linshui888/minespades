@@ -51,7 +51,6 @@ public class Team {
     public BattlegroundPlayer join(Player player) {
         this.players.add(player); size++;
         player.teleport(getRandomRespawnLocation());
-        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground,this, player));
         return new BattlegroundPlayer(battleground, this, player);
     }
 

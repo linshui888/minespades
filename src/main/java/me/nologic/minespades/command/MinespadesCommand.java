@@ -3,7 +3,11 @@ package me.nologic.minespades.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundEditor;
+import me.nologic.minespades.battleground.Team;
+import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 @CommandAlias("minespades|ms")
@@ -76,7 +80,9 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("join")
     @CommandCompletion("@battlegrounds")
     public void onJoin(Player player, String battlegroundName) {
-        plugin.getBattlegroundManager().getBattlegroundByName(battlegroundName).join(player);
+        Battleground battleground = plugin.getBattlegroundManager().getBattlegroundByName(battlegroundName);
+        Team team = battleground.getSmallestTeam();
+        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
     }
 
 }
