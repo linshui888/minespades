@@ -43,7 +43,7 @@ public class BattlegroundLoader {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
-                Team team = new Team(teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
+                Team team = new Team(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
                 // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);

@@ -1,5 +1,7 @@
 package me.nologic.minespades.battleground;
 
+import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -49,6 +51,7 @@ public class Team {
     public BattlegroundPlayer join(Player player) {
         this.players.add(player); size++;
         player.teleport(getRandomRespawnLocation());
+        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground,this, player));
         return new BattlegroundPlayer(battleground, this, player);
     }
 

@@ -76,7 +76,7 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("join")
     @CommandCompletion("@battlegrounds")
     public void onJoin(Player player, String battlegroundName) {
-        plugin.getGameMaster().connect(player, battlegroundName);
+        plugin.getBattlegroundManager().getBattlegroundByName(battlegroundName).join(player);
     }
 
 }

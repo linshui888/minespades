@@ -35,4 +35,8 @@ public class BattlegroundManager {
         battleground.setLaunched(true);
     }
 
+    public Battleground getBattlegroundByName(String name) {
+        return this.enabledBattlegrounds.get(name);
+    }
+
 }
