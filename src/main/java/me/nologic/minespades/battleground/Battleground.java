@@ -49,6 +49,7 @@ public final class Battleground {
         return teams.stream().min(Comparator.comparingInt(Team::size)).orElse(null);
     }
 
+    // TODO: отправку сообщений логично будет разметить и разграничить внутри этого класса, а не в местах вызова
     public void broadcast(TextComponent message) {
         for (Team team : teams) {
             team.getPlayers().forEach(p -> p.sendMessage(message));
