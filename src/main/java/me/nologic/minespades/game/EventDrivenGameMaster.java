@@ -34,18 +34,13 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
-        final TextComponent textComponent = Component.text("You're a ")
-                .color(TextColor.color(0x443344))
-                .append(Component.text("Bunny", NamedTextColor.LIGHT_PURPLE))
-                .append(Component.text("! Press "))
-                .append(
-                        Component.keybind("key.jump")
-                                .color(NamedTextColor.LIGHT_PURPLE)
-                                .decoration(TextDecoration.BOLD, true)
-                )
-                .append(Component.text(" to jump!"));
-        Component player = event.getPlayer().name().color(TextColor.fromHexString("FF8000"));
-        Component killer = event.getKiller().name().color(TextColor.fromHexString("61de2a"));
+        final TextComponent textComponent = Component.text("Игрок ")
+                .color(TextColor.color(0xE8E42D))
+                .append(event.getPlayer().name().color(TextColor.color(0x50DC79)))
+                .append(Component.text(" был убит "))
+                .append(event.getKiller().name().color(TextColor.color(0xE84242)))
+                .append(Component.text("!"));
+
         event.getBattleground().broadcast(textComponent);
         switch (event.getRespawnMethod()) {
             case QUICK -> event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
@@ -59,6 +54,7 @@ public class EventDrivenGameMaster implements Listener {
         for (BattlegroundPlayer p : playersInGame) {
             if (event.getPlayer().equals(p.getPlayer())) {
                 Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), event.getEntity(), p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+                event.setCancelled(true);
             }
         }
     }
