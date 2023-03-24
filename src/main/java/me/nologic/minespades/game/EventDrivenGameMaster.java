@@ -21,7 +21,7 @@ import java.util.List;
 
 public class EventDrivenGameMaster implements Listener {
 
-    public List<BattlegroundPlayer> playersInGame = new ArrayList<>();
+    private final List<BattlegroundPlayer> playersInGame = new ArrayList<>();
 
     @EventHandler
     private void onPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
@@ -43,7 +43,10 @@ public class EventDrivenGameMaster implements Listener {
 
         event.getBattleground().broadcast(textComponent);
         switch (event.getRespawnMethod()) {
-            case QUICK -> event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
+            case QUICK -> {
+                event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
+                event.getPlayer().sendMessage("EFAAFEF");
+            }
             case AOS -> event.getPlayer().sendMessage("не реализовано...");
             case NORMAL -> event.getPlayer().sendMessage("lol ok");
         }
