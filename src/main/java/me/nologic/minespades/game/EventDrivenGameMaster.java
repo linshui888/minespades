@@ -34,11 +34,11 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
-        final TextComponent textComponent = Component.text("Игрок ")
-                .color(TextColor.color(0xE8E42D))
-                .append(event.getPlayer().name().color(TextColor.color(0x50DC79)))
+        final TextComponent textComponent = Component.text(" > ")
+                .color(TextColor.color(0xD9C4CF))
+                .append(event.getPlayer().name().color(TextColor.color(0xA7B85E)))
                 .append(Component.text(" был убит "))
-                .append(event.getKiller().name().color(TextColor.color(0xE84242)))
+                .append(event.getKiller().name().color(TextColor.color(0xB97A5A)))
                 .append(Component.text("!"));
 
         event.getBattleground().broadcast(textComponent);

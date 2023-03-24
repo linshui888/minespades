@@ -80,9 +80,15 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("join")
     @CommandCompletion("@battlegrounds")
     public void onJoin(Player player, String battlegroundName) {
-        Battleground battleground = plugin.getBattlegroundManager().getBattlegroundByName(battlegroundName);
-        Team team = battleground.getSmallestTeam();
-        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
+        try {
+            Battleground battleground = plugin.getBattlegroundManager().getBattlegroundByName(battlegroundName);
+            Team team = battleground.getSmallestTeam();
+            Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
+        } catch (NullPointerException ex) {
+            player.sendMessage("§4Арены с таким названием не существует.");
+
+        }
+
     }
 
 }
