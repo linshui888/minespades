@@ -8,8 +8,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.util.ArrayList;
@@ -45,11 +48,13 @@ public class EventDrivenGameMaster implements Listener {
     }
 
     @EventHandler
-    private void onPlayerDeath(PlayerDeathEvent event) {
-        for (BattlegroundPlayer p : playersInGame) {
-            if (event.getPlayer().equals(p.getPlayer())) {
-                event.setCancelled(true);
-                Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), event.getEntity(), p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+    private void onPlayerTakesDeadlyDamage(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player killer) {
+            for (BattlegroundPlayer p : playersInGame) {
+                if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
+                    event.setCancelled(true);
+                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), killer, p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+                }
             }
         }
     }
