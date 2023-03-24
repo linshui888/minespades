@@ -38,10 +38,7 @@ public class EventDrivenGameMaster implements Listener {
 
         event.getBattleground().broadcast(textComponent);
         switch (event.getRespawnMethod()) {
-            case QUICK -> {
-                event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
-                event.getPlayer().sendMessage("EFAAFEF");
-            }
+            case QUICK -> event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
             case AOS -> event.getPlayer().sendMessage("не реализовано...");
             case NORMAL -> event.getPlayer().sendMessage("lol ok");
         }
