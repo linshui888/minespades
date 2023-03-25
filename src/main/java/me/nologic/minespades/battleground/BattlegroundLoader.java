@@ -1,10 +1,14 @@
 package me.nologic.minespades.battleground;
 
+import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
+import org.bukkit.block.Furnace;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
@@ -74,8 +78,14 @@ public class BattlegroundLoader {
             ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
             while(blocks.next()) {
                 int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");
+                Block b = battleground.getWorld().getBlockAt(x, y, z);
                 Material material = Material.valueOf(blocks.getString("material"));
-                this.battleground.getWorld().setType(x, y, z, material);
+                b.setType(material);
+                b.setBlockData(Bukkit.createBlockData(blocks.getString("data")));
+                BlockState state = b.getState();
+                if (!(state instanceof Furnace) && state instanceof Container container) {
+                    container.getInventory().setContents(this.decodeContainer(blocks.getString("inventory")).getContents());
+                }
             }
         } catch (SQLException exception) {
             exception.printStackTrace();
@@ -92,24 +102,18 @@ public class BattlegroundLoader {
         return new Location(battleground.getWorld(), x, y, z, yaw, pitch);
     }
 
-    private Inventory decodeInventory(String encoded) {
-        Inventory inventory = Bukkit.getServer().createInventory(null, InventoryType.PLAYER);
+    @SneakyThrows
+    public Inventory decodeContainer(String data){
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+        BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+        Inventory inventory = Bukkit.getServer().createInventory(null, dataInput.readInt());
 
-        try {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(encoded));
-            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
-
-
-            for (int i = 0; i < inventory.getSize(); i++) {
-                inventory.setItem(i, (ItemStack) dataInput.readObject());
-            }
-
-            dataInput.close();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        // Read the serialized inventory
+        for (int i = 0; i < inventory.getSize(); i++) {
+            inventory.setItem(i, (ItemStack) dataInput.readObject());
         }
 
+        dataInput.close();
         return inventory;
     }
 

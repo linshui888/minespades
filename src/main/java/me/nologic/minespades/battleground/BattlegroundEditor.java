@@ -1,17 +1,25 @@
 package me.nologic.minespades.battleground;
 
+import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.Future;
 
 /**
  * BattlegroundEditor берёт на себя задачу создания новых арен и редактирования существующих.
@@ -105,6 +113,7 @@ public class BattlegroundEditor implements Listener {
         return conn;
     }
 
+    @SneakyThrows
     public void saveVolume(Player player) {
         Location[] grids = volumeGrids.get(player);
         World world = player.getWorld();
@@ -117,22 +126,46 @@ public class BattlegroundEditor implements Listener {
         int i = 0;
         long startTime = System.currentTimeMillis();
         try (Connection connection = this.connect(battlegroundName);
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO volume(x, y, z, material) VALUES(?,?,?,?);")) {
-            for (int x = Math.min(grids[0].getBlockX(), grids[1].getBlockX()); x <= Math.max(grids[0].getBlockX(), grids[1].getBlockX()); x++) {
-                for (int y = Math.min(grids[0].getBlockY(), grids[1].getBlockY()); y <= Math.max(grids[0].getBlockY(), grids[1].getBlockY()); y++) {
-                    for (int z = Math.min(grids[0].getBlockZ(), grids[1].getBlockZ()); z <= Math.max(grids[0].getBlockZ(), grids[1].getBlockZ()); z++) {
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, inventory) VALUES(?,?,?,?,?,?);")) {
+
+            connection.setAutoCommit(false);
+
+            final int minX = Math.min(grids[0].getBlockX(), grids[1].getBlockX()),
+                      maxX = Math.max(grids[0].getBlockX(), grids[1].getBlockX()),
+                      minY = Math.min(grids[0].getBlockY(), grids[1].getBlockY()),
+                      maxY = Math.max(grids[0].getBlockY(), grids[1].getBlockY()),
+                      minZ = Math.min(grids[0].getBlockZ(), grids[1].getBlockZ()),
+                      maxZ = Math.max(grids[0].getBlockZ(), grids[1].getBlockZ());
+
+            for (int x = minX; x <= maxX; x++) {
+                for (int y = minY; y <= maxY; y++) {
+                    for (int z = minZ; z <= maxZ; z++) {
                         statement.setInt(1, x);
                         statement.setInt(2, y);
                         statement.setInt(3, z);
-                        statement.setString(4, world.getBlockAt(x, y, z).getType().toString());
-                        statement.addBatch(); i++;
+
+                        Block block = world.getBlockAt(x, y, z);
+                        statement.setString(4, block.getType().toString());
+
+                        statement.setString(5, block.getBlockData().getAsString());
+
+                        Future<String> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
+                            String result = null;
+                            if (block.getState() instanceof Container container)
+                                result = this.encodeInventory(container.getInventory());
+                            return result;
+                        });
+
+                        statement.setString(6, future.get());
+                        statement.executeUpdate(); i++;
                     }
                 }
             }
-            statement.executeBatch();
+
+            connection.commit();
             long totalTime = System.currentTimeMillis() - startTime;
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§5%d б.§8, §5%d с.§8)", i, totalTime));
+            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§5%dб.§8, §5%dс.§8)", i, totalTime / 1000));
             this.volumeGrids.remove(player);
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -170,12 +203,27 @@ public class BattlegroundEditor implements Listener {
         player.sendMessage("Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите /ms save, чтобы сохранить карту.");
     }
 
-    public void removeVolumeEditor(Player player) {
-        this.volumeGrids.remove(player);
-    }
-
     public void setTargetTeam(Player player, String teamName) {
         this.teamEditSession.put(player, teamName);
+    }
+
+    @SneakyThrows
+    public String encodeInventory(Inventory inventory) {
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
+
+        // Write the size of the inventory
+        dataOutput.writeInt(inventory.getSize());
+
+        // Save every element in the list
+        for (int i = 0; i < inventory.getSize(); i++) {
+            dataOutput.writeObject(inventory.getItem(i));
+        }
+
+        // Serialize that array
+        dataOutput.close();
+        return Base64Coder.encodeLines(outputStream.toByteArray());
     }
 
 }
