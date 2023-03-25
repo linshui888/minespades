@@ -102,14 +102,14 @@ public class BattlegroundEditor implements Listener {
         }
     }
 
+    @SneakyThrows
     private Connection connect(String battlegroundName) {
         String url = "jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db";
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(url);
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        Connection conn = DriverManager.getConnection(url);
+        Statement st = conn.createStatement();
+        st.execute("PRAGMA journal_mode=OFF");
+        st.execute("PRAGMA synchronous=OFF");
+        st.close();
         return conn;
     }
 
@@ -145,24 +145,34 @@ public class BattlegroundEditor implements Listener {
                         statement.setInt(3, z);
 
                         Block block = world.getBlockAt(x, y, z);
-                        statement.setString(4, block.getType().toString());
 
+                        if (block.getType() == Material.AIR)
+                            continue;
+
+                        statement.setString(4, block.getType().toString());
                         statement.setString(5, block.getBlockData().getAsString());
 
-                        Future<String> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
+
+                        /* Future<String> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
                             String result = null;
                             if (block.getState() instanceof Container container)
                                 result = this.encodeInventory(container.getInventory());
                             return result;
-                        });
+                        }); */
 
-                        statement.setString(6, future.get());
-                        statement.executeUpdate(); i++;
+                        statement.setString(6, null);
+                        statement.addBatch();
+
+                        if (++i % 500 == 0) {
+                            statement.executeBatch();
+                        }
                     }
                 }
             }
 
+            statement.executeBatch();
             connection.commit();
+            connection.setAutoCommit(true);
             long totalTime = System.currentTimeMillis() - startTime;
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§5%dб.§8, §5%dс.§8)", i, totalTime / 1000));
