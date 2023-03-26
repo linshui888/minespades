@@ -16,9 +16,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**
@@ -35,7 +33,7 @@ public class BattlegroundEditor implements Listener {
 
     public BattlegroundEditor(Minespades plugin) {
         this.plugin = plugin;
-        this.volumeGrids = new HashMap<>();
+        this.volumeCorners = new HashMap<>();
         this.battlegroundEditSession = new HashMap<>();
         this.teamEditSession = new HashMap<>();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -115,11 +113,11 @@ public class BattlegroundEditor implements Listener {
 
     @SneakyThrows
     public void saveVolume(Player player) {
-        Location[] grids = volumeGrids.get(player);
+        Location[] corners = volumeCorners.get(player);
         World world = player.getWorld();
         String battlegroundName = this.battlegroundEditSession.get(player);
-        if (grids[0] == null || grids[1] == null) {
-            player.sendMessage("Необходимо указать два угла кубоида.");
+        if (corners[0] == null || corners[1] == null) {
+            player.sendMessage("§4Необходимо указать два угла кубоида.");
             return;
         }
 
@@ -130,12 +128,12 @@ public class BattlegroundEditor implements Listener {
 
             connection.setAutoCommit(false);
 
-            final int minX = Math.min(grids[0].getBlockX(), grids[1].getBlockX()),
-                      maxX = Math.max(grids[0].getBlockX(), grids[1].getBlockX()),
-                      minY = Math.min(grids[0].getBlockY(), grids[1].getBlockY()),
-                      maxY = Math.max(grids[0].getBlockY(), grids[1].getBlockY()),
-                      minZ = Math.min(grids[0].getBlockZ(), grids[1].getBlockZ()),
-                      maxZ = Math.max(grids[0].getBlockZ(), grids[1].getBlockZ());
+            final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()),
+                      maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()),
+                      minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()),
+                      maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()),
+                      minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()),
+                      maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
 
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
@@ -146,28 +144,48 @@ public class BattlegroundEditor implements Listener {
 
                         Block block = world.getBlockAt(x, y, z);
 
-                        if (block.getType() == Material.AIR)
-                            continue;
+                        if (block.getType().isAir()) continue;
 
                         statement.setString(4, block.getType().toString());
                         statement.setString(5, block.getBlockData().getAsString());
 
-
-                        /* Future<String> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                            String result = null;
-                            if (block.getState() instanceof Container container)
-                                result = this.encodeInventory(container.getInventory());
-                            return result;
-                        }); */
-
                         statement.setString(6, null);
                         statement.addBatch();
 
-                        if (++i % 500 == 0) {
+                        if (++i % 5000 == 0) {
                             statement.executeBatch();
                         }
                     }
                 }
+            }
+
+            // Save tile entities
+            Future<List<Container>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
+                List<Container> tiles = new ArrayList<>();
+
+                for (int x = minX; x <= maxX; x++) {
+                    for (int y = minY; y <= maxY; y++) {
+                        for (int z = minZ; z <= maxZ; z++) {
+                            Block block = world.getBlockAt(x, y, z);
+                            if (block.getType().isAir()) continue;
+                            if (block.getState() instanceof Container container) {
+                                tiles.add(container);
+                            }
+                        }
+                    }
+                }
+
+                return tiles;
+            });
+
+            for (Container c : future.get()) {
+                statement.setInt(1, c.getX());
+                statement.setInt(2, c.getY());
+                statement.setInt(3, c.getZ());
+                statement.setString(4, c.getType().toString());
+                statement.setString(5, c.getBlockData().getAsString());
+                statement.setString(6, this.encodeInventory(c.getInventory()));
+                statement.addBatch();
             }
 
             statement.executeBatch();
@@ -175,8 +193,8 @@ public class BattlegroundEditor implements Listener {
             connection.setAutoCommit(true);
             long totalTime = System.currentTimeMillis() - startTime;
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§5%dб.§8, §5%dс.§8)", i, totalTime / 1000));
-            this.volumeGrids.remove(player);
+            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§53%dб.§8, §3%dс.§8)", i, totalTime / 1000));
+            this.volumeCorners.remove(player);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -185,31 +203,31 @@ public class BattlegroundEditor implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (volumeGrids.containsKey(event.getPlayer())) {
+        if (volumeCorners.containsKey(event.getPlayer())) {
             if (event.getPlayer().getInventory().getItemInMainHand().getType() != Material.GOLDEN_SWORD || event.getHand() != EquipmentSlot.HAND) return;
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK -> {
-                    volumeGrids.get(event.getPlayer())[0] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
+                    volumeCorners.get(event.getPlayer())[0] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
                     event.getPlayer().sendMessage("§7Первый угол кубоида: §2" + event.getClickedBlock().getLocation().toVector());
                 }
                 case RIGHT_CLICK_BLOCK -> {
-                    volumeGrids.get(event.getPlayer())[1] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
+                    volumeCorners.get(event.getPlayer())[1] = Objects.requireNonNull(event.getClickedBlock()).getLocation();
                     event.getPlayer().sendMessage("§7Второй угол кубоида: §2" + event.getClickedBlock().getLocation().toVector());
                 }
             }
         }
     }
 
-    private final HashMap<Player, Location[]> volumeGrids;
+    private final HashMap<Player, Location[]> volumeCorners;
     private final HashMap<Player, String> battlegroundEditSession;
     private final HashMap<Player, String> teamEditSession;
     public void addVolumeEditor(Player player) {
-        if (volumeGrids.containsKey(player)) {
+        if (volumeCorners.containsKey(player)) {
             player.sendMessage("В данный момент уже редактируется карта " + battlegroundEditSession.get(player) + ".");
             return;
         }
 
-        this.volumeGrids.put(player, new Location[2]);
+        this.volumeCorners.put(player, new Location[2]);
         player.sendMessage("Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите /ms save, чтобы сохранить карту.");
     }
 
