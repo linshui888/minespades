@@ -123,82 +123,78 @@ public class BattlegroundEditor implements Listener {
 
         int i = 0;
         long startTime = System.currentTimeMillis();
-        try (Connection connection = this.connect(battlegroundName);
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, inventory) VALUES(?,?,?,?,?,?);")) {
+        Connection connection = this.connect(battlegroundName);
+        PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, inventory) VALUES(?,?,?,?,?,?);");
 
-            connection.setAutoCommit(false);
+        // Начало SQL-транзакции
+        connection.setAutoCommit(false);
 
-            final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()),
-                      maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()),
-                      minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()),
-                      maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()),
-                      minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()),
-                      maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
+        // Вычисление углов
+        final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
+
+        // Сохранение блоков
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    bSt.setInt(1, x);
+                    bSt.setInt(2, y);
+                    bSt.setInt(3, z);
+
+                    Block block = world.getBlockAt(x, y, z);
+
+                    if (block.getType().isAir()) continue;
+
+                    bSt.setString(4, block.getType().toString());
+                    bSt.setString(5, block.getBlockData().getAsString());
+
+                    bSt.setString(6, null);
+                    bSt.addBatch();
+
+                    if (++i % 5000 == 0) {
+                        bSt.executeBatch();
+                    }
+                }
+            }
+        }
+
+        bSt.executeBatch();
+        connection.commit();
+
+        // Сохранение тайлов
+        Future<List<Container>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
+            List<Container> tiles = new ArrayList<>();
 
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     for (int z = minZ; z <= maxZ; z++) {
-                        statement.setInt(1, x);
-                        statement.setInt(2, y);
-                        statement.setInt(3, z);
-
                         Block block = world.getBlockAt(x, y, z);
-
                         if (block.getType().isAir()) continue;
-
-                        statement.setString(4, block.getType().toString());
-                        statement.setString(5, block.getBlockData().getAsString());
-
-                        statement.setString(6, null);
-                        statement.addBatch();
-
-                        if (++i % 5000 == 0) {
-                            statement.executeBatch();
+                        if (block.getState() instanceof Container container) {
+                            tiles.add(container);
                         }
                     }
                 }
             }
 
-            // Save tile entities
-            Future<List<Container>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                List<Container> tiles = new ArrayList<>();
+            return tiles;
+        });
 
-                for (int x = minX; x <= maxX; x++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        for (int z = minZ; z <= maxZ; z++) {
-                            Block block = world.getBlockAt(x, y, z);
-                            if (block.getType().isAir()) continue;
-                            if (block.getState() instanceof Container container) {
-                                tiles.add(container);
-                            }
-                        }
-                    }
-                }
-
-                return tiles;
-            });
-
-            for (Container c : future.get()) {
-                statement.setInt(1, c.getX());
-                statement.setInt(2, c.getY());
-                statement.setInt(3, c.getZ());
-                statement.setString(4, c.getType().toString());
-                statement.setString(5, c.getBlockData().getAsString());
-                statement.setString(6, this.encodeInventory(c.getInventory()));
-                statement.addBatch();
-            }
-
-            statement.executeBatch();
-            connection.commit();
-            connection.setAutoCommit(true);
-            long totalTime = System.currentTimeMillis() - startTime;
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§53%dб.§8, §3%dс.§8)", i, totalTime / 1000));
-            this.volumeCorners.remove(player);
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+        PreparedStatement tSt = connection.prepareStatement("UPDATE volume SET inventory = ? WHERE x = ? AND y = ? AND z = ?;");
+        for (Container c : future.get()) {
+            tSt.setString(1, this.encodeInventory(c.getInventory()));
+            tSt.setInt(2, c.getX());
+            tSt.setInt(3, c.getY());
+            tSt.setInt(4, c.getZ());
+            tSt.addBatch();
         }
 
+        tSt.executeBatch();
+        connection.commit();
+        connection.close();
+        long totalTime = System.currentTimeMillis() - startTime;
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+        player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§53%dб.§8, §3%dс.§8)", i, totalTime / 1000));
+        this.volumeCorners.remove(player);
     }
 
     @EventHandler
