@@ -1,5 +1,6 @@
 package me.nologic.minespades.battleground;
 
+import lombok.Getter;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,7 +23,8 @@ public class Team {
 
     private final List<Location> respawnLocations;
 
-    private final List<Inventory> loadouts;
+    private @Getter
+    final List<Inventory> loadouts;
 
     public Team(Battleground battleground, String name, int lifepool, String hexColor) {
         this.battleground = battleground;

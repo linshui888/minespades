@@ -13,9 +13,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
 import org.bukkit.block.data.type.Candle;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
@@ -53,7 +56,7 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
                 Team team = new Team(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                // Arrays.stream(teams.getString("loadouts").split(", ")).toList().forEach(inv -> team.add(decodeInventory(inv)));
+                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(inv -> team.addLoadout(readInventory(inv)));
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);
             }
@@ -79,7 +82,28 @@ public class BattlegroundLoader {
     }
 
     private void loadVolume() {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+        try (Connection connection = connect()) {
+
+            // Clear
+            Statement clear = connection.createStatement();
+            ResultSet corners = clear.executeQuery(Table.CORNERS.getSelectStatement());
+            while(corners.next()) {
+                int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
+                Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
+                battleground.getWorld().getNearbyEntities(BoundingBox.of(corner1, corner2)).forEach(e -> {
+                    if (!(e instanceof Player)) e.remove();
+                });
+                for (int x = minX; x <= maxX; x++) {
+                    for (int y = minY; y <= maxY; y++) {
+                        for (int z = minZ; z <= maxZ; z++) {
+                            battleground.getWorld().getBlockAt(x, y, z).setType(Material.AIR);
+                        }
+                    }
+                }
+            }
+
+            // Blocks
+            Statement statement = connection.createStatement();
             ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
             while(blocks.next()) {
                 int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");

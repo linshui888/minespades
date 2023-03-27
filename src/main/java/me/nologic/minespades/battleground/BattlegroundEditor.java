@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -17,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
@@ -63,8 +65,6 @@ public class BattlegroundEditor implements Listener {
             player.sendMessage("§7Для запуска арены используйте §6/ms launch <название_арены>");
 
             battlegroundEditSession.put(player, battlegroundName);
-            plugin.getConfig().set("Battlegrounds", plugin.getConfig().getStringList("Battlegrounds").add(battlegroundName));
-            plugin.saveConfig();
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -127,16 +127,24 @@ public class BattlegroundEditor implements Listener {
             return;
         }
 
+        final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
+
         int i = 0;
         long startTime = System.currentTimeMillis();
         Connection connection = this.connect(battlegroundName);
+
+        // Сохранение углов
+        PreparedStatement saveCorners = connection.prepareStatement(Table.CORNERS.getInsertStatement());
+        saveCorners.setInt(1, minX);
+        saveCorners.setInt(2, minY);
+        saveCorners.setInt(3, minZ);
+        saveCorners.setInt(4, maxX);
+        saveCorners.setInt(5, maxY);
+        saveCorners.setInt(6, maxZ);
+        saveCorners.executeUpdate();
+
         PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
-
-        // Начало SQL-транзакции
         connection.setAutoCommit(false);
-
-        // Вычисление углов
-        final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
 
         // Сохранение блоков
         for (int x = minX; x <= maxX; x++) {
@@ -230,10 +238,20 @@ public class BattlegroundEditor implements Listener {
         }
     }
 
-    private final HashMap<Player, Location[]> volumeCorners;
     private final HashMap<Player, String> battlegroundEditSession;
+    public void setBattlegroundEditor(Player player, String battlegroundName) {
+        this.battlegroundEditSession.put(player, battlegroundName);
+    }
+
+    private final HashMap<Player, Location[]> volumeCorners;
     private final HashMap<Player, String> teamEditSession;
-    public void addVolumeEditor(Player player) {
+    public void setVolumeEditor(Player player) {
+
+        if (!this.battlegroundEditSession.containsKey(player)) {
+            player.sendMessage("Сперва нужно выбрать редактируемую арену. Сделайте это с помощью /ms edit battleground <название_арены>.");
+            return;
+        }
+
         if (volumeCorners.containsKey(player)) {
             player.sendMessage("В данный момент уже редактируется карта " + battlegroundEditSession.get(player) + ".");
             return;
@@ -245,6 +263,50 @@ public class BattlegroundEditor implements Listener {
 
     public void setTargetTeam(Player player, String teamName) {
         this.teamEditSession.put(player, teamName);
+    }
+
+    public boolean isTeamSelected(Player player) {
+        return teamEditSession.containsKey(player) && teamEditSession.get(player) != null;
+    }
+
+    @SneakyThrows
+    public void addLoadout(Player player, String name) {
+        Connection connection = this.connect(battlegroundEditSession.get(player));
+        Statement stmt = connection.createStatement();
+        String loadouts = stmt.executeQuery("SELECT loadouts FROM teams;").getString("loadouts");
+
+        PreparedStatement statement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
+        if (loadouts == null) {
+            statement.setString(1, prepareLoadout(name, player.getInventory()));
+        } else statement.setString(1, loadouts + "\n" + prepareLoadout(name, player.getInventory()));
+        statement.setString(2, this.teamEditSession.get(player));
+        statement.executeUpdate();
+        connection.close();
+
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+        player.sendMessage(String.format("§7[§5%s§7] Добавлено обмундирование: §6%s", this.teamEditSession.get(player), name));
+    }
+
+    @SneakyThrows
+    public String prepareLoadout(String name, PlayerInventory inventory) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("name", name);
+        obj.addProperty("type", inventory.getType().name());
+        obj.addProperty("size", inventory.getSize());
+
+        JsonArray items = new JsonArray();
+        for (int i = 0; i < inventory.getSize(); i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item != null) {
+                JsonObject jitem = new JsonObject();
+                jitem.addProperty("slot", i);
+                String itemData = itemStackToString(item);
+                jitem.addProperty("data", itemData);
+                items.add(jitem);
+            }
+        }
+        obj.add("items", items);
+        return obj.toString();
     }
 
     @SneakyThrows

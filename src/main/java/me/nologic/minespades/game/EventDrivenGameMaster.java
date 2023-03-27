@@ -26,7 +26,9 @@ public class EventDrivenGameMaster implements Listener {
     private void onPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
         Battleground battleground = event.getBattleground();
         if (battleground.isConnectable()) {
-            playersInGame.add(battleground.join(event.getPlayer()));
+            BattlegroundPlayer player = battleground.join(event.getPlayer());
+            player.setRandomLoadout();
+            this.playersInGame.add(player);
         }
     }
 

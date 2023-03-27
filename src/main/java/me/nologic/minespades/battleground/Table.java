@@ -5,6 +5,9 @@ public enum Table {
     VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, content TEXT);",
             "",
             "SELECT * FROM volume"),
+    CORNERS ("CREATE TABLE IF NOT EXISTS corners (x1 INTEGER NOT NULL, y1 INTEGER NOT NULL, z1 INTEGER NOT NULL, x2 INTEGER NOT NULL, y2 INTEGER NOT NULL, z2 INTEGER NOT NULL);",
+            "INSERT INTO corners (x1,y1,z1,x2,y2,z2) VALUES (?,?,?,?,?,?);"
+            ,"SELECT * FROM corners"),
     ENTITIES("CREATE TABLE IF NOT EXISTS entities (x FLOAT NOT NULL, y INTEGER NOT NULL, z FLOAT NOT NULL, entity_type VARCHAR(32) NOT NULL, inventory TEXT);",
             "",
             ""),
