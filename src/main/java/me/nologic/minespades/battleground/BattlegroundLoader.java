@@ -1,14 +1,19 @@
 package me.nologic.minespades.battleground;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
-import org.bukkit.block.Furnace;
+import org.bukkit.block.*;
+import org.bukkit.block.data.type.Candle;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
@@ -83,9 +88,21 @@ public class BattlegroundLoader {
                 b.setType(material);
                 b.setBlockData(Bukkit.createBlockData(blocks.getString("data")));
                 BlockState state = b.getState();
-                if (!(state instanceof Furnace) && state instanceof Container container) {
-                    container.getInventory().setContents(this.decodeContainer(blocks.getString("inventory")).getContents());
+
+                // Tile entities
+                // TODO: Возможно, стоит перенести это в другое место.
+                if (state instanceof Container container) {
+                    container.getInventory().setContents(this.readInventory(blocks.getString("content")).getContents());
+                } else if (state instanceof Sign sign) {
+                    JsonObject obj = JsonParser.parseString(blocks.getString("content")).getAsJsonObject();
+                    sign.setGlowingText(obj.get("glow").getAsBoolean());
+                    String[] lines = obj.get("content").getAsString().split("\n");
+                    for (int i = 0; i < lines.length; i++)
+                        sign.line(i, Component.text(lines[i]));
+                    sign.setColor(DyeColor.valueOf(obj.get("color").getAsString()));
+                    sign.update(true, false);
                 }
+
             }
         } catch (SQLException exception) {
             exception.printStackTrace();
@@ -102,19 +119,28 @@ public class BattlegroundLoader {
         return new Location(battleground.getWorld(), x, y, z, yaw, pitch);
     }
 
-    @SneakyThrows
-    public Inventory decodeContainer(String data){
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
-        BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
-        Inventory inventory = Bukkit.getServer().createInventory(null, dataInput.readInt());
+    private Inventory readInventory(String string) {
+        JsonObject obj = JsonParser.parseString(string).getAsJsonObject();
 
-        // Read the serialized inventory
-        for (int i = 0; i < inventory.getSize(); i++) {
-            inventory.setItem(i, (ItemStack) dataInput.readObject());
+        Inventory inv = Bukkit.createInventory(null, InventoryType.valueOf(obj.get("type").getAsString()));
+
+        JsonArray items = obj.get("items").getAsJsonArray();
+        for (JsonElement itemele: items) {
+            JsonObject jitem = itemele.getAsJsonObject();
+            ItemStack item = decodeItem(jitem.get("data").getAsString());
+            inv.setItem(jitem.get("slot").getAsInt(), item);
         }
 
+        return inv;
+    }
+
+    @SneakyThrows
+    private ItemStack decodeItem(String base64) {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(base64));
+        BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+        ItemStack item = (ItemStack) dataInput.readObject();
         dataInput.close();
-        return inventory;
+        return item;
     }
 
     public BattlegroundLoader(Minespades plugin) {

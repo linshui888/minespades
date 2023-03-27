@@ -1,16 +1,22 @@
 package me.nologic.minespades.battleground;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
@@ -124,7 +130,7 @@ public class BattlegroundEditor implements Listener {
         int i = 0;
         long startTime = System.currentTimeMillis();
         Connection connection = this.connect(battlegroundName);
-        PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, inventory) VALUES(?,?,?,?,?,?);");
+        PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
 
         // Начало SQL-транзакции
         connection.setAutoCommit(false);
@@ -161,16 +167,16 @@ public class BattlegroundEditor implements Listener {
         connection.commit();
 
         // Сохранение тайлов
-        Future<List<Container>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
-            List<Container> tiles = new ArrayList<>();
+        Future<List<BlockState>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
+            List<BlockState> tiles = new ArrayList<>();
 
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     for (int z = minZ; z <= maxZ; z++) {
                         Block block = world.getBlockAt(x, y, z);
                         if (block.getType().isAir()) continue;
-                        if (block.getState() instanceof Container container) {
-                            tiles.add(container);
+                        if (block.getState() instanceof Container || block.getState() instanceof Sign) {
+                            tiles.add(block.getState());
                         }
                     }
                 }
@@ -179,13 +185,23 @@ public class BattlegroundEditor implements Listener {
             return tiles;
         });
 
-        PreparedStatement tSt = connection.prepareStatement("UPDATE volume SET inventory = ? WHERE x = ? AND y = ? AND z = ?;");
-        for (Container c : future.get()) {
-            tSt.setString(1, this.encodeInventory(c.getInventory()));
-            tSt.setInt(2, c.getX());
-            tSt.setInt(3, c.getY());
-            tSt.setInt(4, c.getZ());
-            tSt.addBatch();
+        // Добавление в датабазу
+        PreparedStatement tSt = connection.prepareStatement("UPDATE volume SET content = ? WHERE x = ? AND y = ? AND z = ?;");
+        for (BlockState state : future.get()) {
+            if (state instanceof Container container) {
+                tSt.setString(1, this.save(container.getInventory()));
+                tSt.setInt(2, container.getX());
+                tSt.setInt(3, container.getY());
+                tSt.setInt(4, container.getZ());
+                tSt.addBatch();
+            } else if (state instanceof Sign sign) {
+                tSt.setString(1, this.save(sign));
+                tSt.setInt(2, sign.getX());
+                tSt.setInt(3, sign.getY());
+                tSt.setInt(4, sign.getZ());
+                tSt.addBatch();
+            }
+
         }
 
         tSt.executeBatch();
@@ -224,7 +240,7 @@ public class BattlegroundEditor implements Listener {
         }
 
         this.volumeCorners.put(player, new Location[2]);
-        player.sendMessage("Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите /ms save, чтобы сохранить карту.");
+        player.sendMessage("§7Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите §6/ms save§7, чтобы сохранить карту.");
     }
 
     public void setTargetTeam(Player player, String teamName) {
@@ -232,20 +248,39 @@ public class BattlegroundEditor implements Listener {
     }
 
     @SneakyThrows
-    public String encodeInventory(Inventory inventory) {
+    private String save(Inventory inventory) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("type", inventory.getType().name());
+        obj.addProperty("size", inventory.getSize());
 
+        JsonArray items = new JsonArray();
+        for (int i = 0; i < inventory.getSize(); i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item != null) {
+                JsonObject jitem = new JsonObject();
+                jitem.addProperty("slot", i);
+                String itemData = itemStackToString(item);
+                jitem.addProperty("data", itemData);
+                items.add(jitem);
+            }
+        }
+        obj.add("items", items);
+        return obj.toString();
+    }
+
+    private String save(Sign sign) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("content", StringUtils.join(sign.getLines(), "\n"));
+        obj.addProperty("glow", sign.isGlowingText());
+        obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
+        return obj.toString();
+    }
+
+    @SneakyThrows
+    public String itemStackToString(ItemStack item) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
-
-        // Write the size of the inventory
-        dataOutput.writeInt(inventory.getSize());
-
-        // Save every element in the list
-        for (int i = 0; i < inventory.getSize(); i++) {
-            dataOutput.writeObject(inventory.getItem(i));
-        }
-
-        // Serialize that array
+        dataOutput.writeObject(item);
         dataOutput.close();
         return Base64Coder.encodeLines(outputStream.toByteArray());
     }

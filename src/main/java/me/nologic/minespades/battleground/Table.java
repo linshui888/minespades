@@ -2,7 +2,7 @@ package me.nologic.minespades.battleground;
 
 public enum Table {
 
-    VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, inventory TEXT);",
+    VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, content TEXT);",
             "",
             "SELECT * FROM volume"),
     ENTITIES("CREATE TABLE IF NOT EXISTS entities (x FLOAT NOT NULL, y INTEGER NOT NULL, z FLOAT NOT NULL, entity_type VARCHAR(32) NOT NULL, inventory TEXT);",
