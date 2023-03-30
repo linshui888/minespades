@@ -1,9 +1,8 @@
 package me.nologic.minespades;
 
 import me.nologic.minespades.battleground.Battleground;
-import me.nologic.minespades.battleground.BattlegroundEditor;
+import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.BattlegroundLoader;
-import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.TextColor;
@@ -15,7 +14,6 @@ import org.bukkit.Sound;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
 public class BattlegroundManager {
 

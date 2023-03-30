@@ -1,4 +1,4 @@
-package me.nologic.minespades.battleground.editor;
+package me.nologic.minespades.battleground.editor.task;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -31,7 +31,7 @@ public abstract class BaseEditorTask {
     }
 
     @SneakyThrows
-    protected final String itemStackToString(ItemStack item) {
+    protected final String itemStackToBase64(ItemStack item) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
         dataOutput.writeObject(item);

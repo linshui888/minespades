@@ -1,4 +1,4 @@
-package me.nologic.minespades.battleground.editor;
+package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -150,7 +150,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> 
             if (item != null) {
                 JsonObject jitem = new JsonObject();
                 jitem.addProperty("slot", i);
-                String itemData = itemStackToString(item);
+                String itemData = itemStackToBase64(item);
                 jitem.addProperty("data", itemData);
                 items.add(jitem);
             }
@@ -160,7 +160,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> 
     }
 
     private String save(Sign sign) {
-        JsonObject obj = new JsonObject();
+        JsonObject obj = new JsonObject(); // TODO: sign.lines() or sign.getLines()?
         obj.addProperty("content", StringUtils.join(sign.lines(), "\n"));
         obj.addProperty("glow", sign.isGlowingText());
         obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());

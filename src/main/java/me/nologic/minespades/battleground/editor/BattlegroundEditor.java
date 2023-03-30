@@ -1,8 +1,9 @@
-package me.nologic.minespades.battleground;
+package me.nologic.minespades.battleground.editor;
 
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
-import me.nologic.minespades.battleground.editor.SaveVolumeTask;
+import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;

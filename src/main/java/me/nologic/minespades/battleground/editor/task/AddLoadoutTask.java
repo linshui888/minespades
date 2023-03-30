@@ -1,4 +1,4 @@
-package me.nologic.minespades.battleground.editor;
+package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -28,8 +28,9 @@ public class AddLoadoutTask extends BaseEditorTask implements Callable<Boolean> 
 
         PreparedStatement statement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
         if (loadouts == null) {
-            statement.setString(1, jsonifyInventory(name, player.getInventory()));
-        } else statement.setString(1, loadouts + "\n" + jsonifyInventory(name, player.getInventory()));
+            /* Если loadouts == null, то вместо конкатенации строки со старым значением, мы перезаписываем её. */
+            statement.setString(1, jsonifyPlayerInventory(name, player.getInventory()));
+        } else statement.setString(1, loadouts + "\n" + jsonifyPlayerInventory(name, player.getInventory()));
         statement.setString(2, plugin.getBattlegrounder().getEditor().getTargetTeam(player));
         statement.executeUpdate();
         connection.close();
@@ -40,9 +41,9 @@ public class AddLoadoutTask extends BaseEditorTask implements Callable<Boolean> 
     }
 
     @SneakyThrows
-    public String jsonifyInventory(String name, PlayerInventory inventory) {
+    public String jsonifyPlayerInventory(String loadoutName, PlayerInventory inventory) {
         JsonObject obj = new JsonObject();
-        obj.addProperty("name", name);
+        obj.addProperty("name", loadoutName);
         obj.addProperty("type", inventory.getType().name());
         obj.addProperty("size", inventory.getSize());
 
@@ -52,7 +53,7 @@ public class AddLoadoutTask extends BaseEditorTask implements Callable<Boolean> 
             if (item != null) {
                 JsonObject jitem = new JsonObject();
                 jitem.addProperty("slot", i);
-                String itemData = itemStackToString(item);
+                String itemData = itemStackToBase64(item);
                 jitem.addProperty("data", itemData);
                 items.add(jitem);
             }
