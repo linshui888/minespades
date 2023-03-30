@@ -1,40 +1,23 @@
 package me.nologic.minespades.battleground;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
-import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
-import org.bukkit.block.Sign;
+import me.nologic.minespades.battleground.editor.SaveVolumeTask;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
-import java.io.ByteArrayOutputStream;
 import java.sql.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.Future;
 
-/**
- * BattlegroundEditor берёт на себя задачу создания новых арен и редактирования существующих.
- * <p> Для удобства пользования BattlegroundEditor и BattlegroundLoader были разделены
- * на два класса. Что эти классы делают — вполне ясно по названию. В редакторе редактируется
- * не сам объект арены, загруженный в JVM, а информация о ней, хранимая в директории плагина.
- * Очевидно, что для применения изменённых настроек, необходима перезагрузка рабочей арены.
- * @see BattlegroundLoader
- */
 public class BattlegroundEditor implements Listener {
 
     private final Minespades plugin;
@@ -117,110 +100,6 @@ public class BattlegroundEditor implements Listener {
         return conn;
     }
 
-    @SneakyThrows
-    public void saveVolume(Player player) {
-        Location[] corners = volumeCorners.get(player);
-        World world = player.getWorld();
-        String battlegroundName = this.battlegroundEditSession.get(player);
-        if (corners[0] == null || corners[1] == null) {
-            player.sendMessage("§4Необходимо указать два угла кубоида.");
-            return;
-        }
-
-        final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
-
-        int i = 0;
-        long startTime = System.currentTimeMillis();
-        Connection connection = this.connect(battlegroundName);
-
-        // Сохранение углов
-        PreparedStatement saveCorners = connection.prepareStatement(Table.CORNERS.getInsertStatement());
-        saveCorners.setInt(1, minX);
-        saveCorners.setInt(2, minY);
-        saveCorners.setInt(3, minZ);
-        saveCorners.setInt(4, maxX);
-        saveCorners.setInt(5, maxY);
-        saveCorners.setInt(6, maxZ);
-        saveCorners.executeUpdate();
-
-        PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
-        connection.setAutoCommit(false);
-
-        // Сохранение блоков
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    bSt.setInt(1, x);
-                    bSt.setInt(2, y);
-                    bSt.setInt(3, z);
-
-                    Block block = world.getBlockAt(x, y, z);
-
-                    if (block.getType().isAir()) continue;
-
-                    bSt.setString(4, block.getType().toString());
-                    bSt.setString(5, block.getBlockData().getAsString());
-
-                    bSt.setString(6, null);
-                    bSt.addBatch();
-
-                    if (++i % 5000 == 0) {
-                        bSt.executeBatch();
-                    }
-                }
-            }
-        }
-
-        bSt.executeBatch();
-        connection.commit();
-
-        // Сохранение тайлов
-        Future<List<BlockState>> future = Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> {
-            List<BlockState> tiles = new ArrayList<>();
-
-            for (int x = minX; x <= maxX; x++) {
-                for (int y = minY; y <= maxY; y++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        Block block = world.getBlockAt(x, y, z);
-                        if (block.getType().isAir()) continue;
-                        if (block.getState() instanceof Container || block.getState() instanceof Sign) {
-                            tiles.add(block.getState());
-                        }
-                    }
-                }
-            }
-
-            return tiles;
-        });
-
-        // Добавление в датабазу
-        PreparedStatement tSt = connection.prepareStatement("UPDATE volume SET content = ? WHERE x = ? AND y = ? AND z = ?;");
-        for (BlockState state : future.get()) {
-            if (state instanceof Container container) {
-                tSt.setString(1, this.save(container.getInventory()));
-                tSt.setInt(2, container.getX());
-                tSt.setInt(3, container.getY());
-                tSt.setInt(4, container.getZ());
-                tSt.addBatch();
-            } else if (state instanceof Sign sign) {
-                tSt.setString(1, this.save(sign));
-                tSt.setInt(2, sign.getX());
-                tSt.setInt(3, sign.getY());
-                tSt.setInt(4, sign.getZ());
-                tSt.addBatch();
-            }
-
-        }
-
-        tSt.executeBatch();
-        connection.commit();
-        connection.close();
-        long totalTime = System.currentTimeMillis() - startTime;
-        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§53%dб.§8, §3%dс.§8)", i, totalTime / 1000));
-        this.volumeCorners.remove(player);
-    }
-
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (volumeCorners.containsKey(event.getPlayer())) {
@@ -239,8 +118,12 @@ public class BattlegroundEditor implements Listener {
     }
 
     private final HashMap<Player, String> battlegroundEditSession;
-    public void setBattlegroundEditor(Player player, String battlegroundName) {
+    public void setTargetBattleground(Player player, String battlegroundName) {
         this.battlegroundEditSession.put(player, battlegroundName);
+    }
+
+    public String getTargetBattleground(Player player) {
+        return battlegroundEditSession.get(player);
     }
 
     private final HashMap<Player, Location[]> volumeCorners;
@@ -264,87 +147,25 @@ public class BattlegroundEditor implements Listener {
     public void setTargetTeam(Player player, String teamName) {
         this.teamEditSession.put(player, teamName);
     }
+    public String getTargetTeam(Player player) {
+        return teamEditSession.get(player);
+    }
 
     public boolean isTeamSelected(Player player) {
         return teamEditSession.containsKey(player) && teamEditSession.get(player) != null;
     }
 
     @SneakyThrows
-    public void addLoadout(Player player, String name) {
-        Connection connection = this.connect(battlegroundEditSession.get(player));
-        Statement stmt = connection.createStatement();
-        String loadouts = stmt.executeQuery("SELECT loadouts FROM teams;").getString("loadouts");
-
-        PreparedStatement statement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
-        if (loadouts == null) {
-            statement.setString(1, prepareLoadout(name, player.getInventory()));
-        } else statement.setString(1, loadouts + "\n" + prepareLoadout(name, player.getInventory()));
-        statement.setString(2, this.teamEditSession.get(player));
-        statement.executeUpdate();
-        connection.close();
-
-        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage(String.format("§7[§5%s§7] Добавлено обмундирование: §6%s", this.teamEditSession.get(player), name));
-    }
-
-    @SneakyThrows
-    public String prepareLoadout(String name, PlayerInventory inventory) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("name", name);
-        obj.addProperty("type", inventory.getType().name());
-        obj.addProperty("size", inventory.getSize());
-
-        JsonArray items = new JsonArray();
-        for (int i = 0; i < inventory.getSize(); i++) {
-            ItemStack item = inventory.getItem(i);
-            if (item != null) {
-                JsonObject jitem = new JsonObject();
-                jitem.addProperty("slot", i);
-                String itemData = itemStackToString(item);
-                jitem.addProperty("data", itemData);
-                items.add(jitem);
-            }
+    public void saveVolume(Player player) {
+        SaveVolumeTask task = new SaveVolumeTask(plugin, player, this.battlegroundEditSession.get(player), this.volumeCorners.get(player));
+        Future<Boolean> result = plugin.getServer().getScheduler().callSyncMethod(plugin, task);
+        if (result.get()) {
+            this.volumeCorners.remove(player);
         }
-        obj.add("items", items);
-        return obj.toString();
     }
 
-    @SneakyThrows
-    private String save(Inventory inventory) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("type", inventory.getType().name());
-        obj.addProperty("size", inventory.getSize());
+    public void addLoadout(Player player, String loadoutName) {
 
-        JsonArray items = new JsonArray();
-        for (int i = 0; i < inventory.getSize(); i++) {
-            ItemStack item = inventory.getItem(i);
-            if (item != null) {
-                JsonObject jitem = new JsonObject();
-                jitem.addProperty("slot", i);
-                String itemData = itemStackToString(item);
-                jitem.addProperty("data", itemData);
-                items.add(jitem);
-            }
-        }
-        obj.add("items", items);
-        return obj.toString();
-    }
-
-    private String save(Sign sign) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("content", StringUtils.join(sign.getLines(), "\n"));
-        obj.addProperty("glow", sign.isGlowingText());
-        obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
-        return obj.toString();
-    }
-
-    @SneakyThrows
-    public String itemStackToString(ItemStack item) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
-        dataOutput.writeObject(item);
-        dataOutput.close();
-        return Base64Coder.encodeLines(outputStream.toByteArray());
     }
 
 }

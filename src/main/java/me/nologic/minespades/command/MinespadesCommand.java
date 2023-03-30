@@ -77,7 +77,7 @@ public class MinespadesCommand extends BaseCommand {
         public void onEditBattleground(Player player, String name) {
             name = name.toLowerCase();
             if (battlegrounder.isBattlegroundExist(name)) {
-                battlegrounder.getEditor().setBattlegroundEditor(player, name);
+                battlegrounder.getEditor().setTargetBattleground(player, name);
                 player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", name)).color(TextColor.color(155, 197, 90)));
             } else player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
         }
