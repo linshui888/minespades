@@ -16,13 +16,12 @@ import java.sql.Statement;
 @RequiredArgsConstructor
 public abstract class BaseEditorTask {
 
-    protected final Minespades plugin;
+    protected final Minespades plugin = Minespades.getPlugin(Minespades.class);
     protected final Player     player;
-    protected final String     name;
 
     @SneakyThrows
     protected final Connection connect() {
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + name + ".db");
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + plugin.getBattlegrounder().getEditor().getTargetBattleground(player) + ".db");
         Statement statement = connection.createStatement();
         statement.execute("PRAGMA journal_mode=OFF");
         statement.execute("PRAGMA synchronous=OFF");

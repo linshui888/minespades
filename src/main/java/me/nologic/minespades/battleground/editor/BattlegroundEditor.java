@@ -3,6 +3,7 @@ package me.nologic.minespades.battleground.editor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.editor.task.SaveLoadoutTask;
 import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -118,13 +119,13 @@ public class BattlegroundEditor implements Listener {
         }
     }
 
+    public void addLoadout(Player player, String name) {
+        plugin.getServer().getScheduler().runTask(plugin, new SaveLoadoutTask(player, name));
+    }
+
     private final HashMap<Player, String> battlegroundEditSession;
     public void setTargetBattleground(Player player, String battlegroundName) {
         this.battlegroundEditSession.put(player, battlegroundName);
-    }
-
-    public String getTargetBattleground(Player player) {
-        return battlegroundEditSession.get(player);
     }
 
     private final HashMap<Player, Location[]> volumeCorners;
@@ -158,15 +159,14 @@ public class BattlegroundEditor implements Listener {
 
     @SneakyThrows
     public void saveVolume(Player player) {
-        SaveVolumeTask task = new SaveVolumeTask(plugin, player, this.battlegroundEditSession.get(player), this.volumeCorners.get(player));
+        SaveVolumeTask task = new SaveVolumeTask(player, this.volumeCorners.get(player));
         Future<Boolean> result = plugin.getServer().getScheduler().callSyncMethod(plugin, task);
         if (result.get()) {
             this.volumeCorners.remove(player);
         }
     }
 
-    public void addLoadout(Player player, String loadoutName) {
-
+    public String getTargetBattleground(Player player) {
+        return this.battlegroundEditSession.get(player);
     }
-
 }

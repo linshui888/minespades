@@ -3,7 +3,6 @@ package me.nologic.minespades.battleground.editor.task;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
-import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
@@ -30,8 +29,8 @@ public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> 
 
     private final Location[] corners;
 
-    public SaveVolumeTask(Minespades plugin, Player player, String name, Location[] corners) {
-        super(plugin, player, name);
+    public SaveVolumeTask(Player player, Location[] corners) {
+        super(player);
         this.corners = corners;
     }
 
