@@ -22,10 +22,9 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> {
+public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     private final Location[] corners;
 
@@ -35,11 +34,11 @@ public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> 
     }
 
     @SneakyThrows
-    public Boolean call() {
+    public void run() {
 
         if (corners[0] == null || corners[1] == null) {
             player.sendMessage("§4Необходимо указать два угла кубоида.");
-            return false;
+            return;
         }
 
         final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
@@ -134,7 +133,6 @@ public class SaveVolumeTask extends BaseEditorTask implements Callable<Boolean> 
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§33%dб.§8, §3%dс.§8)", i, totalTime / 1000));
-        return true;
     }
 
     @SneakyThrows

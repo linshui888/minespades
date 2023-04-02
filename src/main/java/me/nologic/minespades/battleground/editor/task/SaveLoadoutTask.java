@@ -34,15 +34,18 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
         Connection connection = this.connect();
         Statement stmt = connection.createStatement();
         String loadouts = stmt.executeQuery("SELECT loadouts FROM teams;").getString("loadouts");
+        stmt.close();
 
-        PreparedStatement statement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
+        PreparedStatement uLSTMT = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
         if (loadouts == null) {
             /* Если loadouts == null, то вместо конкатенации строки со старым значением, мы перезаписываем нулик. */
-            statement.setString(1, inventoryToJSONString(addedLoadoutName, player.getInventory()));
-        } else statement.setString(1, loadouts + "\n" + inventoryToJSONString(addedLoadoutName, player.getInventory()));
-        statement.setString(2, plugin.getBattlegrounder().getEditor().getTargetTeam(player));
-        statement.executeUpdate();
+            uLSTMT.setString(1, inventoryToJSONString(addedLoadoutName, player.getInventory()));
+        } else uLSTMT.setString(1, loadouts + "\n" + inventoryToJSONString(addedLoadoutName, player.getInventory()));
+        uLSTMT.setString(2, plugin.getBattlegrounder().getEditor().getTargetTeam(player));
+        uLSTMT.executeUpdate();
+        uLSTMT.close();
 
+        // TODO: в другой метод это говно (а ещё лучше класс)
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         ResultSet data = connection.createStatement().executeQuery("SELECT * FROM teams;");
         while (data.next()) {

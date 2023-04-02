@@ -45,6 +45,16 @@ public class MinespadesCommand extends BaseCommand {
 
     }
 
+    @Subcommand("delete")
+    public class Delete extends BaseCommand {
+
+        @Subcommand("loadout")
+        public void onDeleteLoadout(Player player, String loadoutName) {
+            battlegrounder.getEditor().removeLoadout(player, loadoutName);
+        }
+
+    }
+
     @Subcommand("list")
     public class List extends BaseCommand {
 
@@ -97,7 +107,7 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("save")
     public void onSave(Player player) {
         player.sendMessage("§7Сохранение карты займёт какое-то время.");
-        new Thread(() -> battlegrounder.getEditor().saveVolume(player)).start();
+        battlegrounder.getEditor().saveVolume(player);
     }
 
     @Subcommand("join")

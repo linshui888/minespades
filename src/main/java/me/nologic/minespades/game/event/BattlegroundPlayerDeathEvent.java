@@ -19,6 +19,15 @@ public class BattlegroundPlayerDeathEvent extends Event {
     private final boolean      keepInventory;
     private final RespawnMethod respawnMethod;
 
+    public BattlegroundPlayerDeathEvent(Battleground battleground, Player player, Team team, boolean keepInventory, RespawnMethod respawnMethod) {
+        this.battleground = battleground;
+        this.player = player;
+        this.killer = null;
+        this.team = team;
+        this.keepInventory = keepInventory;
+        this.respawnMethod = respawnMethod;
+    }
+
     public enum RespawnMethod {
         NORMAL, AOS, QUICK;
     }

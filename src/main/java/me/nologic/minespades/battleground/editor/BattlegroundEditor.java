@@ -3,6 +3,7 @@ package me.nologic.minespades.battleground.editor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.editor.task.RemoveLoadoutTask;
 import me.nologic.minespades.battleground.editor.task.SaveLoadoutTask;
 import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
 import org.bukkit.Location;
@@ -67,7 +68,6 @@ public class BattlegroundEditor implements Listener {
             player.sendMessage("§7Кроме того, рекомендуется указать базовое обмундирование с помощью §6/ms add loadout");
 
             this.setTargetTeam(player, teamName);
-
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -123,6 +123,10 @@ public class BattlegroundEditor implements Listener {
         plugin.getServer().getScheduler().runTask(plugin, new SaveLoadoutTask(player, name));
     }
 
+    public void removeLoadout(Player player, String name) {
+        plugin.getServer().getScheduler().runTask(plugin, new RemoveLoadoutTask(player, name));
+    }
+
     private final HashMap<Player, String> battlegroundEditSession;
     public void setTargetBattleground(Player player, String battlegroundName) {
         this.battlegroundEditSession.put(player, battlegroundName);
@@ -159,11 +163,7 @@ public class BattlegroundEditor implements Listener {
 
     @SneakyThrows
     public void saveVolume(Player player) {
-        SaveVolumeTask task = new SaveVolumeTask(player, this.volumeCorners.get(player));
-        Future<Boolean> result = plugin.getServer().getScheduler().callSyncMethod(plugin, task);
-        if (result.get()) {
-            this.volumeCorners.remove(player);
-        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new SaveVolumeTask(player, this.volumeCorners.get(player)));
     }
 
     public String getTargetBattleground(Player player) {
