@@ -13,7 +13,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,7 @@ public class EventDrivenGameMaster implements Listener {
     @EventHandler
     private void onPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
         Battleground battleground = event.getBattleground();
-        if (battleground.isConnectable()) {
+        if (battleground.isLaunched()) {
             BattlegroundPlayer player = battleground.join(event.getPlayer());
             player.setRandomLoadout();
             this.playersInGame.add(player);
@@ -36,50 +35,61 @@ public class EventDrivenGameMaster implements Listener {
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
 
         TextComponent textComponent;
+        Player player = event.getPlayer();
 
         if (event.getKiller() != null) {
             textComponent = Component.text(" > ")
                     .color(TextColor.color(0xCACAD9))
-                    .append(event.getPlayer().name().color(TextColor.color(0xA7B85E)))
+                    .append(player.name().color(TextColor.fromHexString("#" + event.getTeam().getColor())))
                     .append(Component.text(" был убит "))
-                    .append(event.getKiller().name().color(TextColor.color(0xB97A5A)))
+                    .append(event.getKiller().getPlayer().name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor())))
                     .append(Component.text("!"));
         } else {
             textComponent = Component.text(" > ")
                     .color(TextColor.color(0xCACAD9))
-                    .append(event.getPlayer().name().color(TextColor.color(0xA7B85E)))
+                    .append(player.name().color(TextColor.fromHexString("#" + event.getTeam().getColor())))
                     .append(Component.text(" умер.."));
         }
 
-        event.getBattleground().broadcast(textComponent);
         switch (event.getRespawnMethod()) {
-            case QUICK -> event.getPlayer().teleport(event.getTeam().getRandomRespawnLocation());
-            case AOS -> event.getPlayer().sendMessage("не реализовано...");
-            case NORMAL -> event.getPlayer().sendMessage("lol ok");
+            case QUICK -> player.teleport(event.getTeam().getRandomRespawnLocation());
+            case AOS -> player.sendMessage("не реализовано...");
+            case NORMAL -> player.sendMessage("lol ok");
         }
+
+        event.getBattleground().broadcast(textComponent);
+        player.setNoDamageTicks(20);
+        player.setFireTicks(0);
+        player.setHealth(20);
+        player.setFoodLevel(20);
+        player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+        event.getVictim().setRandomLoadout();
     }
 
     @EventHandler
-    private void onPlayerTakesDeadlyDamageFromOtherPlayer(EntityDamageByEntityEvent event) {
+    private void whenPlayerKillPlayer(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player killer) {
             for (BattlegroundPlayer p : playersInGame) {
                 if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
                     event.setCancelled(true);
-                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), killer, p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), killer, true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
                 }
             }
         }
     }
 
     @EventHandler
-    private void onPlayerTakesDeadlyDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player player && event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-            for (BattlegroundPlayer p : playersInGame) {
-                if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
-                    event.setCancelled(true);
-                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+    private void whenPlayerShouldDie(EntityDamageEvent event) {
+        if (event.isCancelled()) return;
+        if (event.getEntity() instanceof Player player) {
+            if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK)
+                for (BattlegroundPlayer p : playersInGame) {
+                    if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
+                        event.setCancelled(true);
+                        Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getBattleground(), p.getPlayer(), p.getTeam(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
+                    }
                 }
-            }
         }
     }
 

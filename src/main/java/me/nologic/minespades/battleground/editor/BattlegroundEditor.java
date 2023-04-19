@@ -169,4 +169,13 @@ public class BattlegroundEditor implements Listener {
     public String getTargetBattleground(Player player) {
         return this.battlegroundEditSession.get(player);
     }
+
+    @SneakyThrows
+    public void setTeamColor(Player player, String hexColor) {
+        Connection connection = this.connect(getTargetBattleground(player));
+        PreparedStatement statement = connection.prepareStatement("UPDATE teams SET color = ? WHERE name = ?;");
+        statement.setString(1, hexColor);
+        statement.setString(2, getTargetTeam(player));
+        statement.executeUpdate();
+    }
 }

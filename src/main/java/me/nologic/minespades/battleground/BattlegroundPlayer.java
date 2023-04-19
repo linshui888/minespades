@@ -3,7 +3,7 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import me.nologic.minespades.Minespades;
+
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
@@ -18,4 +18,5 @@ public class BattlegroundPlayer {
     public void setRandomLoadout() {
         player.getInventory().setContents(team.getLoadouts().get((int) (Math.random() * team.getLoadouts().size())).getContents());
     }
+
 }

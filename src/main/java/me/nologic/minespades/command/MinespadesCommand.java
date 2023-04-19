@@ -3,6 +3,7 @@ package me.nologic.minespades.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.BattlegroundManager;
@@ -16,6 +17,7 @@ import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
 @CommandAlias("minespades|ms")
+@CommandPermission("minespades.tester")
 public class MinespadesCommand extends BaseCommand {
 
     private final BattlegroundManager battlegrounder;
@@ -102,6 +104,11 @@ public class MinespadesCommand extends BaseCommand {
             battlegrounder.getEditor().setTargetTeam(player, teamName);
         }
 
+        @Subcommand("color")
+        public void onEditColor(Player player, String hexColor) {
+            battlegrounder.getEditor().setTeamColor(player, hexColor);
+        }
+
     }
 
     @Subcommand("save")
@@ -116,6 +123,7 @@ public class MinespadesCommand extends BaseCommand {
         try {
             name = name.toLowerCase();
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
+            if (battleground.havePlayer(player)) return;
             Team team = battleground.getSmallestTeam();
             Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
         } catch (NullPointerException ex) {

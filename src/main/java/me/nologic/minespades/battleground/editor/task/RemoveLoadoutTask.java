@@ -31,7 +31,14 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
         String loadouts = result.getString("loadouts"); // Получаем мульти-строку, которую нужно сплитнуть
         StringBuilder reformed = new StringBuilder();
         int i = 0; for (String loadout : loadouts.split("\n")) {
-            String loadoutName = JsonParser.parseString(loadout).getAsJsonObject().get("name").getAsString();
+            String loadoutName;
+
+            try {
+                loadoutName = JsonParser.parseString(loadout).getAsJsonObject().get("name").getAsString();
+            } catch (IllegalStateException ex) {
+                continue;
+            }
+
             if (!Objects.equals(targetLoadoutName, loadoutName)) {
                 if (i == 0) {
                     reformed.append(loadout);

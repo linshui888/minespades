@@ -1,36 +1,42 @@
 package me.nologic.minespades.battleground;
 
-import net.kyori.adventure.text.Component;
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
-/**
- * Battleground содержит все необходимые методы для управления процессом игры и игроками.
- * <p> Чтобы игроки могли подключаться к арене, она должна быть запущена и проверена на минимальные
- * требования: как минимум две команды с установленными респавн-поинтами, инициализированные настройки,
- * загруженный мир, метод isLaunched должен возвращать true.
- * */
+@Getter
 public final class Battleground {
 
+    private final String battlegroundName;
+    private final boolean launched = false;
+    private @Setter World world;
+
+    private final Set<Player> players;
     private final List<Team> teams;
+
+    // TODO: Возможно стоит перенести параметры арены в отдельный класс?
     private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, skipDeathScreen, colorfulEnding, airStrike;
 
     public Battleground(String battlegroundName) {
-        this.name = battlegroundName;
+        this.battlegroundName = battlegroundName;
+        this.players = new HashSet<>();
         this.teams = new ArrayList<>();
     }
 
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
     public BattlegroundPlayer join(Player player) {
-        return this.getSmallestTeam().join(player);
+        if (!players.contains(player)) {
+            players.add(player);
+            return this.getSmallestTeam().join(player);
+        }
+        return null;
     }
 
-    public void quit(Player player) {
+    public void kick(Player player) {
 
     }
 
@@ -38,47 +44,24 @@ public final class Battleground {
         this.teams.add(team);
     }
 
-    public boolean isLaunchable() {
+    // Валидация арены. Если арена невалидна, то к ней нельзя подключиться.
+    public boolean isValid() {
         return teams.size() >= 2;
-    }
-    public boolean isConnectable() {
-        return launched;
     }
 
     public Team getSmallestTeam() {
         return teams.stream().min(Comparator.comparingInt(Team::size)).orElse(null);
     }
 
-    // TODO: отправку сообщений логично будет разметить и разграничить внутри этого класса, а не в местах вызова
+    // TODO: отправку сообщений логично будет разметить и разграничить (what?) внутри этого класса, а не в местах вызова
     public void broadcast(TextComponent message) {
         for (Team team : teams) {
             team.getPlayers().forEach(p -> p.sendMessage(message));
         }
     }
 
-    /* Fields. */
-
-    private boolean launched = false;
-    public void setLaunched(boolean launched) {
-        this.launched = launched;
-    }
-
-    private World world;
-    public void setWorld(World world) {
-        this.world = world;
-    }
-    public World getWorld() {
-        return this.world;
-    }
-
-    private final String name;
-    public String getBattlegroundName() {
-        return this.name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
+    public boolean havePlayer(Player player) {
+        return players.contains(player);
     }
 
 }

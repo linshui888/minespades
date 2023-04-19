@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
@@ -55,7 +56,10 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
                 Team team = new Team(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(inv -> team.addLoadout(readInventory(inv)));
+                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(inv -> {
+                    Inventory inventory = readInventory(inv);
+                    if (inventory != null) team.addLoadout(inventory);
+                });
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);
             }
@@ -143,7 +147,13 @@ public class BattlegroundLoader {
     }
 
     private Inventory readInventory(String string) {
-        JsonObject obj = JsonParser.parseString(string).getAsJsonObject();
+        JsonObject obj;
+
+        try {
+            obj = JsonParser.parseString(string).getAsJsonObject();
+        } catch (IllegalStateException ex) {
+            return null;
+        }
 
         Inventory inv = Bukkit.createInventory(null, InventoryType.valueOf(obj.get("type").getAsString()));
 

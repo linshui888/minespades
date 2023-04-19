@@ -31,39 +31,55 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
     @Override
     @SneakyThrows
     public void run() {
-        Connection connection = this.connect();
-        Statement stmt = connection.createStatement();
-        String loadouts = stmt.executeQuery("SELECT loadouts FROM teams;").getString("loadouts");
-        stmt.close();
+        try (Connection connection = this.connect()) {
+            PreparedStatement loadoutStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;"); // TODO: нужен селектор команды, добавь WHERE
 
-        PreparedStatement uLSTMT = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
-        if (loadouts == null) {
-            /* Если loadouts == null, то вместо конкатенации строки со старым значением, мы перезаписываем нулик. */
-            uLSTMT.setString(1, inventoryToJSONString(addedLoadoutName, player.getInventory()));
-        } else uLSTMT.setString(1, loadouts + "\n" + inventoryToJSONString(addedLoadoutName, player.getInventory()));
-        uLSTMT.setString(2, plugin.getBattlegrounder().getEditor().getTargetTeam(player));
-        uLSTMT.executeUpdate();
-        uLSTMT.close();
+            String targetTeamName = plugin.getBattlegrounder().getEditor().getTargetTeam(player);
+            loadoutStatement.setString(1, targetTeamName);
+            ResultSet r = loadoutStatement.executeQuery(); r.next();
+            String loadouts = r.getString("loadouts");
+            loadoutStatement.close();
 
-        // TODO: в другой метод это говно (а ещё лучше класс)
-        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        ResultSet data = connection.createStatement().executeQuery("SELECT * FROM teams;");
-        while (data.next()) {
-            player.sendMessage(Component.text("\n" + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
-            for (String loadoutJSON : data.getString("loadouts").split("\n")) {
-                String loadoutName = JsonParser.parseString(loadoutJSON).getAsJsonObject().get("name").getAsString();
-                player.sendMessage(
-                    Component.text(" - " + loadoutName, TextColor.color(172, 127, 67))
-                            .append(Component.text(" [x]")
-                                    .color(TextColor.color(187, 166, 96))
-                                    .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы удалить " + loadoutName).color(TextColor.color(193, 186, 80))))
-                                    .clickEvent(ClickEvent.runCommand("/ms delete loadout " + loadoutName))
-                            )
-                );
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
+            if (loadouts == null) {
+                /* Если loadouts == null, то вместо конкатенации строки со старым значением, мы перезаписываем нулик. */
+                updateStatement.setString(1, inventoryToJSONString(addedLoadoutName, player.getInventory()));
+            } else updateStatement.setString(1, loadouts + "\n" + inventoryToJSONString(addedLoadoutName, player.getInventory()));
+            updateStatement.setString(2, targetTeamName);
+            updateStatement.executeUpdate();
+            updateStatement.close();
+
+            // TODO: в другой метод это говно (а ещё лучше класс)
+            // Лист лоадаутов с удобной кнопкой удаления. Да, надо убрать его в отдельный метод.
+            player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1F, 1.4F);
+            PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
+            listStatement.setString(1, targetTeamName);
+            ResultSet data = listStatement.executeQuery();
+            while (data.next()) {
+                player.sendMessage(Component.text("\nНаборы " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
+                for (String loadoutJSON : data.getString("loadouts").split("\n")) {
+                    String loadoutName;
+
+                    try {
+                        loadoutName = JsonParser.parseString(loadoutJSON).getAsJsonObject().get("name").getAsString();
+                    } catch (IllegalStateException ex) {
+                        continue;
+                    }
+
+                    player.sendMessage(
+                            Component.text(" - " + loadoutName, TextColor.color(172, 127, 67))
+                                    .append(Component.text(" [x]")
+                                            .color(TextColor.color(187, 166, 96))
+                                            .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы удалить " + loadoutName).color(TextColor.color(193, 186, 80))))
+                                            .clickEvent(ClickEvent.runCommand("/ms delete loadout " + loadoutName))
+                                    )
+                    );
+                }
             }
+            data.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        data.close();
-        connection.close();
     }
 
     @SneakyThrows
