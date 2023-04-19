@@ -5,6 +5,7 @@ import lombok.Setter;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -28,12 +29,9 @@ public final class Battleground {
     }
 
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
-    public BattlegroundPlayer join(Player player) {
-        if (!players.contains(player)) {
-            players.add(player);
-            return this.getSmallestTeam().join(player);
-        }
-        return null;
+    public BattlegroundPlayer connect(Player player) {
+        players.add(player);
+        return this.getSmallestTeam().join(player);
     }
 
     public void kick(Player player) {

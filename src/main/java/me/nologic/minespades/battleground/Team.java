@@ -37,7 +37,7 @@ public class Team {
         this.loadouts.add(loadout);
     }
 
-    private Location getRandomRespawnLocation() {
+    public Location getRandomRespawnLocation() {
         return respawnLocations.get((int) (Math.random() * respawnLocations.size()));
     }
 
