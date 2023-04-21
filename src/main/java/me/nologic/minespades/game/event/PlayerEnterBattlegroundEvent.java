@@ -3,7 +3,7 @@ package me.nologic.minespades.game.event;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.battleground.Battleground;
-import me.nologic.minespades.battleground.Team;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class PlayerEnterBattlegroundEvent extends Event {
 
     private final Battleground battleground;
-    private final Team         team;
+    private final BattlegroundTeam team;
     private final Player       player;
 
     /* Nothing to see here. */

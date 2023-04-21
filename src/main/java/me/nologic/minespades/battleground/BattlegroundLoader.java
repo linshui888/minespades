@@ -17,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
@@ -50,12 +49,12 @@ public class BattlegroundLoader {
         return battleground;
     }
 
-    private List<Team> loadTeams() {
-        List<Team> list = new ArrayList<>();
+    private List<BattlegroundTeam> loadTeams() {
+        List<BattlegroundTeam> list = new ArrayList<>();
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
-                Team team = new Team(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
+                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
                 Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(inv -> {
                     Inventory inventory = readInventory(inv);
                     if (inventory != null) team.addLoadout(inventory);

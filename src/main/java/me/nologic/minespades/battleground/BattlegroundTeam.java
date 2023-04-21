@@ -1,27 +1,28 @@
 package me.nologic.minespades.battleground;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 
 @Getter
-public class Team {
+public class BattlegroundTeam {
 
     private final Battleground battleground;
+    private @Setter Team bukkitTeam;
 
     private final String       name, color;
     private final int          lifepool;
-    private final Set<Player>  players;
 
     private final List<Location> respawnLocations;
     private final List<Inventory> loadouts;
 
-    public Team(Battleground battleground, String name, int lifepool, String hexColor) {
+    public BattlegroundTeam(Battleground battleground, String name, int lifepool, String hexColor) {
         this.battleground = battleground;
-        this.players = new HashSet<>();
         this.loadouts = new ArrayList<>();
         this.respawnLocations = new ArrayList<>();
         this.name = name;
@@ -42,17 +43,19 @@ public class Team {
     }
 
     public BattlegroundPlayer join(Player player) {
-        this.players.add(player);
+        this.bukkitTeam.addPlayer(player);
+        BattlegroundPlayer bgPlayer = new BattlegroundPlayer(battleground, this, player);
         player.teleport(this.getRandomRespawnLocation());
-        return new BattlegroundPlayer(battleground, this, player);
+        bgPlayer.setRandomLoadout();
+        return bgPlayer;
     }
 
     public void kick(Player player) {
-        this.players.remove(player);
+        this.bukkitTeam.removePlayer(player);
     }
 
     public int size() {
-        return players.size();
+        return bukkitTeam.getSize();
     }
 
 }

@@ -42,11 +42,10 @@ public class BattlegroundManager {
     public void enable(String name) {
         Battleground battleground = loader.load(name);
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        battleground.setLaunched(true);
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_7, 1F, 1F));
-        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(143, 163, 229)));
-        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(143, 163, 229))
-                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(228, 216, 0)).decorate(TextDecoration.UNDERLINED)));
+        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(18, 123, 15)));
+        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(18, 123, 15))
+                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(94, 167, 61)).decorate(TextDecoration.UNDERLINED)));
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);
         plugin.getConfig().set("Battlegrounds", name);

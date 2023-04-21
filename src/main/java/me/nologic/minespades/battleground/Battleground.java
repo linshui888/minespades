@@ -3,21 +3,25 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 
 @Getter
 public final class Battleground {
 
+    private final Scoreboard scoreboard;
+
     private final String battlegroundName;
     private final boolean launched = false;
     private @Setter World world;
 
-    private final Set<Player> players;
-    private final List<Team> teams;
+    private final Set<BattlegroundPlayer> players;
+    private final List<BattlegroundTeam> teams;
 
     // TODO: Возможно стоит перенести параметры арены в отдельный класс?
     private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, skipDeathScreen, colorfulEnding, airStrike;
@@ -26,19 +30,24 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.players = new HashSet<>();
         this.teams = new ArrayList<>();
+        this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
     }
 
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
     public BattlegroundPlayer connect(Player player) {
-        players.add(player);
-        return this.getSmallestTeam().join(player);
+        BattlegroundPlayer bgPlayer = this.getSmallestTeam().join(player);
+        players.add(bgPlayer);
+        return bgPlayer;
     }
 
-    public void kick(Player player) {
-
+    public void kick(BattlegroundPlayer player) {
+        player.getTeam().kick(player.getPlayer());
     }
 
-    public void addTeam(Team team) {
+    public void addTeam(BattlegroundTeam team) {
+        Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
+        bukkitTeam.setAllowFriendlyFire(false);
+        team.setBukkitTeam(bukkitTeam);
         this.teams.add(team);
     }
 
@@ -47,15 +56,13 @@ public final class Battleground {
         return teams.size() >= 2;
     }
 
-    public Team getSmallestTeam() {
-        return teams.stream().min(Comparator.comparingInt(Team::size)).orElse(null);
+    public BattlegroundTeam getSmallestTeam() {
+        return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
     }
 
     // TODO: отправку сообщений логично будет разметить и разграничить (what?) внутри этого класса, а не в местах вызова
     public void broadcast(TextComponent message) {
-        for (Team team : teams) {
-            team.getPlayers().forEach(p -> p.sendMessage(message));
-        }
+        players.forEach(p -> p.getPlayer().sendMessage(message));
     }
 
     public boolean havePlayer(Player player) {

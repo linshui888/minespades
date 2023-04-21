@@ -1,10 +1,9 @@
 package me.nologic.minespades.game.event;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
-import me.nologic.minespades.battleground.Team;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -15,7 +14,7 @@ public class BattlegroundPlayerDeathEvent extends Event {
 
     private final Battleground battleground;
     private final Player       player;
-    private final Team         team;
+    private final BattlegroundTeam team;
 
     private BattlegroundPlayer victim, killer;
 
@@ -34,7 +33,7 @@ public class BattlegroundPlayerDeathEvent extends Event {
     }
 
     // игрок умер не от другого игрока
-    public BattlegroundPlayerDeathEvent(Battleground battleground, Player player, Team team, boolean b, RespawnMethod quick) {
+    public BattlegroundPlayerDeathEvent(Battleground battleground, Player player, BattlegroundTeam team, boolean b, RespawnMethod quick) {
         this.battleground = battleground;
         this.player = player;
         this.team = team;

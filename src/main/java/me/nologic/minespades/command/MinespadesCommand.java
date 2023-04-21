@@ -7,9 +7,12 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.BattlegroundManager;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
-import me.nologic.minespades.battleground.Team;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
+import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -17,18 +20,20 @@ import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
 @CommandAlias("minespades|ms")
-@CommandPermission("minespades.tester")
+@CommandPermission("minespades.player")
 public class MinespadesCommand extends BaseCommand {
 
     private final BattlegroundManager battlegrounder;
 
     @Subcommand("launch")
     @CommandCompletion("@battlegrounds")
+    @CommandPermission("minespades.editor")
     public void launch(Player player, String name) {
         battlegrounder.enable(name.toLowerCase());
     }
 
     @Subcommand("add")
+    @CommandPermission("minespades.editor")
     public class Add extends BaseCommand {
 
         @Subcommand("respawn")
@@ -48,6 +53,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("delete")
+    @CommandPermission("minespades.editor")
     public class Delete extends BaseCommand {
 
         @Subcommand("loadout")
@@ -63,6 +69,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("create")
+    @CommandPermission("minespades.editor")
     public class Create extends BaseCommand {
 
         @Subcommand("battleground")
@@ -83,6 +90,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("edit")
+    @CommandPermission("minespades.editor")
     public class Edit extends BaseCommand {
 
         @Subcommand("battleground")
@@ -112,6 +120,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("save")
+    @CommandPermission("minespades.editor")
     public void onSave(Player player) {
         player.sendMessage("§7Сохранение карты займёт какое-то время.");
         battlegrounder.getEditor().saveVolume(player);
@@ -124,12 +133,19 @@ public class MinespadesCommand extends BaseCommand {
             name = name.toLowerCase();
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
             if (battleground.havePlayer(player)) return;
-            Team team = battleground.getSmallestTeam();
+            BattlegroundTeam team = battleground.getSmallestTeam();
             Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
         } catch (NullPointerException ex) {
             player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
         }
+    }
 
+    @Subcommand("quit|leave")
+    public void onQuit(Player player) {
+        BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
+        if (bgPlayer != null)
+            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player));
+        else player.sendMessage("§4Бананы из ушей вытащи!");
     }
 
 }
