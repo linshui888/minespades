@@ -47,9 +47,9 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void whenPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
-        playerManager.save(event.getPlayer());
         Battleground battleground = event.getBattleground();
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
+            playerManager.save(event.getPlayer());
             playerManager.getPlayersInGame().add(battleground.connect(event.getPlayer()));
         }
     }
@@ -164,11 +164,13 @@ public class EventDrivenGameMaster implements Listener {
         @SneakyThrows
         private void save(Player player) {
             try (Connection connection = connect()) {
-
                 // Сперва убеждаемся, что в датабазе есть нужная таблица (если нет, то создаём)
                 Statement statement = connection.createStatement();
                 statement.executeUpdate("CREATE TABLE IF NOT EXISTS players (name VARCHAR(32) NOT NULL, world VARCHAR(64) NOT NULL, location TEXT NOT NULL, inventory TEXT NOT NULL, health DOUBLE NOT NULL, hunger INT NOT NULL);");
                 statement.close();
+
+                PreparedStatement deleteOldValue = connection.prepareStatement("DELETE FROM players WHERE name = ?;");
+                deleteOldValue.setString(1, player.getName());
 
                 // После создаём PreparedStatement
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO players (name, world, location, inventory, health, hunger) VALUES (?,?,?,?,?,?);");
@@ -186,7 +188,6 @@ public class EventDrivenGameMaster implements Listener {
                 preparedStatement.executeUpdate();
 
                 Bukkit.getLogger().info(String.format("Инвентарь игрока %s был сохранён.", player.getName()));
-
             }
         }
 
