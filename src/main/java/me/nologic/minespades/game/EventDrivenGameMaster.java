@@ -51,6 +51,8 @@ public class EventDrivenGameMaster implements Listener {
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
             playerManager.getPlayersInGame().add(battleground.connect(event.getPlayer()));
+        } else {
+            event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
     }
 
@@ -58,10 +60,10 @@ public class EventDrivenGameMaster implements Listener {
     private void whenPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
         BattlegroundPlayer battlegroundPlayer = playerManager.getBattlegroundPlayer(event.getPlayer());
         if (battlegroundPlayer != null) {
-            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
+            battlegroundPlayer.getBattleground().kickPlayer(battlegroundPlayer);
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
+            playerManager.load(event.getPlayer());
         }
-        playerManager.load(event.getPlayer());
     }
 
     @EventHandler
@@ -171,6 +173,7 @@ public class EventDrivenGameMaster implements Listener {
 
                 PreparedStatement deleteOldValue = connection.prepareStatement("DELETE FROM players WHERE name = ?;");
                 deleteOldValue.setString(1, player.getName());
+                deleteOldValue.executeUpdate();
 
                 // После создаём PreparedStatement
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO players (name, world, location, inventory, health, hunger) VALUES (?,?,?,?,?,?);");

@@ -46,7 +46,9 @@ public class BattlegroundTeam {
         this.bukkitTeam.addPlayer(player);
         BattlegroundPlayer bgPlayer = new BattlegroundPlayer(battleground, this, player);
         player.teleport(this.getRandomRespawnLocation());
+        player.setHealth(20);
         bgPlayer.setRandomLoadout();
+        player.sendMessage("§eПодключение успешно! Ваша команда: " + bgPlayer.getTeam().name);
         return bgPlayer;
     }
 

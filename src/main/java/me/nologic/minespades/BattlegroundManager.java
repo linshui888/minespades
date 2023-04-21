@@ -39,17 +39,47 @@ public class BattlegroundManager {
         return enabledBattlegrounds.keySet().stream().toList();
     }
 
+    /**
+     * Перезагрузка арены. Восстановит все блоки, удалит всех энтитей (включая предметы и прожектайлы).
+     * Перед использованием рекомендуется убедиться, что на арене нет игроков.
+     * На время перезагрузки арена помечается как отключенная (enabled==false) и из-за этого к ней
+     * нельзя подключиться.
+     * */
+    public void reset(Battleground battleground) {
+        disable(battleground.getBattlegroundName());
+        load(battleground.getBattlegroundName());
+        enable(battleground.getBattlegroundName());
+    }
+
     public void enable(String name) {
-        Battleground battleground = loader.load(name);
+        Battleground battleground = this.load(name);
+        battleground.setEnabled(true);
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_7, 1F, 1F));
-        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(18, 123, 15)));
-        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(18, 123, 15))
-                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(94, 167, 61)).decorate(TextDecoration.UNDERLINED)));
+        this.callToArms(name);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);
         plugin.getConfig().set("Battlegrounds", name);
         plugin.saveConfig();
+    }
+
+    /* Загрузка арены из датабазы. */
+    private Battleground load(String name) {
+        return loader.load(name);
+    }
+
+    private void disable(String name) {
+        this.getBattlegroundByName(name).setEnabled(false);
+    }
+
+    /**
+     * Объявляет в чате о готовности арены, а так же отправляет звук.
+     * */
+    private void callToArms(String name) {
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_7, 1F, 1F));
+        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(172, 127, 67)));
+        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(172, 127, 67))
+                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(187, 151, 60)).decorate(TextDecoration.UNDERLINED)));
+
     }
 
     public boolean isBattlegroundExist(String battlegroundName) {

@@ -17,7 +17,7 @@ public final class Battleground {
     private final Scoreboard scoreboard;
 
     private final String battlegroundName;
-    private final boolean launched = false;
+    private @Setter boolean enabled = false;
     private @Setter World world;
 
     private final Set<BattlegroundPlayer> players;
@@ -35,13 +35,16 @@ public final class Battleground {
 
     // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
     public BattlegroundPlayer connect(Player player) {
+        player.setScoreboard(scoreboard);
         BattlegroundPlayer bgPlayer = this.getSmallestTeam().join(player);
         players.add(bgPlayer);
         return bgPlayer;
     }
 
-    public void kick(BattlegroundPlayer player) {
+    public void kickPlayer(BattlegroundPlayer player) {
+        player.getTeam().getBukkitTeam().removePlayer(player.getPlayer());
         player.getTeam().kick(player.getPlayer());
+        player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
 
     public void addTeam(BattlegroundTeam team) {
@@ -63,10 +66,6 @@ public final class Battleground {
     // TODO: отправку сообщений логично будет разметить и разграничить (what?) внутри этого класса, а не в местах вызова
     public void broadcast(TextComponent message) {
         players.forEach(p -> p.getPlayer().sendMessage(message));
-    }
-
-    public boolean havePlayer(Player player) {
-        return players.contains(player);
     }
 
 }

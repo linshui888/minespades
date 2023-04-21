@@ -132,7 +132,6 @@ public class MinespadesCommand extends BaseCommand {
         try {
             name = name.toLowerCase();
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            if (battleground.havePlayer(player)) return;
             BattlegroundTeam team = battleground.getSmallestTeam();
             Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
         } catch (NullPointerException ex) {
@@ -146,6 +145,20 @@ public class MinespadesCommand extends BaseCommand {
         if (bgPlayer != null)
             Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player));
         else player.sendMessage("§4Бананы из ушей вытащи!");
+    }
+
+    @Subcommand("reset")
+    @CommandCompletion("@battlegrounds")
+    @CommandPermission("minespades.editor")
+    public void onForceReset(Player player, String name) {
+        try {
+            Battleground battleground = battlegrounder.getBattlegroundByName(name);
+            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", name, player.getName())).color(TextColor.color(187, 151, 60)));
+            battleground.getPlayers().forEach(battleground::kickPlayer);
+            battlegrounder.reset(battleground);
+        } catch (NullPointerException ex) {
+            player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
+        }
     }
 
 }
