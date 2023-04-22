@@ -47,7 +47,6 @@ public class BattlegroundManager {
      * */
     public void reset(Battleground battleground) {
         disable(battleground.getBattlegroundName());
-        load(battleground.getBattlegroundName());
         enable(battleground.getBattlegroundName());
     }
 

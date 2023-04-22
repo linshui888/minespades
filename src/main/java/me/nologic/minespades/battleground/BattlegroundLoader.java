@@ -86,15 +86,16 @@ public class BattlegroundLoader {
     private void loadVolume() {
         try (Connection connection = connect()) {
 
+            // BoundingBox для удаления энитей
+            BoundingBox box = null;
+
             // Clear
             Statement clear = connection.createStatement();
             ResultSet corners = clear.executeQuery(Table.CORNERS.getSelectStatement());
             while(corners.next()) {
                 int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
                 Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
-                battleground.getWorld().getNearbyEntities(BoundingBox.of(corner1, corner2)).forEach(e -> {
-                    if (!(e instanceof Player)) e.remove();
-                });
+                box = BoundingBox.of(corner1, corner2);
                 for (int x = minX; x <= maxX; x++) {
                     for (int y = minY; y <= maxY; y++) {
                         for (int z = minZ; z <= maxZ; z++) {
@@ -128,8 +129,14 @@ public class BattlegroundLoader {
                     sign.setColor(DyeColor.valueOf(obj.get("color").getAsString()));
                     sign.update(true, false);
                 }
-
             }
+
+            if (box != null) {
+                battleground.getWorld().getNearbyEntities(box).forEach(e -> {
+                    if (!(e instanceof Player)) e.remove();
+                });
+            }
+            
         } catch (SQLException exception) {
             exception.printStackTrace();
         }

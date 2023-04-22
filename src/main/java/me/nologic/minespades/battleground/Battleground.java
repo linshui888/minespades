@@ -33,7 +33,6 @@ public final class Battleground {
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
     }
 
-    // TODO: сохранение инвентаря игрока перед подключением, обязательно в дб, дабы игроки не проёбывали вещи
     public BattlegroundPlayer connect(Player player) {
         player.setScoreboard(scoreboard);
         BattlegroundPlayer bgPlayer = this.getSmallestTeam().join(player);
@@ -42,7 +41,6 @@ public final class Battleground {
     }
 
     public void kickPlayer(BattlegroundPlayer player) {
-        player.getTeam().getBukkitTeam().removePlayer(player.getPlayer());
         player.getTeam().kick(player.getPlayer());
         player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }

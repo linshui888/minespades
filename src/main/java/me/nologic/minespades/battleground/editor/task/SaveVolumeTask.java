@@ -158,7 +158,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     private String save(Sign sign) {
         JsonObject obj = new JsonObject(); // TODO: sign.lines() or sign.getLines()?
-        obj.addProperty("content", StringUtils.join(sign.lines(), "\n"));
+        obj.addProperty("content", StringUtils.join(sign.getLines(), "\n"));
         obj.addProperty("glow", sign.isGlowingText());
         obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
         return obj.toString();

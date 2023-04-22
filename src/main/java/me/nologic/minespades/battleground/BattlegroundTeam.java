@@ -16,15 +16,17 @@ public class BattlegroundTeam {
     private @Setter Team bukkitTeam;
 
     private final String       name, color;
-    private final int          lifepool;
+    private @Setter int          lifepool;
 
     private final List<Location> respawnLocations;
     private final List<Inventory> loadouts;
+    private final Set<Player> players;
 
     public BattlegroundTeam(Battleground battleground, String name, int lifepool, String hexColor) {
         this.battleground = battleground;
         this.loadouts = new ArrayList<>();
         this.respawnLocations = new ArrayList<>();
+        this.players = new HashSet<>();
         this.name = name;
         this.lifepool = lifepool;
         this.color = hexColor;
@@ -44,6 +46,7 @@ public class BattlegroundTeam {
 
     public BattlegroundPlayer join(Player player) {
         this.bukkitTeam.addPlayer(player);
+        this.players.add(player);
         BattlegroundPlayer bgPlayer = new BattlegroundPlayer(battleground, this, player);
         player.teleport(this.getRandomRespawnLocation());
         player.setHealth(20);
@@ -54,6 +57,7 @@ public class BattlegroundTeam {
 
     public void kick(Player player) {
         this.bukkitTeam.removePlayer(player);
+        this.players.remove(player);
     }
 
     public int size() {

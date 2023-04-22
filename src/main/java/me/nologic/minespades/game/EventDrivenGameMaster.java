@@ -15,8 +15,11 @@ import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -51,6 +54,9 @@ public class EventDrivenGameMaster implements Listener {
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
             playerManager.getPlayersInGame().add(battleground.connect(event.getPlayer()));
+            Component name = event.getPlayer().name().color(TextColor.fromHexString("#" + event.getTeam().getColor()));
+            event.getPlayer().playerListName(name);
+            event.getPlayer().displayName(name);
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
@@ -63,6 +69,24 @@ public class EventDrivenGameMaster implements Listener {
             battlegroundPlayer.getBattleground().kickPlayer(battlegroundPlayer);
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
             playerManager.load(event.getPlayer());
+            event.getPlayer().displayName(event.getPlayer().name().color(NamedTextColor.WHITE));
+            event.getPlayer().playerListName(event.getPlayer().name().color(NamedTextColor.WHITE));
+
+            // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
+            // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
+            // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
+            boolean everyPlayerInTeamIsSpectator = true;
+            for (Player p : event.getTeam().getPlayers()) {
+                if (p.getGameMode() == GameMode.SURVIVAL) {
+                    everyPlayerInTeamIsSpectator = false;
+                    break;
+                }
+            }
+            if (everyPlayerInTeamIsSpectator) {
+                // TODO: team lose event
+                event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(121, 157, 9)).decorate(TextDecoration.BOLD));
+                Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
+            }
         }
     }
 
@@ -75,10 +99,10 @@ public class EventDrivenGameMaster implements Listener {
         // TODO: создать класс Killfeed, который бы отправлял игрокам сообщения об игровых событиях
         if (event.getKiller() != null) {
             textComponent = Component.text(" > ")
-                    .color(TextColor.color(0xCACAD9))
+                    .color(TextColor.color(0xCED4C8))
                     .append(player.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
                     .append(Component.text(" был убит "))
-                    .append(player.name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor())))
+                    .append(event.getKiller().getPlayer().name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor())))
                     .append(Component.text("!"));
         } else {
             textComponent = Component.text(" > ")
@@ -87,19 +111,40 @@ public class EventDrivenGameMaster implements Listener {
                     .append(Component.text(" умер.."));
         }
 
-        switch (event.getRespawnMethod()) {
-            case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
-            case AOS -> player.sendMessage("не реализовано...");
-            case NORMAL -> player.sendMessage("lol ok");
+        // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
+        // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
+        // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
+        int lifepool = event.getVictim().getTeam().getLifepool();
+        if (lifepool >= 1) {
+            event.getVictim().getTeam().setLifepool(lifepool - 1);
+            event.getVictim().setRandomLoadout();
+            switch (event.getRespawnMethod()) {
+                case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
+                case AOS -> player.sendMessage("не реализовано...");
+                case NORMAL -> player.sendMessage("lol ok");
+            }
+            Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
+                event.getBattleground().broadcast(textComponent);
+                player.setNoDamageTicks(40);
+                player.setFireTicks(0);
+                player.setHealth(20);
+                player.setFoodLevel(20);
+                player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+            }, 5L);
+        } else {
+            event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
+            boolean everyPlayerInTeamIsSpectator = true;
+            for (Player p : event.getVictim().getTeam().getPlayers()) {
+                if (p.getGameMode() == GameMode.SURVIVAL) everyPlayerInTeamIsSpectator = false;
+            }
+            if (everyPlayerInTeamIsSpectator) {
+                // TODO: team lose event
+                // Нужно будет написать специальный ивент, но пока просто ресетаем арену, когда у команды закончился лайфпул и все её игроки в спеке.
+                event.getBattleground().broadcast(Component.text("Команда " + event.getVictim().getTeam().getName() + " проиграла.").color(TextColor.color(121, 157, 9)).decorate(TextDecoration.BOLD));
+                Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
+            }
         }
 
-        event.getBattleground().broadcast(textComponent);
-        player.setNoDamageTicks(20);
-        player.setFireTicks(0);
-        player.setHealth(20);
-        player.setFoodLevel(20);
-        player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-        event.getVictim().setRandomLoadout();
     }
 
     @EventHandler
@@ -212,6 +257,7 @@ public class EventDrivenGameMaster implements Listener {
                 player.getInventory().setContents(inventory.getContents());
                 player.setHealth(health);
                 player.setFoodLevel(hunger);
+                player.setGameMode(GameMode.SURVIVAL);
                 player.sendMessage("§7Инвентарь был восстановлен.");
             }
         }

@@ -153,8 +153,8 @@ public class MinespadesCommand extends BaseCommand {
     public void onForceReset(Player player, String name) {
         try {
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", name, player.getName())).color(TextColor.color(187, 151, 60)));
-            battleground.getPlayers().forEach(battleground::kickPlayer);
+            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", name, player.getName())).color(TextColor.color(187, 166, 96)));
+            battleground.getPlayers().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
             battlegrounder.reset(battleground);
         } catch (NullPointerException ex) {
             player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
