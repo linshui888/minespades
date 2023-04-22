@@ -6,8 +6,7 @@ import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
+import org.bukkit.scoreboard.*;
 
 import java.util.*;
 
@@ -40,14 +39,16 @@ public final class Battleground {
         return bgPlayer;
     }
 
-    public void kickPlayer(BattlegroundPlayer player) {
+    public void kick(BattlegroundPlayer player) {
         player.getTeam().kick(player.getPlayer());
         player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        this.players.remove(player);
     }
 
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
+        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OWN_TEAM);
         team.setBukkitTeam(bukkitTeam);
         this.teams.add(team);
     }

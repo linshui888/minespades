@@ -46,6 +46,7 @@ public class BattlegroundManager {
      * нельзя подключиться.
      * */
     public void reset(Battleground battleground) {
+        battleground.getPlayers().forEach(battleground::kick);
         disable(battleground.getBattlegroundName());
         enable(battleground.getBattlegroundName());
     }
