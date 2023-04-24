@@ -36,8 +36,19 @@ public final class Minespades extends JavaPlugin {
     private void enableBattlegrounds() {
         Bukkit.getLogger().info("Minespades пытается автоматически загрузить сохранённые арены.");
         getConfig().getStringList("Battlegrounds").forEach(name -> {
+
+            // FIXME: почини меня, дай мне свежесть
             getLogger().info("Плагин пытается загрузить " + name + "...");
             battlegrounder.enable(name);
+        });
+    }
+
+    @Override
+    public void onDisable() {
+        battlegrounder.getEnabledBattlegrounds().forEach(b -> {
+            battlegrounder.getBattlegroundByName(b).getPlayers().forEach(p -> {
+                p.getBattleground().kick(p);
+            });
         });
     }
 

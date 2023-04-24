@@ -1,6 +1,7 @@
 package me.nologic.minespades;
 
 import me.nologic.minespades.battleground.Battleground;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.BattlegroundLoader;
 import net.kyori.adventure.text.Component;
@@ -13,6 +14,7 @@ import org.bukkit.Sound;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class BattlegroundManager {
@@ -39,14 +41,7 @@ public class BattlegroundManager {
         return enabledBattlegrounds.keySet().stream().toList();
     }
 
-    /**
-     * Перезагрузка арены. Восстановит все блоки, удалит всех энтитей (включая предметы и прожектайлы).
-     * Перед использованием рекомендуется убедиться, что на арене нет игроков.
-     * На время перезагрузки арена помечается как отключенная (enabled==false) и из-за этого к ней
-     * нельзя подключиться.
-     * */
     public void reset(Battleground battleground) {
-        battleground.getPlayers().forEach(battleground::kick);
         disable(battleground.getBattlegroundName());
         enable(battleground.getBattlegroundName());
     }
@@ -68,7 +63,15 @@ public class BattlegroundManager {
     }
 
     private void disable(String name) {
-        this.getBattlegroundByName(name).setEnabled(false);
+        Battleground battleground = this.getBattlegroundByName(name);
+        battleground.setEnabled(false);
+
+        Iterator<BattlegroundPlayer> players = battleground.getPlayers().iterator();
+        while (players.hasNext()) {
+            battleground.kick(players.next());
+            // todo: what
+        }
+
     }
 
     /**

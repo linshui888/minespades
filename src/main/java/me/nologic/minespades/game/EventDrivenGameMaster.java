@@ -29,6 +29,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -57,6 +58,8 @@ public class EventDrivenGameMaster implements Listener {
             Component name = event.getPlayer().name().color(TextColor.fromHexString("#" + event.getTeam().getColor()));
             event.getPlayer().playerListName(name);
             event.getPlayer().displayName(name);
+            event.getPlayer().setHealth(20);
+            event.getPlayer().setFoodLevel(20);
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
@@ -75,17 +78,19 @@ public class EventDrivenGameMaster implements Listener {
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
             // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
-            boolean everyPlayerInTeamIsSpectator = true;
-            for (Player p : event.getTeam().getPlayers()) {
-                if (p.getGameMode() == GameMode.SURVIVAL) {
-                    everyPlayerInTeamIsSpectator = false;
-                    break;
+            if (event.getTeam().getLifepool() == 0 && event.getTeam().getPlayers().size() > 1) {
+                boolean everyPlayerInTeamIsSpectator = true;
+                for (Player p : event.getTeam().getPlayers()) {
+                    if (p.getGameMode() == GameMode.SURVIVAL) {
+                        everyPlayerInTeamIsSpectator = false;
+                        break;
+                    }
                 }
-            }
-            if (everyPlayerInTeamIsSpectator) {
-                // TODO: team lose event
-                event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(121, 157, 9)).decorate(TextDecoration.BOLD));
-                Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
+                if (everyPlayerInTeamIsSpectator) {
+                    // TODO: team lose event
+                    event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
+                    Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
+                }
             }
         }
     }
@@ -123,12 +128,13 @@ public class EventDrivenGameMaster implements Listener {
                 case AOS -> player.sendMessage("не реализовано...");
                 case NORMAL -> player.sendMessage("lol ok");
             }
+
+            player.setNoDamageTicks(40);
+            player.setHealth(20);
+            player.setFoodLevel(20);
             Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
                 event.getBattleground().broadcast(textComponent);
-                player.setNoDamageTicks(40);
                 player.setFireTicks(0);
-                player.setHealth(20);
-                player.setFoodLevel(20);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
             }, 5L);
         } else {
@@ -182,6 +188,13 @@ public class EventDrivenGameMaster implements Listener {
                     }
                 }
         }
+    }
+
+    @EventHandler
+    private void whenPlayerQuitServer(PlayerQuitEvent event) {
+        BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
+        if (bgPlayer != null)
+            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), event.getPlayer()));
     }
 
     /**

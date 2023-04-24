@@ -42,13 +42,19 @@ public final class Battleground {
     public void kick(BattlegroundPlayer player) {
         player.getTeam().kick(player.getPlayer());
         player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-        this.players.remove(player);
+
+        List<BattlegroundPlayer> list = players.stream().toList();
+        for (BattlegroundPlayer battlegroundPlayer : list) {
+            if (battlegroundPlayer.equals(player)) {
+                players.remove(battlegroundPlayer);
+            }
+        }
     }
 
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
-        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OWN_TEAM);
+        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
         team.setBukkitTeam(bukkitTeam);
         this.teams.add(team);
     }

@@ -17,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.codehaus.plexus.util.StringUtils;
 
 @RequiredArgsConstructor
 @CommandAlias("minespades|ms")
@@ -98,9 +99,11 @@ public class MinespadesCommand extends BaseCommand {
             name = name.toLowerCase();
             if (battlegrounder.isBattlegroundExist(name)) {
                 battlegrounder.getEditor().setTargetBattleground(player, name);
-                player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", name)).color(TextColor.color(155, 197, 90)));
+                player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", name)).color(TextColor.color(197, 184, 41)));
             } else player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
         }
+
+        // TODO: add logback
 
         @Subcommand("volume")
         public void onEditBattlegroundVolume(Player player) {
@@ -153,8 +156,8 @@ public class MinespadesCommand extends BaseCommand {
     public void onForceReset(Player player, String name) {
         try {
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", name, player.getName())).color(TextColor.color(187, 166, 96)));
-            battleground.getPlayers().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
+            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", StringUtils.capitalise(name), player.getName())).color(TextColor.color(187, 166, 96)));
+            battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
             battlegrounder.reset(battleground);
         } catch (NullPointerException ex) {
             player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
