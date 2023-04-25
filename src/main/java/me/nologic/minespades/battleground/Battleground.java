@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -42,13 +43,6 @@ public final class Battleground {
     public void kick(BattlegroundPlayer player) {
         player.getTeam().kick(player.getPlayer());
         player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-
-        List<BattlegroundPlayer> list = players.stream().toList();
-        for (BattlegroundPlayer battlegroundPlayer : list) {
-            if (battlegroundPlayer.equals(player)) {
-                players.remove(battlegroundPlayer);
-            }
-        }
     }
 
     public void addTeam(BattlegroundTeam team) {
@@ -66,6 +60,11 @@ public final class Battleground {
 
     public BattlegroundTeam getSmallestTeam() {
         return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
+    }
+
+    @Nullable
+    public BattlegroundTeam getTeamByName(String name) {
+        return this.teams.stream().filter(b -> b.getName().equals(name)).findFirst().orElse(null);
     }
 
     // TODO: отправку сообщений логично будет разметить и разграничить (what?) внутри этого класса, а не в местах вызова

@@ -8,12 +8,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public final class Minespades extends JavaPlugin {
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager battlegrounder;
+
+    private PaperCommandManager commandManager;
 
     @Override
     public void onEnable() {
@@ -26,9 +30,8 @@ public final class Minespades extends JavaPlugin {
         }
         this.battlegrounder = new BattlegroundManager(this);
         this.gameMaster = new EventDrivenGameMaster();
-        PaperCommandManager pcm = new PaperCommandManager(this);
-        pcm.registerCommand(new MinespadesCommand(this.battlegrounder));
-        pcm.getCommandCompletions().registerCompletion("battlegrounds", c -> battlegrounder.getEnabledBattlegrounds());
+        this.commandManager = new PaperCommandManager(this);
+        commandManager.registerCommand(new MinespadesCommand());
         getServer().getPluginManager().registerEvents(gameMaster, this);
         this.enableBattlegrounds();
     }
@@ -45,10 +48,9 @@ public final class Minespades extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        battlegrounder.getEnabledBattlegrounds().forEach(b -> {
-            battlegrounder.getBattlegroundByName(b).getPlayers().forEach(p -> {
-                p.getBattleground().kick(p);
-            });
+        battlegrounder.getEnabledBattlegrounds().forEach(battleground -> {
+            battleground.getPlayers().forEach(battleground::kick);
+            battleground.getPlayers().clear();
         });
     }
 

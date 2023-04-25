@@ -1,8 +1,10 @@
 package me.nologic.minespades.battleground.editor.task;
 
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectOutputStream;
@@ -16,8 +18,11 @@ import java.sql.Statement;
 @RequiredArgsConstructor
 public abstract class BaseEditorTask {
 
-    protected final Minespades plugin = Minespades.getPlugin(Minespades.class);
-    protected final Player     player;
+    protected final Minespades         plugin = Minespades.getPlugin(Minespades.class);
+    protected final BattlegroundEditor editor = plugin.getBattlegrounder().getEditor();
+    protected final Player             player;
+
+    protected final Gson               gson = new Gson();
 
     @SneakyThrows
     protected final Connection connect() {
@@ -30,7 +35,7 @@ public abstract class BaseEditorTask {
     }
 
     @SneakyThrows
-    protected final String itemStackToBase64(ItemStack item) {
+    protected final String serializeItemStack(ItemStack item) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
         dataOutput.writeObject(item);

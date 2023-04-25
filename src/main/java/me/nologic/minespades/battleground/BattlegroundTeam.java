@@ -2,12 +2,15 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.nologic.minespades.battleground.editor.loadout.Loadout;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.scoreboard.Team;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Getter
 public class BattlegroundTeam {
@@ -19,8 +22,8 @@ public class BattlegroundTeam {
     private @Setter int          lifepool;
 
     private final List<Location> respawnLocations;
-    private final List<Inventory> loadouts;
-    private final Set<Player> players;
+    private final List<Loadout>  loadouts;
+    private final Set<Player>    players;
 
     public BattlegroundTeam(Battleground battleground, String name, int lifepool, String hexColor) {
         this.battleground = battleground;
@@ -36,7 +39,7 @@ public class BattlegroundTeam {
         this.respawnLocations.add(location);
     }
 
-    public void addLoadout(Inventory loadout) {
+    public void addLoadout(Loadout loadout) {
         this.loadouts.add(loadout);
     }
 
@@ -49,7 +52,6 @@ public class BattlegroundTeam {
         this.players.add(player);
         BattlegroundPlayer bgPlayer = new BattlegroundPlayer(battleground, this, player);
         player.teleport(this.getRandomRespawnLocation());
-        player.setHealth(20);
         bgPlayer.setRandomLoadout();
         player.sendMessage("§eПодключение успешно! Ваша команда: " + bgPlayer.getTeam().name);
         return bgPlayer;

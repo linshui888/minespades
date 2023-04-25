@@ -5,12 +5,12 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
-import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.battleground.editor.loadout.Loadout;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
@@ -19,12 +19,25 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
-@RequiredArgsConstructor
 @CommandAlias("minespades|ms")
 @CommandPermission("minespades.player")
 public class MinespadesCommand extends BaseCommand {
 
+    private final Minespades          plugin;
+    private final CommandCompletions  completions;
     private final BattlegroundManager battlegrounder;
+
+    {
+        this.plugin = Minespades.getPlugin(Minespades.class);
+        this.battlegrounder = plugin.getBattlegrounder();
+        this.completions = new CommandCompletions();
+        this.registerCompletions();
+    }
+
+    private void registerCompletions() {
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getEnabledBattlegroundNames());
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadoutNames(c.getPlayer()));
+    }
 
     @Subcommand("launch")
     @CommandCompletion("@battlegrounds")
@@ -51,6 +64,21 @@ public class MinespadesCommand extends BaseCommand {
             } else player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
         }
 
+        @Subcommand("supply")
+        public void onAddSupply(Player player, String name, int interval, int amount, int maximum) {
+            if (!battlegrounder.getEditor().isTeamSelected(player)) {
+                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
+                return;
+            }
+
+            if (battlegrounder.getEditor().getTargetLoadout(player) == null) {
+                player.sendMessage("§4Ошибка. Для редактирования не выбран набор экипировки.");
+                return;
+            }
+
+
+        }
+
     }
 
     @Subcommand("delete")
@@ -58,6 +86,7 @@ public class MinespadesCommand extends BaseCommand {
     public class Delete extends BaseCommand {
 
         @Subcommand("loadout")
+        @CommandCompletion("loadouts")
         public void onDeleteLoadout(Player player, String loadoutName) {
             battlegrounder.getEditor().removeLoadout(player, loadoutName);
         }
@@ -107,7 +136,7 @@ public class MinespadesCommand extends BaseCommand {
 
         @Subcommand("volume")
         public void onEditBattlegroundVolume(Player player) {
-            battlegrounder.getEditor().setVolumeEditor(player);
+            battlegrounder.getEditor().setAsVolumeEditor(player);
         }
 
         @Subcommand("team")
@@ -118,6 +147,24 @@ public class MinespadesCommand extends BaseCommand {
         @Subcommand("color")
         public void onEditColor(Player player, String hexColor) {
             battlegrounder.getEditor().setTeamColor(player, hexColor);
+        }
+
+        @Subcommand("loadout")
+        @CommandCompletion("loadouts")
+        public void onEditLoadout(Player player, String name) {
+
+            if (battlegrounder.getEditor().getTargetTeam(player) == null) {
+                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
+                return;
+            }
+
+            if (!Loadout.exists(name)) {
+                player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", name, battlegrounder.getEditor().getTargetTeam(player)));
+                return;
+            }
+
+            battlegrounder.getEditor().setTargetLoadout(player, name);
+            player.sendMessage(String.format("§2Успех. Редактируемый набор экипировки: %s.", name));
         }
 
     }

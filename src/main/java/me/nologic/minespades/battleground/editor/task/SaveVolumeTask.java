@@ -147,7 +147,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
             if (item != null) {
                 JsonObject jitem = new JsonObject();
                 jitem.addProperty("slot", i);
-                String itemData = itemStackToBase64(item);
+                String itemData = serializeItemStack(item);
                 jitem.addProperty("data", itemData);
                 items.add(jitem);
             }

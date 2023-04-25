@@ -28,7 +28,7 @@ public class BattlegroundManager {
 
     public BattlegroundManager (Minespades plugin) {
         this.plugin = plugin;
-        this.editor = new BattlegroundEditor(plugin);
+        this.editor = new BattlegroundEditor();
         this.loader = new BattlegroundLoader(plugin);
         this.enabledBattlegrounds = new HashMap<>();
     }
@@ -37,8 +37,8 @@ public class BattlegroundManager {
         return editor;
     }
 
-    public List<String> getEnabledBattlegrounds() {
-        return enabledBattlegrounds.keySet().stream().toList();
+    public List<Battleground> getEnabledBattlegrounds() {
+        return enabledBattlegrounds.values().stream().toList();
     }
 
     public void reset(Battleground battleground) {

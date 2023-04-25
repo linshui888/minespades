@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
+import me.nologic.minespades.battleground.editor.loadout.Loadout;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -55,9 +56,10 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(inv -> {
-                    Inventory inventory = readInventory(inv);
-                    if (inventory != null) team.addLoadout(inventory);
+                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(loadout -> {
+                    String name = JsonParser.parseString(loadout).getAsJsonObject().get("name").getAsString();
+                    Inventory inventory = readInventory(loadout);
+                    if (inventory != null) team.addLoadout(new Loadout(name, inventory, team));
                 });
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);
@@ -166,7 +168,7 @@ public class BattlegroundLoader {
         JsonArray items = obj.get("items").getAsJsonArray();
         for (JsonElement itemele: items) {
             JsonObject jitem = itemele.getAsJsonObject();
-            ItemStack item = decodeItem(jitem.get("data").getAsString());
+            ItemStack item = deserializeItemStack(jitem.get("data").getAsString());
             inv.setItem(jitem.get("slot").getAsInt(), item);
         }
 
@@ -174,7 +176,7 @@ public class BattlegroundLoader {
     }
 
     @SneakyThrows
-    private ItemStack decodeItem(String base64) {
+    private ItemStack deserializeItemStack(String base64) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(base64));
         BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
         ItemStack item = (ItemStack) dataInput.readObject();

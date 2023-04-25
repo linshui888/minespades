@@ -119,6 +119,7 @@ public class EventDrivenGameMaster implements Listener {
         // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
         // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
         // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
+        // TODO: Необходимо заблочить телепортацию в режиме наблюдателя.
         int lifepool = event.getVictim().getTeam().getLifepool();
         if (lifepool >= 1) {
             event.getVictim().getTeam().setLifepool(lifepool - 1);

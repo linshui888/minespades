@@ -19,20 +19,23 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.Future;
 
 public class BattlegroundEditor implements Listener {
 
     private final Minespades plugin;
+    private final HashMap<Player, Location[]> volumeCorners = new HashMap<>();
+    private final HashMap<Player, String> teamEditSession = new HashMap<>();
+    private final HashMap<Player, String> loadoutEditSession = new HashMap<Player, String>();
+    private final HashMap<Player, String> battlegroundEditSession  = new HashMap<>();
 
-    public BattlegroundEditor(Minespades plugin) {
-        this.plugin = plugin;
-        this.volumeCorners = new HashMap<>();
-        this.battlegroundEditSession = new HashMap<>();
-        this.teamEditSession = new HashMap<>();
+    {
+        plugin = Minespades.getPlugin(Minespades.class);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    /**
+     * Создание файла арены.
+     * */
     public void create(Player player, String battlegroundName) {
         try (Connection connection = connect(battlegroundName); Statement statement = connection.createStatement()) {
 
@@ -57,6 +60,7 @@ public class BattlegroundEditor implements Listener {
         }
     }
 
+    // Создание команды
     public void createTeam(Player player, String teamName) {
         try (Connection connection = connect(battlegroundEditSession.get(player)); PreparedStatement statement = connection.prepareStatement(Table.TEAMS.getInsertStatement())) {
             statement.setString(1, teamName);
@@ -70,6 +74,14 @@ public class BattlegroundEditor implements Listener {
             this.setTargetTeam(player, teamName);
         } catch (SQLException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    @SneakyThrows
+    public void addSupply(Player player) {
+        String sql = "UPDATE teams SET loadouts = ? WHERE name = ?";
+        try (Connection connection = connect(battlegroundEditSession.get(player)); PreparedStatement statement = connection.prepareStatement(sql)) {
+
         }
     }
 
@@ -127,14 +139,19 @@ public class BattlegroundEditor implements Listener {
         plugin.getServer().getScheduler().runTask(plugin, new RemoveLoadoutTask(player, name));
     }
 
-    private final HashMap<Player, String> battlegroundEditSession;
     public void setTargetBattleground(Player player, String battlegroundName) {
         this.battlegroundEditSession.put(player, battlegroundName);
     }
 
-    private final HashMap<Player, Location[]> volumeCorners;
-    private final HashMap<Player, String> teamEditSession;
-    public void setVolumeEditor(Player player) {
+    public void setTargetLoadout(Player player, String loadoutName) {
+        this.loadoutEditSession.put(player, loadoutName);
+    }
+
+    public String getTargetLoadout(Player player) {
+        return this.loadoutEditSession.get(player);
+    }
+
+    public void setAsVolumeEditor(Player player) {
 
         if (!this.battlegroundEditSession.containsKey(player)) {
             player.sendMessage("Сперва нужно выбрать редактируемую арену. Сделайте это с помощью /ms edit battleground <название_арены>.");

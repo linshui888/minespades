@@ -4,19 +4,23 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import me.nologic.minespades.battleground.editor.loadout.Loadout;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
 public class BattlegroundPlayer {
 
-    private @Getter final Battleground battleground;
+    private @Getter final Battleground     battleground;
     private @Getter final BattlegroundTeam team;
-    private @Getter final Player       player;
+    private @Getter final Player           player;
+
+    private @Getter Loadout loadout;
 
     private @Setter @Getter int kills, deaths, assists;
 
     public void setRandomLoadout() {
-        player.getInventory().setContents(team.getLoadouts().get((int) (Math.random() * team.getLoadouts().size())).getContents());
+        loadout = team.getLoadouts().get((int) (Math.random() * team.getLoadouts().size()));
+        player.getInventory().setContents(loadout.getInventory().getContents());
     }
 
 }
