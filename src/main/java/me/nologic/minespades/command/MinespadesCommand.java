@@ -65,7 +65,7 @@ public class MinespadesCommand extends BaseCommand {
         }
 
         @Subcommand("supply")
-        public void onAddSupply(Player player, String name, int interval, int amount, int maximum) {
+        public void onAddSupply(Player player, String name, int interval, int amount, int maximum, String permission) {
             if (!battlegrounder.getEditor().isTeamSelected(player)) {
                 player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
                 return;
@@ -76,7 +76,7 @@ public class MinespadesCommand extends BaseCommand {
                 return;
             }
 
-
+            battlegrounder.getEditor().addSupply(player, name, interval, amount, maximum, permission);
         }
 
     }

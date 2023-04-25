@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.Loadout;
+import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -56,11 +57,20 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
-                Arrays.stream(teams.getString("loadouts").split("\n")).toList().forEach(loadout -> {
-                    String name = JsonParser.parseString(loadout).getAsJsonObject().get("name").getAsString();
-                    Inventory inventory = readInventory(loadout);
-                    if (inventory != null) team.addLoadout(new Loadout(name, inventory, team));
-                });
+                JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
+                for (JsonElement loadoutElement : loadouts) {
+                    JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
+                    String loadoutName = jsonLoadout.get("name").getAsString();
+                    Inventory inventory = this.readInventory(jsonLoadout.get("inventory").getAsString());
+                    Loadout loadout = new Loadout(loadoutName, inventory, team);
+                    JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
+                    for (JsonElement supplyElement : supplies) {
+                        JsonObject supplyRule = supplyElement.getAsJsonObject();
+                        String supplyName = supplyRule.get("name").getAsString();
+                        loadout.addSupplyRule(new LoadoutSupplyRule(loadoutName, supplyName, supplyRule.get("item").getAsString(), supplyRule.get("permission").getAsString(), supplyRule.get("interval").getAsInt(), supplyRule.get("amount").getAsInt(), supplyRule.get("maximum").getAsInt()));
+                    }
+                    loadout.acceptSupplyRules();
+                }
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);
             }

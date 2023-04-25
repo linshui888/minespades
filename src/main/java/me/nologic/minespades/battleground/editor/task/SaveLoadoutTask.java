@@ -30,17 +30,20 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
     @Override
     @SneakyThrows
     public void run() {
-        try (Connection connection = this.connect(); PreparedStatement loadoutStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;"); PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;")) {
-            loadoutStatement.setString(1, editor.getTargetTeam(player));
-            ResultSet result = loadoutStatement.executeQuery(); result.next();
+        try (Connection connection = this.connect()) {
 
-            String loadoutsJSON = result.getString("loadouts");
-            JsonArray array = (loadoutsJSON != null) ? JsonParser.parseString(loadoutsJSON).getAsJsonArray() : new JsonArray();
-            JsonElement loadout = inventoryToJSONString(addedLoadoutName, player.getInventory());
-            array.add(loadout);
-            loadoutsJSON = array.toString();
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;");
+            selectStatement.setString(1, editor.getTargetTeam(player));
+            ResultSet result = selectStatement.executeQuery(); result.next();
 
-            updateStatement.setString(1, loadoutsJSON);
+            // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
+            String loadouts = result.getString("loadouts");
+
+            JsonArray array = (loadouts != null) ? JsonParser.parseString(loadouts).getAsJsonArray() : new JsonArray();
+            array.add(this.inventoryToJSONString(addedLoadoutName, player.getInventory()));
+
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
+            updateStatement.setString(1, array.toString());
             updateStatement.setString(2, editor.getTargetTeam(player));
             updateStatement.executeUpdate();
 
@@ -51,7 +54,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
     }
 
     @SneakyThrows
-    private void listEntries() {
+    private void listEntries() { // TODO: Убрать в отдельный класс (но какой?..)
         try (Connection connection = connect(); PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;")) {
 
             // Воспроизводим звук как показатель успешного выполнения команды и отображения листа
@@ -62,7 +65,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
 
             // Проходимся по всем элементам JSON-массива и отправляем игроку-редактору лист со всеми наборами экипировки редактируемой команды
             while (data.next()) {
-                player.sendMessage(Component.text("Наборы экипировки" + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
+                player.sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
 
                 JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
                 for (JsonElement element : loadouts) {

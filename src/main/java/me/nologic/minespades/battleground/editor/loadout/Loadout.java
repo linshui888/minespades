@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public class Loadout {
     private final Inventory inventory;
     private final BattlegroundTeam team;
 
-    private List<LoadoutSupplyRule> supplyRules;
+    private final List<LoadoutSupplyRule> supplyRules = new ArrayList<>();
 
     public void addSupplyRule(LoadoutSupplyRule rule) {
         this.supplyRules.add(rule);
@@ -35,7 +36,8 @@ public class Loadout {
                 @Override
                 public void run() {
                     for (BattlegroundPlayer player : Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getPlayersInGame()) {
-                        if (player.getLoadout().getName().equals(rule.targetLoadout())) {
+                        if (!player.getPlayer().hasPermission(rule.getPermission())) return;
+                        if (player.getLoadout().getName().equals(rule.getTargetLoadout())) {
                             ItemStack item = rule.getItemStack();
                             PlayerInventory inventory = player.getPlayer().getInventory();
                             if (inventory.contains(item)) {
@@ -50,7 +52,7 @@ public class Loadout {
 
             };
 
-            runnable.runTaskTimer(Minespades.getPlugin(Minespades.class),0, rule.interval());
+            runnable.runTaskTimer(Minespades.getPlugin(Minespades.class),0, rule.getInterval());
         }
     }
 

@@ -5,6 +5,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.editor.task.RemoveLoadoutTask;
 import me.nologic.minespades.battleground.editor.task.SaveLoadoutTask;
+import me.nologic.minespades.battleground.editor.task.SaveSupplyTask;
 import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -78,11 +79,8 @@ public class BattlegroundEditor implements Listener {
     }
 
     @SneakyThrows
-    public void addSupply(Player player) {
-        String sql = "UPDATE teams SET loadouts = ? WHERE name = ?";
-        try (Connection connection = connect(battlegroundEditSession.get(player)); PreparedStatement statement = connection.prepareStatement(sql)) {
-
-        }
+    public void addSupply(Player player, String name, int interval, int amount, int maximum, String permission) {
+        plugin.getServer().getScheduler().runTask(plugin, new SaveSupplyTask(player, name, interval, amount, maximum, permission));
     }
 
     public void addRespawnPoint(Player player) {
