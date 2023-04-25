@@ -1,5 +1,9 @@
 package me.nologic.minespades.battleground.editor;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
@@ -192,5 +196,22 @@ public class BattlegroundEditor implements Listener {
         statement.setString(1, hexColor);
         statement.setString(2, getTargetTeam(player));
         statement.executeUpdate();
+    }
+
+    @SneakyThrows
+    public boolean isLoadoutExist(Player player, String loadoutName) {
+        try (Connection connection = connect(getTargetBattleground(player))) {
+            PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
+            listStatement.setString(1, this.getTargetTeam(player));
+            ResultSet data = listStatement.executeQuery(); data.next();
+            JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
+
+            for (JsonElement loadoutElement : loadouts) {
+                JsonObject loadout = loadoutElement.getAsJsonObject();
+                if (loadoutName.equals(loadout.get("name").getAsString())) return true;
+            }
+
+            return false;
+        }
     }
 }

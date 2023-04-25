@@ -26,8 +26,10 @@ public class LoadoutSupplyRule {
     private final String permission;
     private final int    interval, amount, maximum;
 
+    private ItemStack deserializedItemStack;
+
     public ItemStack getItemStack() {
-        return this.deserializeItemStack(serializedItemStack);
+        return deserializedItemStack == null ? (deserializedItemStack = deserializeItemStack(serializedItemStack)) : deserializedItemStack;
     }
 
     @SneakyThrows
@@ -35,6 +37,7 @@ public class LoadoutSupplyRule {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(base64));
         BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
         ItemStack item = (ItemStack) dataInput.readObject();
+        item.setAmount(amount);
         dataInput.close();
         return item;
     }

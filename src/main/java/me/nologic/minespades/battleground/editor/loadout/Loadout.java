@@ -19,8 +19,8 @@ import java.util.Objects;
 @RequiredArgsConstructor @Getter
 public class Loadout {
 
-    private final String    name;
-    private final Inventory inventory;
+    private final String           name;
+    private final Inventory        inventory;
     private final BattlegroundTeam team;
 
     private final List<LoadoutSupplyRule> supplyRules = new ArrayList<>();
@@ -40,11 +40,8 @@ public class Loadout {
                         if (player.getLoadout().getName().equals(rule.getTargetLoadout())) {
                             ItemStack item = rule.getItemStack();
                             PlayerInventory inventory = player.getPlayer().getInventory();
-                            if (inventory.contains(item)) {
-                                if (!inventory.contains(item, rule.getMaximum())) {
-                                    item.setAmount(rule.getAmount());
-                                    inventory.addItem(item);
-                                }
+                            if (!inventory.containsAtLeast(item, rule.getMaximum())) {
+                                inventory.addItem(item);
                             }
                         }
                     }
@@ -54,20 +51,6 @@ public class Loadout {
 
             runnable.runTaskTimer(Minespades.getPlugin(Minespades.class),0, rule.getInterval());
         }
-    }
-
-    public static boolean exists(String name) {
-        final BattlegroundManager battlegrounder = Minespades.getPlugin(Minespades.class).getBattlegrounder();
-        for (Battleground battleground : battlegrounder.getEnabledBattlegrounds()) {
-            for (BattlegroundTeam team : battleground.getTeams()) {
-                for (Loadout loadout : team.getLoadouts()) {
-                    if (Objects.equals(name, loadout.name)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
 }

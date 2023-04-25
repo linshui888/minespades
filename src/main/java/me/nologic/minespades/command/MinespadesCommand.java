@@ -150,7 +150,7 @@ public class MinespadesCommand extends BaseCommand {
         }
 
         @Subcommand("loadout")
-        @CommandCompletion("loadouts")
+        @CommandCompletion("@loadouts")
         public void onEditLoadout(Player player, String name) {
 
             if (battlegrounder.getEditor().getTargetTeam(player) == null) {
@@ -158,7 +158,7 @@ public class MinespadesCommand extends BaseCommand {
                 return;
             }
 
-            if (!Loadout.exists(name)) {
+            if (!battlegrounder.getEditor().isLoadoutExist(player, name)) {
                 player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", name, battlegrounder.getEditor().getTargetTeam(player)));
                 return;
             }

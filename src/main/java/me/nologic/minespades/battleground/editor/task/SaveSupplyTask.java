@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -50,7 +51,16 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                 String name = loadout.get("name").getAsString();
                 if (Objects.equals(name, editor.getTargetLoadout(player))) {
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
-                    supplies.add(supplyRuleJSON);
+                    JsonObject supplyRule = JsonParser.parseString(supplyRuleJSON).getAsJsonObject();
+
+                    for (JsonElement supplyElement : supplies) {
+                        if (Objects.equals(supplyElement.getAsJsonObject().get("name").getAsString(), supplyRule.get("name").getAsString())) {
+                            player.sendMessage(String.format("§4Ошибка. Название %s уже занято.", supplyRule.get("name").getAsString()));
+                            return;
+                        }
+                    }
+
+                    supplies.add(supplyRule);
                 }
 
             }
@@ -87,7 +97,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                 String loadoutName = loadout.get("name").getAsString();
 
                 if (Objects.equals(loadoutName, editor.getTargetLoadout(player))) {
-                    player.sendMessage(Component.text(String.format("Правила автовыдачи вещей набора экипировки %s команды %s: ", loadoutName, editor.getTargetTeam(player))).color(TextColor.fromHexString("#" + data.getString("color"))));
+                    player.sendMessage(Component.text(String.format("Правила автовыдачи для экипировки %s у команды %s: ", loadoutName, editor.getTargetTeam(player))).color(TextColor.color(172, 127, 67)));
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
                     for (JsonElement supplyArrayElement : supplies) {
                         JsonObject supplyRule = supplyArrayElement.getAsJsonObject();

@@ -61,7 +61,7 @@ public class BattlegroundLoader {
                 for (JsonElement loadoutElement : loadouts) {
                     JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                     String loadoutName = jsonLoadout.get("name").getAsString();
-                    Inventory inventory = this.readInventory(jsonLoadout.get("inventory").getAsString());
+                    Inventory inventory = this.readInventory(jsonLoadout.toString());
                     Loadout loadout = new Loadout(loadoutName, inventory, team);
                     JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
                     for (JsonElement supplyElement : supplies) {
@@ -70,6 +70,7 @@ public class BattlegroundLoader {
                         loadout.addSupplyRule(new LoadoutSupplyRule(loadoutName, supplyName, supplyRule.get("item").getAsString(), supplyRule.get("permission").getAsString(), supplyRule.get("interval").getAsInt(), supplyRule.get("amount").getAsInt(), supplyRule.get("maximum").getAsInt()));
                     }
                     loadout.acceptSupplyRules();
+                    team.addLoadout(loadout);
                 }
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
                 list.add(team);

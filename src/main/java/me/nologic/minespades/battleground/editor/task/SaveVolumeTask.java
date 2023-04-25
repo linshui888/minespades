@@ -79,7 +79,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     bSt.setString(6, null);
                     bSt.addBatch();
 
-                    if (++i % 5000 == 0) {
+                    if (++i % 10000 == 0) {
                         bSt.executeBatch();
                     }
                 }
