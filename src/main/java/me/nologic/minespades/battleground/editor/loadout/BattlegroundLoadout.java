@@ -2,9 +2,7 @@ package me.nologic.minespades.battleground.editor.loadout;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
-import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import org.bukkit.inventory.Inventory;
@@ -14,16 +12,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @RequiredArgsConstructor @Getter
-public class Loadout {
+public class BattlegroundLoadout {
 
     private final String           name;
     private final Inventory        inventory;
     private final BattlegroundTeam team;
 
     private final List<LoadoutSupplyRule> supplyRules = new ArrayList<>();
+    private final List<BukkitRunnable> tasks = new ArrayList<>();
 
     public void addSupplyRule(LoadoutSupplyRule rule) {
         this.supplyRules.add(rule);
@@ -50,6 +48,7 @@ public class Loadout {
             };
 
             runnable.runTaskTimer(Minespades.getPlugin(Minespades.class),0, rule.getInterval());
+            this.tasks.add(runnable);
         }
     }
 

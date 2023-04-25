@@ -2,7 +2,7 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.nologic.minespades.battleground.editor.loadout.Loadout;
+import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
@@ -15,31 +15,28 @@ import java.util.Set;
 @Getter
 public class BattlegroundTeam {
 
-    private final Battleground battleground;
-    private @Setter Team bukkitTeam;
+    private final Battleground   battleground;
+    private @Setter Team         bukkitTeam;
 
-    private final String       name, color;
+    private final String         name, color;
     private @Setter int          lifepool;
 
-    private final List<Location> respawnLocations;
-    private final List<Loadout>  loadouts;
-    private final Set<Player>    players;
+    private final List<Location>             respawnLocations = new ArrayList<>();
+    private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
+    private final Set<Player>                players = new HashSet<>();
 
-    public BattlegroundTeam(Battleground battleground, String name, int lifepool, String hexColor) {
+    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
         this.battleground = battleground;
-        this.loadouts = new ArrayList<>();
-        this.respawnLocations = new ArrayList<>();
-        this.players = new HashSet<>();
         this.name = name;
+        this.color = color;
         this.lifepool = lifepool;
-        this.color = hexColor;
     }
 
     public void addRespawnLocation(Location location) {
         this.respawnLocations.add(location);
     }
 
-    public void addLoadout(Loadout loadout) {
+    public void addLoadout(BattlegroundLoadout loadout) {
         this.loadouts.add(loadout);
     }
 

@@ -26,7 +26,7 @@ public class LoadoutSupplyRule {
     private final String permission;
     private final int    interval, amount, maximum;
 
-    private ItemStack deserializedItemStack;
+    private transient ItemStack deserializedItemStack;
 
     public ItemStack getItemStack() {
         return deserializedItemStack == null ? (deserializedItemStack = deserializeItemStack(serializedItemStack)) : deserializedItemStack;

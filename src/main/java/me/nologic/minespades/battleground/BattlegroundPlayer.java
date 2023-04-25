@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import me.nologic.minespades.battleground.editor.loadout.Loadout;
+import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
@@ -14,7 +14,7 @@ public class BattlegroundPlayer {
     private @Getter final BattlegroundTeam team;
     private @Getter final Player           player;
 
-    private @Getter Loadout loadout;
+    private @Getter BattlegroundLoadout loadout;
 
     private @Setter @Getter int kills, deaths, assists;
 

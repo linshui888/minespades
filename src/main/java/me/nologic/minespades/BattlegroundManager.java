@@ -2,8 +2,10 @@ package me.nologic.minespades;
 
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.BattlegroundLoader;
+import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.TextColor;
@@ -11,6 +13,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.util.HashMap;
@@ -62,16 +65,27 @@ public class BattlegroundManager {
         return loader.load(name);
     }
 
-    private void disable(String name) {
-        Battleground battleground = this.getBattlegroundByName(name);
+    private void disable(String battlegroundName) {
+        Battleground battleground = this.getBattlegroundByName(battlegroundName);
         battleground.setEnabled(false);
 
+        // Останавливаем все BukkitRunnable из правил автовыдачи
+        for (BattlegroundTeam team : battleground.getTeams()) {
+            for (BattlegroundLoadout loadout : team.getLoadouts()) {
+                for (BukkitRunnable task : loadout.getTasks()) {
+                    task.cancel();
+                }
+            }
+        }
+
+        // Обрабатываем лист игроков через итератор чтобы избежать ConcurrentModificationException
         Iterator<BattlegroundPlayer> players = battleground.getPlayers().iterator();
         while (players.hasNext()) {
             battleground.kick(players.next());
             // todo: what
         }
 
+        battleground.getPlayers().clear();
     }
 
     /**

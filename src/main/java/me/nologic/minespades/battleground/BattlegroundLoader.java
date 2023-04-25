@@ -7,7 +7,7 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
-import me.nologic.minespades.battleground.editor.loadout.Loadout;
+import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -41,7 +41,7 @@ import java.util.List;
 public class BattlegroundLoader {
 
     private final Minespades plugin;
-    private Battleground battleground;
+    private Battleground     battleground;
 
     public Battleground load(String name) {
         this.battleground = new Battleground(name);
@@ -56,13 +56,13 @@ public class BattlegroundLoader {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
-                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getInt("lifepool"), teams.getString("color"));
+                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"));
                 JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {
                     JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                     String loadoutName = jsonLoadout.get("name").getAsString();
                     Inventory inventory = this.readInventory(jsonLoadout.toString());
-                    Loadout loadout = new Loadout(loadoutName, inventory, team);
+                    BattlegroundLoadout loadout = new BattlegroundLoadout(loadoutName, inventory, team);
                     JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
                     for (JsonElement supplyElement : supplies) {
                         JsonObject supplyRule = supplyElement.getAsJsonObject();
