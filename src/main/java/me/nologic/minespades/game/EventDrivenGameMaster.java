@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
@@ -14,7 +13,6 @@ import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -23,11 +21,10 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -40,14 +37,18 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class EventDrivenGameMaster implements Listener {
 
-    @Getter
-    private final PlayerManager playerManager = new PlayerManager();
+    private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
+    private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
 
     @EventHandler
     private void whenPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
@@ -98,23 +99,7 @@ public class EventDrivenGameMaster implements Listener {
     @EventHandler
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
 
-        TextComponent textComponent;
-        Player player = event.getVictim().getPlayer();
-
-        // TODO: создать класс Killfeed, который бы отправлял игрокам сообщения об игровых событиях
-        if (event.getKiller() != null) {
-            textComponent = Component.text(" > ")
-                    .color(TextColor.color(0xCED4C8))
-                    .append(player.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
-                    .append(Component.text(" был убит "))
-                    .append(event.getKiller().getPlayer().name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor())))
-                    .append(Component.text("!"));
-        } else {
-            textComponent = Component.text(" > ")
-                    .color(TextColor.color(0xCACAD9))
-                    .append(player.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
-                    .append(Component.text(" умер.."));
-        }
+        final Player player = event.getVictim().getPlayer();
 
         // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
         // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
@@ -123,21 +108,24 @@ public class EventDrivenGameMaster implements Listener {
         int lifepool = event.getVictim().getTeam().getLifepool();
         if (lifepool >= 1) {
             event.getVictim().getTeam().setLifepool(lifepool - 1);
-            event.getVictim().setRandomLoadout();
+
             switch (event.getRespawnMethod()) {
                 case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
                 case AOS -> player.sendMessage("не реализовано...");
                 case NORMAL -> player.sendMessage("lol ok");
             }
 
+            if (!event.isKeepInventory()) {
+                event.getVictim().setRandomLoadout();
+            }
+
             player.setNoDamageTicks(40);
             player.setHealth(20);
             player.setFoodLevel(20);
             Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
-                event.getBattleground().broadcast(textComponent);
                 player.setFireTicks(0);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-            }, 5L);
+            }, 10L);
         } else {
             event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
             boolean everyPlayerInTeamIsSpectator = true;
@@ -155,40 +143,17 @@ public class EventDrivenGameMaster implements Listener {
     }
 
     @EventHandler
-    private void whenPlayerKillPlayer(EntityDamageByEntityEvent event) {
-        if (event.isCancelled()) return;
-        if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player killer) {
-            for (BattlegroundPlayer p : playerManager.getPlayersInGame()) {
-                if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
-                    event.setCancelled(true);
-                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getPlayer(), killer, true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
-                }
-            }
-        } else if (event.getEntity() instanceof Player player && event.getDamager() instanceof Projectile projectile) {
-            if (projectile.getShooter() instanceof Player killer) {
-                for (BattlegroundPlayer p : playerManager.getPlayersInGame()) {
-                    if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
-                        event.setCancelled(true);
-                        Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getPlayer(), killer, true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
-                    }
-                }
-            }
-        }
+    private void onPlayerDeath(PlayerDeathEvent event) {
+        if (event.isCancelled() || playerManager.getBattlegroundPlayer(event.getPlayer()) == null) return;
 
-    }
+        final Player victim = event.getPlayer();
+        final Player killer = victim.getKiller();
+        final EntityDamageEvent.DamageCause cause = Objects.requireNonNull(victim.getLastDamageCause()).getCause();
+        event.setCancelled(true);
 
-    @EventHandler
-    private void whenPlayerShouldDie(EntityDamageEvent event) {
-        if (event.isCancelled()) return;
-        if (event.getEntity() instanceof Player player) {
-            if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK && event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE)
-                for (BattlegroundPlayer p : playerManager.getPlayersInGame()) {
-                    if (player.equals(p.getPlayer()) && player.getHealth() <= event.getFinalDamage()) {
-                        event.setCancelled(true);
-                        Bukkit.getServer().getPluginManager().callEvent(new BattlegroundPlayerDeathEvent(p.getPlayer(), true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK));
-                    }
-                }
-        }
+        BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
+        Bukkit.getServer().getPluginManager().callEvent(bpde);
+
     }
 
     @EventHandler
@@ -203,9 +168,9 @@ public class EventDrivenGameMaster implements Listener {
      * свои вещи, необходимо сохранять старый инвентарь в датабазе и загружать его, когда игрок покидает арену.
      * И не только инвентарь! Кол-во хитпоинтов, голод, координаты, активные баффы и дебаффы и т. д.
      * */
-    public static class PlayerManager {
+    public static class BattlegroundPlayerManager {
 
-        @Getter (AccessLevel.PUBLIC)
+        @Getter
         private final List<BattlegroundPlayer> playersInGame = new ArrayList<>();
         private final Minespades plugin = Minespades.getPlugin(Minespades.class);
 
@@ -222,25 +187,28 @@ public class EventDrivenGameMaster implements Listener {
             return null;
         }
 
+        /**
+         * Сохранение состояния указанного игрока: в датабазе сохраняется инвентарь, координаты, здоровье и голод.
+         */
         @SneakyThrows
         private void save(Player player) {
             try (Connection connection = connect()) {
-                // Сперва убеждаемся, что в датабазе есть нужная таблица (если нет, то создаём)
-                Statement statement = connection.createStatement();
-                statement.executeUpdate("CREATE TABLE IF NOT EXISTS players (name VARCHAR(32) NOT NULL, world VARCHAR(64) NOT NULL, location TEXT NOT NULL, inventory TEXT NOT NULL, health DOUBLE NOT NULL, hunger INT NOT NULL);");
-                statement.close();
 
+                // Сперва убеждаемся, что в датабазе есть нужная таблица (если нет, то создаём)
+                String sql = "CREATE TABLE IF NOT EXISTS players (name VARCHAR(32) NOT NULL, world VARCHAR(64) NOT NULL, location TEXT NOT NULL, inventory TEXT NOT NULL, health DOUBLE NOT NULL, hunger INT NOT NULL);";
+                connection.createStatement().executeUpdate(sql);
+
+                // С целью избежания багов и путанницы, удаляем старое значение
                 PreparedStatement deleteOldValue = connection.prepareStatement("DELETE FROM players WHERE name = ?;");
                 deleteOldValue.setString(1, player.getName());
                 deleteOldValue.executeUpdate();
 
-                // После создаём PreparedStatement
+                // Готовимся сохранить данные игрока в датабазе (имя, мир, локация в Base64, инвентарь в JSON, здоровье, голод)
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO players (name, world, location, inventory, health, hunger) VALUES (?,?,?,?,?,?);");
 
                 Location l = player.getLocation();
                 String encodedLocation = Base64Coder.encodeString(String.format("%f; %f; %f; %f; %f", l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch()));
 
-                // И заполняем его. Сохраняем имя игрока, координаты, его инвентарь, хп и голод.
                 preparedStatement.setString(1, player.getName());
                 preparedStatement.setString(2, player.getWorld().getName());
                 preparedStatement.setString(3, encodedLocation);
@@ -249,23 +217,22 @@ public class EventDrivenGameMaster implements Listener {
                 preparedStatement.setDouble(6, player.getFoodLevel());
                 preparedStatement.executeUpdate();
 
-                Bukkit.getLogger().info(String.format("Инвентарь игрока %s был сохранён.", player.getName()));
+                plugin.getLogger().info(String.format("Инвентарь игрока %s был сохранён.", player.getName()));
             }
         }
 
         @SneakyThrows
         private void load(Player player) {
             try (Connection connection = connect()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;"); // TODO: нужен селектор команды, добавь WHERE
-
+                PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");
                 preparedStatement.setString(1, player.getName());
                 ResultSet r = preparedStatement.executeQuery(); r.next();
 
-                World world = Bukkit.getWorld(r.getString("world"));
-                Location location = this.decodeLocation(world, r.getString("location"));
-                Inventory inventory = this.readInventory(r.getString("inventory"));
-                double health = r.getDouble("health");
-                int hunger = r.getInt("hunger");
+                World     world     = Bukkit.getWorld(r.getString("world"));
+                Location  location  = this.decodeLocation(world, r.getString("location"));
+                Inventory inventory = this.parseJsonToInventory(r.getString("inventory"));
+                double    health    = r.getDouble("health");
+                int       hunger    = r.getInt("hunger");
 
                 player.teleport(location);
                 player.getInventory().setContents(inventory.getContents());
@@ -278,12 +245,7 @@ public class EventDrivenGameMaster implements Listener {
 
         @SneakyThrows
         private Connection connect() {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/data.sl3");
-            Statement statement = connection.createStatement();
-            statement.execute("PRAGMA journal_mode=OFF");
-            statement.execute("PRAGMA synchronous=OFF");
-            statement.close();
-            return connection;
+            return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/player.db");
         }
 
         private Location decodeLocation(World world, String encoded) {
@@ -297,7 +259,7 @@ public class EventDrivenGameMaster implements Listener {
         }
 
         @NotNull
-        private Inventory readInventory(String string) {
+        private Inventory parseJsonToInventory(String string) {
             JsonObject obj = JsonParser.parseString(string).getAsJsonObject();
 
 

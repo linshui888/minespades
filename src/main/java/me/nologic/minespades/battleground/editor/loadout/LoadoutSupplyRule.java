@@ -26,6 +26,7 @@ public class LoadoutSupplyRule {
     private final String permission;
     private final int    interval, amount, maximum;
 
+    // Десериализованный ItemStack, который инициализируется лениво
     private transient ItemStack deserializedItemStack;
 
     public ItemStack getItemStack() {

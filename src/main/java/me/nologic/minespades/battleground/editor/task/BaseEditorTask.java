@@ -26,7 +26,7 @@ public abstract class BaseEditorTask {
 
     @SneakyThrows
     protected final Connection connect() {
-        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + plugin.getBattlegrounder().getEditor().getTargetBattleground(player) + ".db");
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + editor.getTargetBattleground(player) + ".db");
         Statement statement = connection.createStatement();
         statement.execute("PRAGMA journal_mode=OFF");
         statement.execute("PRAGMA synchronous=OFF");
