@@ -36,7 +36,7 @@ public class BattlegroundPlayerDeathEvent extends Event {
     }
 
     public enum RespawnMethod {
-        NORMAL, AOS, QUICK;
+        NORMAL, AOS, QUICK
     }
 
     private static final HandlerList HANDLERS = new HandlerList();
