@@ -29,8 +29,8 @@ public class BattlegroundPlayerDeathEvent extends Event {
     public BattlegroundPlayerDeathEvent(Player player, Player killer, EntityDamageEvent.DamageCause damageCause, boolean keepInventory, RespawnMethod respawnMethod) {
         this.victim = plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
         this.killer = plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(killer);
-        this.damageCause = damageCause;
-        this.battleground = victim.getBattleground();
+        this.damageCause   = damageCause;
+        this.battleground  = victim.getBattleground();
         this.keepInventory = keepInventory;
         this.respawnMethod = respawnMethod;
     }

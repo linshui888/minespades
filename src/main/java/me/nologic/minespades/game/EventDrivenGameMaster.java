@@ -101,6 +101,8 @@ public class EventDrivenGameMaster implements Listener {
 
         final Player player = event.getVictim().getPlayer();
 
+        this.playerKDA.handlePlayerDeath(event);
+
         // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
         // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
         // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
@@ -109,23 +111,23 @@ public class EventDrivenGameMaster implements Listener {
         if (lifepool >= 1) {
             event.getVictim().getTeam().setLifepool(lifepool - 1);
 
-            switch (event.getRespawnMethod()) {
-                case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
-                case AOS -> player.sendMessage("не реализовано...");
-                case NORMAL -> player.sendMessage("lol ok");
-            }
-
             if (!event.isKeepInventory()) {
                 event.getVictim().setRandomLoadout();
             }
 
-            player.setNoDamageTicks(40);
-            player.setHealth(20);
-            player.setFoodLevel(20);
+            // Если не сделать задержку в 1 тик, то некоторые изменения состояния игрока не применятся (fireTicks, tp)
             Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
+                switch (event.getRespawnMethod()) {
+                    case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
+                    case AOS -> player.sendMessage("не реализовано...");
+                    case NORMAL -> player.sendMessage("lol ok");
+                }
+                player.setNoDamageTicks(40);
+                player.setHealth(20);
+                player.setFoodLevel(20);
                 player.setFireTicks(0);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-            }, 10L);
+            }, 1L);
         } else {
             event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
             boolean everyPlayerInTeamIsSpectator = true;
@@ -150,7 +152,7 @@ public class EventDrivenGameMaster implements Listener {
         final Player killer = victim.getKiller();
         final EntityDamageEvent.DamageCause cause = Objects.requireNonNull(victim.getLastDamageCause()).getCause();
         event.setCancelled(true);
-
+        event.deathMessage(null);
         BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
         Bukkit.getServer().getPluginManager().callEvent(bpde);
 

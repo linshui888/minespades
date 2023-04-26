@@ -14,7 +14,8 @@ public class PlayerKDAHandler {
 
     public void handlePlayerDeath(BattlegroundPlayerDeathEvent event) {
 
-        Player victim = event.getVictim().getPlayer(), killer = event.getKiller().getPlayer();
+        Player victim = event.getVictim().getPlayer(), killer = null;
+        if (event.getKiller() != null) killer = event.getKiller().getPlayer();
 
         TextComponent textComponent;
         if (killer != null) {
@@ -28,7 +29,7 @@ public class PlayerKDAHandler {
             textComponent = Component.text(" > ")
                     .color(TextColor.color(0xCACAD9))
                     .append(victim.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
-                    .append(Component.text(" умер.."));
+                    .append(Component.text(" умер своей смертью.."));
         }
 
         event.getBattleground().broadcast(textComponent);
