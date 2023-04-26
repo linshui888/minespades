@@ -67,7 +67,6 @@ public final class Battleground {
         return this.teams.stream().filter(b -> b.getName().equals(name)).findFirst().orElse(null);
     }
 
-    // TODO: отправку сообщений логично будет разметить и разграничить (what?) внутри этого класса, а не в местах вызова
     public void broadcast(TextComponent message) {
         players.forEach(p -> p.getPlayer().sendMessage(message));
     }
