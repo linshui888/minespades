@@ -21,13 +21,13 @@ public class PlayerKDAHandler {
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
             textComponent = Component.text("")
-                    .color(TextColor.color(0xC78C3B))
+                    .color(TextColor.color(0x9B6433))
                     .append(victim.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
                     .append(Component.text(symbol))
                     .append(killer.name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor())));
         } else {
             textComponent = Component.text("☠ ")
-                    .color(TextColor.color(0xC78C3B))
+                    .color(TextColor.color(0x9B6433))
                     .append(victim.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())))
                     .append(Component.text(" ☠"));
         }
