@@ -12,13 +12,9 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
-import me.nologic.minespades.game.flag.Flag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -47,13 +43,6 @@ public class MinespadesCommand extends BaseCommand {
     @CommandPermission("minespades.editor")
     public void onLaunch(Player player, String name) {
         battlegrounder.enable(name.toLowerCase());
-    }
-
-    @Subcommand("testflag")
-    @CommandPermission("minespades.developer")
-    public void onTest(Player player) {
-        Flag flag = (Flag) player.getWorld().spawnFallingBlock(player.getLocation(), Material.BLACK_BANNER.createBlockData());
-        flag.shouldAutoExpire(false);
     }
 
     @Subcommand("add")
@@ -87,6 +76,16 @@ public class MinespadesCommand extends BaseCommand {
             }
 
             battlegrounder.getEditor().addSupply(player, name, interval, amount, maximum, permission);
+        }
+
+        @Subcommand("flag")
+        public void onAddFlag(Player player) {
+            if (!player.getInventory().getItemInMainHand().getType().toString().toLowerCase().contains("banner")) {
+                player.sendMessage("§4Ошибка. Возьмите в руки флаг.");
+                return;
+            }
+
+            battlegrounder.getEditor().addFlag(player);
         }
 
     }

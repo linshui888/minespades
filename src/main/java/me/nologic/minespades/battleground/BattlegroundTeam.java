@@ -3,9 +3,11 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.Setter;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
+import me.nologic.minespades.game.flag.BattlegroundFlag;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,11 +27,15 @@ public class BattlegroundTeam {
     private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
     private final Set<Player>                players = new HashSet<>();
 
-    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
+    @Nullable
+    private final BattlegroundFlag flag;
+
+    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool, BattlegroundFlag flag) {
         this.battleground = battleground;
         this.name = name;
         this.color = color;
         this.lifepool = lifepool;
+        this.flag = flag;
     }
 
     public void addRespawnLocation(Location location) {

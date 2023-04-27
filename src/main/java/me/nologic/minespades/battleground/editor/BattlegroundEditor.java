@@ -7,10 +7,8 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Table;
-import me.nologic.minespades.battleground.editor.task.RemoveLoadoutTask;
-import me.nologic.minespades.battleground.editor.task.SaveLoadoutTask;
-import me.nologic.minespades.battleground.editor.task.SaveSupplyTask;
-import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
+import me.nologic.minespades.battleground.editor.task.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -19,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.sql.*;
@@ -212,6 +211,23 @@ public class BattlegroundEditor implements Listener {
             }
 
             return false;
+        }
+    }
+
+    @SneakyThrows
+    public void addFlag(Player player) {
+        try (Connection connection = connect(getTargetBattleground(player))) {
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
+            selectStatement.setString(1, this.getTargetTeam(player));
+            ResultSet result = selectStatement.executeQuery(); result.next();
+
+            if (result.getString("flag") != null) {
+                player.sendMessage("§4Ошибка. У команды %s уже есть флаг.");
+                return;
+            }
+
+            Bukkit.getScheduler().runTask(plugin, new AddFlagTask(player));
+
         }
     }
 }
