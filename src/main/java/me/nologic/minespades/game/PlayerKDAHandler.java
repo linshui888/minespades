@@ -22,7 +22,7 @@ public class PlayerKDAHandler {
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
             deathMessage = killer.name().color(TextColor.fromHexString("#" + event.getKiller().getTeam().getColor()))
-                    .append(Component.text(symbol).color(TextColor.color(0xB9B9B9)))
+                    .append(Component.text(" " + symbol + " ").color(TextColor.color(0xB9B9B9)))
                     .append(victim.name().color(TextColor.fromHexString("#" + event.getVictim().getTeam().getColor())));
         } else {
             deathMessage = Component.text("☠ ")
@@ -44,7 +44,7 @@ public class PlayerKDAHandler {
         }
 
         return switch (event.getDamageCause()) {
-            case PROJECTILE -> "➶";
+            case PROJECTILE -> "➴";
             default -> "⚔";
         };
     }
