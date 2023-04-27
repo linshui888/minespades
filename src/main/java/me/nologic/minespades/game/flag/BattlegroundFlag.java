@@ -99,6 +99,7 @@ public class BattlegroundFlag implements Listener {
         box = null;
     }
 
+    // TODO: дроп флага в воздухе и в лаве должен обрабатываться отдельно
     /**
      * Когда вор флага умирает, должен вызываться этот метод.
      */
@@ -153,6 +154,7 @@ public class BattlegroundFlag implements Listener {
         BannerMeta meta = (BannerMeta) flag.getItemMeta();
         Banner banner = (Banner) position.getBlock().getState();
         banner.setPatterns(meta.getPatterns());
+        banner.update();
     }
 
 }
