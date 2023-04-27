@@ -12,9 +12,13 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
+import me.nologic.minespades.game.flag.Flag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -41,8 +45,15 @@ public class MinespadesCommand extends BaseCommand {
     @Subcommand("launch")
     @CommandCompletion("@battlegrounds")
     @CommandPermission("minespades.editor")
-    public void launch(Player player, String name) {
+    public void onLaunch(Player player, String name) {
         battlegrounder.enable(name.toLowerCase());
+    }
+
+    @Subcommand("testflag")
+    @CommandPermission("minespades.developer")
+    public void onTest(Player player) {
+        Flag flag = (Flag) player.getWorld().spawnFallingBlock(player.getLocation(), Material.BLACK_BANNER.createBlockData());
+        flag.shouldAutoExpire(false);
     }
 
     @Subcommand("add")
@@ -94,7 +105,7 @@ public class MinespadesCommand extends BaseCommand {
 
     @Subcommand("list")
     public class List extends BaseCommand {
-
+        // TODO
     }
 
     @Subcommand("create")
@@ -127,7 +138,7 @@ public class MinespadesCommand extends BaseCommand {
             name = name.toLowerCase();
             if (battlegrounder.isBattlegroundExist(name)) {
                 battlegrounder.getEditor().setTargetBattleground(player, name);
-                player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", name)).color(TextColor.color(197, 184, 41)));
+                player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", StringUtils.capitalise(name))).color(TextColor.color(197, 184, 41)));
             } else player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
         }
 
@@ -202,7 +213,7 @@ public class MinespadesCommand extends BaseCommand {
     public void onForceReset(Player player, String name) {
         try {
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            battleground.broadcast(Component.text(String.format("Арена %s была принудительно перезагружена игроком %s.", StringUtils.capitalise(name), player.getName())).color(TextColor.color(187, 166, 96)));
+            battleground.broadcast(Component.text(String.format("Арена %s принудительно перезагружена игроком %s.", StringUtils.capitalise(name), player.getName())).color(TextColor.color(187, 166, 96)));
             battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
             battlegrounder.reset(battleground);
         } catch (NullPointerException ex) {

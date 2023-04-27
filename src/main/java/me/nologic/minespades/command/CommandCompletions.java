@@ -29,6 +29,8 @@ public class CommandCompletions {
         return battlegroundNames;
     }
 
+    // TODO: списки команд редактируемой арены
+
     // Возвращает список лоадаутов команды, редактируемой игроком в данный момент.
     public List<String> getTargetTeamLoadoutNames(Player player) {
         List<String> loadoutNames = new ArrayList<>();
