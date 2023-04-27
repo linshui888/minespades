@@ -60,6 +60,7 @@ public class BattlegroundFlag implements Listener {
                                 if (!Objects.equals(player.getScoreboard().getPlayerTeam(player), team.getBukkitTeam())) {
                                     if (player.getGameMode().equals(GameMode.SURVIVAL)) {
                                         pickup(BattlegroundPlayer.getBattlegroundPlayer(player));
+                                        return;
                                     }
                                 }
                             }
