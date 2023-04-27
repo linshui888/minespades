@@ -2,6 +2,7 @@ package me.nologic.minespades.game.flag;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
@@ -27,13 +28,12 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class BattlegroundFlag implements Listener {
 
-    private final @Getter BukkitRunnable tick;
+    private @Getter @Setter BukkitRunnable tick;
     private final Battleground           battleground;
 
-    private final Team      team;
+    private @Setter Team    team;
     private final Location  base;
     private final ItemStack flag;
-    private final DyeColor  color;
 
     private BattlegroundPlayer carrier;
     private Location           position;
@@ -115,12 +115,16 @@ public class BattlegroundFlag implements Listener {
     /**
      * Возвращение флага к изначальному состоянию.
      */
-    private void reset() {
+    public void reset() {
         position = base;
-        carrier.getPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
-        carrier = null;
+        if (carrier != null) {
+            carrier.getPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
+            carrier.setFlag(null);
+            carrier.setCarryingFlag(false);
+            carrier = null;
+        }
         updateBoundingBox();
-        position.getBlock().setType(Material.WHITE_BANNER);
+        validateBannerData();
     }
 
     /**
@@ -137,7 +141,7 @@ public class BattlegroundFlag implements Listener {
         BannerMeta meta = (BannerMeta) flag.getItemMeta();
         Banner banner = (Banner) position.getBlock();
         banner.setPatterns(meta.getPatterns());
-        banner.setBaseColor(color);
+        banner.setType(flag.getType());
     }
 
 }

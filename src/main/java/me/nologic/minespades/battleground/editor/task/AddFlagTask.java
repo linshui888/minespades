@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

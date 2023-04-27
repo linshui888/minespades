@@ -9,6 +9,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
+import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -56,7 +57,13 @@ public class BattlegroundLoader {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
-                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"));
+
+                JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
+                int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
+                ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
+
+                BattlegroundFlag flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
+                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
                 JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {
                     JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
@@ -73,6 +80,7 @@ public class BattlegroundLoader {
                     team.addLoadout(loadout);
                 }
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
+                team.resetFlag();
                 list.add(team);
             }
         } catch (SQLException ex) {

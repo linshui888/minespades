@@ -50,6 +50,12 @@ public class BattlegroundTeam {
         return respawnLocations.get((int) (Math.random() * respawnLocations.size()));
     }
 
+    public void resetFlag() {
+        if (flag != null) {
+            flag.reset();
+        }
+    }
+
     public BattlegroundPlayer join(Player player) {
         this.bukkitTeam.addPlayer(player);
         this.players.add(player);

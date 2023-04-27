@@ -108,6 +108,11 @@ public class EventDrivenGameMaster implements Listener {
         // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
         // TODO: Необходимо заблочить телепортацию в режиме наблюдателя.
         int lifepool = event.getVictim().getTeam().getLifepool();
+
+        if (event.getVictim().isCarryingFlag()) {
+            event.getVictim().getFlag().drop();
+        }
+
         if (lifepool >= 1) {
             event.getVictim().getTeam().setLifepool(lifepool - 1);
 

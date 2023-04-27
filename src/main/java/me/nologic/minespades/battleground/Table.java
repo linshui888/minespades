@@ -11,7 +11,7 @@ public enum Table {
     ENTITIES("CREATE TABLE IF NOT EXISTS entities (x FLOAT NOT NULL, y INTEGER NOT NULL, z FLOAT NOT NULL, entity_type VARCHAR(32) NOT NULL, inventory TEXT);",
             "",
             ""),
-    TEAMS("CREATE TABLE IF NOT EXISTS teams (name VARCHAR(16) NOT NULL UNIQUE, lifepool INTEGER DEFAULT 100, color CHAR(6) DEFAULT 'FFFFFF', loadouts TEXT, respawnPoints TEXT);",
+    TEAMS("CREATE TABLE IF NOT EXISTS teams (name VARCHAR(16) NOT NULL UNIQUE, lifepool INTEGER DEFAULT 100, color CHAR(6) DEFAULT 'FFFFFF', loadouts TEXT, respawnPoints TEXT, flag TEXT);",
             "INSERT INTO teams (name) VALUES (?);",
             "SELECT * FROM teams"),
     PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (autoAssign BOOLEAN DEFAULT FALSE, friendlyFire BOOLEAN DEFAULT FALSE, world VARCHAR(64) NOT NULL);",
