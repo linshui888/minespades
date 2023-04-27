@@ -6,9 +6,13 @@ import lombok.Setter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -20,7 +24,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.Team;
 import org.bukkit.util.BoundingBox;
 
 import java.util.Objects;
@@ -28,12 +31,15 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class BattlegroundFlag implements Listener {
 
-    private @Getter @Setter BukkitRunnable tick;
-    private final Battleground           battleground;
+    private final Battleground battleground;
 
-    private @Setter Team    team;
-    private final Location  base;
-    private final ItemStack flag;
+    @Setter
+    private BattlegroundTeam team;
+    private final Location   base;
+    private final ItemStack  flag;
+
+    @Getter @Setter
+    private BukkitRunnable   tick;
 
     private BattlegroundPlayer carrier;
     private Location           position;
@@ -51,8 +57,10 @@ public class BattlegroundFlag implements Listener {
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
-                                if (!Objects.equals(player.getScoreboard().getPlayerTeam(player), team)) {
-                                    pickup(BattlegroundPlayer.getBattlegroundPlayer(player));
+                                if (!Objects.equals(player.getScoreboard().getPlayerTeam(player), team.getBukkitTeam())) {
+                                    if (player.getGameMode().equals(GameMode.SURVIVAL)) {
+                                        pickup(BattlegroundPlayer.getBattlegroundPlayer(player));
+                                    }
                                 }
                             }
 
@@ -68,10 +76,9 @@ public class BattlegroundFlag implements Listener {
 
     @EventHandler
     private void onBlockBreak(BlockBreakEvent event) {
+        // TODO: нормальные проверки
         if (Objects.equals(event.getBlock().getLocation(), position)) {
-            if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
-                event.setCancelled(true);
-            }
+            event.setCancelled(true);
         }
     }
 
@@ -83,11 +90,12 @@ public class BattlegroundFlag implements Listener {
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
         Player player = carrier.getPlayer();
-        ItemStack flag = ((Banner) position.getBlock()).getDrops().stream().findFirst().orElseThrow();
+        ItemStack flag = position.getBlock().getState().getDrops().stream().findFirst().orElseThrow();
         player.getInventory().setHelmet(flag);
-        battleground.broadcast(Component.text(String.format("Игрок %s спиздил флаг команды %s!", player.getName(), team)).color(TextColor.color(255, 51, 49)));
+        battleground.broadcast(Component.text(String.format("%s крадёт флаг команды %s!", player.getName(), team.getName())).color(TextColor.color(255, 255, 255)));
         position.getBlock().setType(Material.AIR);
         position = null;
+        box = null;
     }
 
     /**
@@ -105,10 +113,12 @@ public class BattlegroundFlag implements Listener {
         carrier.setCarryingFlag(false);
 
         position = player.getLocation().getBlock().getLocation();
+        this.updateBoundingBox();
+
         player.getInventory().setHelmet(new ItemStack(Material.AIR));
         carrier = null;
 
-        battleground.broadcast(Component.text(String.format("Игрок %s теряет флаг команды %s!", player.getName(), team)).color(TextColor.color(255, 51, 49)));
+        battleground.broadcast(Component.text(String.format("%s теряет флаг команды %s!", player.getName(), team.getName())).color(TextColor.color(255, 255, 255)));
         this.validateBannerData();
     }
 
@@ -138,10 +148,10 @@ public class BattlegroundFlag implements Listener {
      * Применяет к флагу сохранённый цвет и паттерны. Имеет смысл вызывать только после смены позиции.
      */
     private void validateBannerData() {
+        position.getBlock().setType(flag.getType());
         BannerMeta meta = (BannerMeta) flag.getItemMeta();
-        Banner banner = (Banner) position.getBlock();
+        Banner banner = (Banner) position.getBlock().getState();
         banner.setPatterns(meta.getPatterns());
-        banner.setType(flag.getType());
     }
 
 }

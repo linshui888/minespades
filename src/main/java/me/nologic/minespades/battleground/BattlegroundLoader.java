@@ -64,6 +64,7 @@ public class BattlegroundLoader {
 
                 BattlegroundFlag flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
+
                 JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {
                     JsonObject jsonLoadout = loadoutElement.getAsJsonObject();

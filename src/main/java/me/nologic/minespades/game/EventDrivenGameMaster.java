@@ -109,10 +109,6 @@ public class EventDrivenGameMaster implements Listener {
         // TODO: Необходимо заблочить телепортацию в режиме наблюдателя.
         int lifepool = event.getVictim().getTeam().getLifepool();
 
-        if (event.getVictim().isCarryingFlag()) {
-            event.getVictim().getFlag().drop();
-        }
-
         if (lifepool >= 1) {
             event.getVictim().getTeam().setLifepool(lifepool - 1);
 
@@ -122,6 +118,10 @@ public class EventDrivenGameMaster implements Listener {
 
             // Если не сделать задержку в 1 тик, то некоторые изменения состояния игрока не применятся (fireTicks, tp)
             Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
+
+                if (event.getVictim().isCarryingFlag())
+                    event.getVictim().getFlag().drop();
+
                 switch (event.getRespawnMethod()) {
                     case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
                     case AOS -> player.sendMessage("не реализовано...");

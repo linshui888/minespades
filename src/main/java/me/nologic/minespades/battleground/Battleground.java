@@ -50,6 +50,10 @@ public final class Battleground {
         bukkitTeam.setAllowFriendlyFire(false);
         bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
         team.setBukkitTeam(bukkitTeam);
+
+        if (team.getFlag() != null)
+            team.getFlag().setTeam(team);
+
         this.teams.add(team);
     }
 
