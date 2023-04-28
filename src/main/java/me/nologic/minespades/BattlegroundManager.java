@@ -85,7 +85,9 @@ public class BattlegroundManager {
         // Обрабатываем лист игроков через итератор чтобы избежать ConcurrentModificationException
         Iterator<BattlegroundPlayer> players = battleground.getPlayers().iterator();
         while (players.hasNext()) {
-            battleground.kick(players.next());
+            BattlegroundPlayer player = players.next();
+            plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
+            battleground.kick(player);
             // todo: what
         }
 

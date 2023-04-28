@@ -1,5 +1,6 @@
 package me.nologic.minespades.game.flag;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -33,7 +34,7 @@ public class BattlegroundFlag implements Listener {
 
     private final Battleground battleground;
 
-    @Setter
+    @Setter @Getter
     private BattlegroundTeam team;
     private final Location   base;
     private final ItemStack  flag;
@@ -64,7 +65,6 @@ public class BattlegroundFlag implements Listener {
                                     }
                                 }
                             }
-
                         }
                     }
                 }

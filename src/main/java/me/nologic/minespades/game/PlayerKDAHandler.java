@@ -2,8 +2,6 @@ package me.nologic.minespades.game;
 
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentBuilder;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.entity.Player;
 
@@ -41,10 +39,15 @@ public class PlayerKDAHandler {
             if (itemName.contains("pickaxe")) {
                 return "⛏";
             }
+            if (itemName.equals("air")) {
+                return "ツ";
+            }
         }
 
         return switch (event.getDamageCause()) {
             case PROJECTILE -> "➴";
+            case LAVA, FIRE, FIRE_TICK -> "♨";
+            case MAGIC -> "⛒";
             default -> "⚔";
         };
     }

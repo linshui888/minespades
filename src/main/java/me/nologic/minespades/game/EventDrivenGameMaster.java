@@ -70,6 +70,9 @@ public class EventDrivenGameMaster implements Listener {
     private void whenPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
         BattlegroundPlayer battlegroundPlayer = playerManager.getBattlegroundPlayer(event.getPlayer());
         if (battlegroundPlayer != null) {
+            if (battlegroundPlayer.isCarryingFlag()) {
+                battlegroundPlayer.getFlag().drop();
+            }
             battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
             playerManager.load(event.getPlayer());
@@ -134,6 +137,8 @@ public class EventDrivenGameMaster implements Listener {
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
             }, 1L);
         } else {
+            if (event.getVictim().isCarryingFlag())
+                event.getVictim().getFlag().drop();
             event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
             boolean everyPlayerInTeamIsSpectator = true;
             for (Player p : event.getVictim().getTeam().getPlayers()) {
@@ -160,7 +165,6 @@ public class EventDrivenGameMaster implements Listener {
         event.deathMessage(null);
         BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
         Bukkit.getServer().getPluginManager().callEvent(bpde);
-
     }
 
     @EventHandler
