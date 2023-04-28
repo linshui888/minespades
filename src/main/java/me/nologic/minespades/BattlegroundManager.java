@@ -1,10 +1,7 @@
 package me.nologic.minespades;
 
-import me.nologic.minespades.battleground.Battleground;
-import me.nologic.minespades.battleground.BattlegroundPlayer;
-import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
-import me.nologic.minespades.battleground.BattlegroundLoader;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -74,6 +71,10 @@ public class BattlegroundManager {
 
             if (team.getFlag() != null)
                 team.getFlag().getTick().cancel();
+
+            for (TeamRespawnPoint respawnPoint : team.getRespawnLocations()) {
+                respawnPoint.getTick().cancel();
+            }
 
             for (BattlegroundLoadout loadout : team.getLoadouts()) {
                 for (BukkitRunnable task : loadout.getTasks()) {
