@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
@@ -20,10 +21,11 @@ public class BattlegroundTeam {
     private final Battleground   battleground;
     private @Setter Team         bukkitTeam;
 
-    private final String         name, color;
+    private final TextColor      color;
+    private final String         name;
     private @Setter int          lifepool;
 
-    private final List<TeamRespawnPoint>             respawnLocations = new ArrayList<>();
+    private final List<TeamRespawnPoint>     respawnLocations = new ArrayList<>();
     private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
     private final Set<Player>                players = new HashSet<>();
 
@@ -33,7 +35,7 @@ public class BattlegroundTeam {
     public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool, @Nullable BattlegroundFlag flag) {
         this.battleground = battleground;
         this.name = name;
-        this.color = color;
+        this.color = TextColor.fromHexString("#" + color);
         this.lifepool = lifepool;
         this.flag = flag;
     }

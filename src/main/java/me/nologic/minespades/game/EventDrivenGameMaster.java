@@ -56,7 +56,7 @@ public class EventDrivenGameMaster implements Listener {
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
             playerManager.getPlayersInGame().add(battleground.connect(event.getPlayer()));
-            Component name = event.getPlayer().name().color(TextColor.fromHexString("#" + event.getTeam().getColor()));
+            Component name = event.getPlayer().name().color(event.getTeam().getColor());
             event.getPlayer().playerListName(name);
             event.getPlayer().displayName(name);
             event.getPlayer().setHealth(20);

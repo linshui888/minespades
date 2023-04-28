@@ -1,5 +1,6 @@
 package me.nologic.minespades.battleground;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -11,10 +12,7 @@ import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -61,15 +59,20 @@ public class BattlegroundLoader {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
 
-                JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
-                int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
-                ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
-                ItemMeta meta = itemFlag.getItemMeta();
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
-                itemFlag.setItemMeta(meta);
+                BattlegroundFlag flag = null;
 
-                BattlegroundFlag flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
+                if (teams.getString("flag") != null) {
+                    JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
+                    int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
+                    ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
+                    ItemMeta meta = itemFlag.getItemMeta();
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                    meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+                    itemFlag.setItemMeta(meta);
+
+                    flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
+                }
+
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
 
                 JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
@@ -88,7 +91,6 @@ public class BattlegroundLoader {
                     team.addLoadout(loadout);
                 }
                 Arrays.stream(teams.getString("respawnPoints").split(", ")).toList().forEach(loc -> team.addRespawnLocation(decodeLocation(loc)));
-                team.resetFlag();
                 list.add(team);
             }
         } catch (SQLException ex) {

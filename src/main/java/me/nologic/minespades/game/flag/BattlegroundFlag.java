@@ -1,5 +1,6 @@
 package me.nologic.minespades.game.flag;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -8,11 +9,9 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.*;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -39,11 +38,14 @@ public class BattlegroundFlag implements Listener {
     private final ItemStack  flag;
 
     @Getter @Setter
-    private BukkitRunnable   tick;
-
+    private BukkitRunnable     tick;
     private BattlegroundPlayer carrier;
+
+    @Getter
     private Location           position;
     private BoundingBox        box;
+
+    private ParticleBuilder particle;
 
     {
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
@@ -54,6 +56,7 @@ public class BattlegroundFlag implements Listener {
             @Override
             public void run() {
                 if (box != null) {
+                    particle.spawn();
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
@@ -76,9 +79,17 @@ public class BattlegroundFlag implements Listener {
 
     @EventHandler
     private void onBlockBreak(BlockBreakEvent event) {
+
         // TODO: нормальные проверки
         if (Objects.equals(event.getBlock().getLocation(), position)) {
             event.setCancelled(true);
+        }
+
+        // Блок под флагом тоже должен быть неразрушаемым
+        if (position != null) {
+            if (Objects.equals(event.getBlock().getLocation(), position.getBlock().getRelative(BlockFace.DOWN).getLocation())) {
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -91,7 +102,13 @@ public class BattlegroundFlag implements Listener {
         carrier.setCarryingFlag(true);
         Player player = carrier.getPlayer();
         player.getInventory().setHelmet(flag);
-        battleground.broadcast(Component.text(String.format("%s крадёт флаг команды %s!", player.getName(), team.getName())).color(TextColor.color(255, 255, 255)));
+
+        TextComponent stealMessage = Component.text(player.getName()).color(carrier.getTeam().getColor())
+                .append(Component.text(" крадёт флаг команды ").color(NamedTextColor.WHITE))
+                .append(Component.text(team.getName()).color(team.getColor())).append(Component.text("!").color(NamedTextColor.WHITE));
+
+        battleground.broadcast(stealMessage);
+
         position.getBlock().setType(Material.AIR);
         position = null;
         box = null;
@@ -103,8 +120,15 @@ public class BattlegroundFlag implements Listener {
      */
     public void drop() {
 
+        // TODO: сообщения нужно куда-то убрать, код станет гораздо чище
+        TextComponent flagDropMessage = Component.text(carrier.getPlayer().getName()).color(carrier.getTeam().getColor())
+                .append(Component.text(" теряет флаг команды ").color(NamedTextColor.WHITE))
+                .append(Component.text(team.getName()).color(team.getColor())).append(Component.text("!").color(NamedTextColor.WHITE));
+
+        battleground.broadcast(flagDropMessage);
+
         Player player = carrier.getPlayer();
-        if (Objects.equals(Objects.requireNonNull(player.getLastDamageCause()).getCause(), EntityDamageEvent.DamageCause.LAVA)) {
+        if (player.getLastDamageCause() != null && Objects.equals(player.getLastDamageCause().getCause(), EntityDamageEvent.DamageCause.LAVA)) {
             this.reset();
             return;
         }
@@ -113,12 +137,12 @@ public class BattlegroundFlag implements Listener {
         carrier.setCarryingFlag(false);
 
         position = player.getLocation().getBlock().getLocation();
+        particle.location(position.toCenterLocation());
         this.updateBoundingBox();
 
         player.getInventory().setHelmet(new ItemStack(Material.AIR));
         carrier = null;
 
-        battleground.broadcast(Component.text(String.format("%s теряет флаг команды %s!", player.getName(), team.getName())).color(TextColor.color(255, 255, 255)));
         this.validateBannerData();
     }
 
@@ -135,6 +159,7 @@ public class BattlegroundFlag implements Listener {
         }
         updateBoundingBox();
         validateBannerData();
+        prepareFlagParticle();
     }
 
     /**
@@ -153,6 +178,12 @@ public class BattlegroundFlag implements Listener {
         Banner banner = (Banner) position.getBlock().getState();
         banner.setPatterns(meta.getPatterns());
         banner.update();
+    }
+
+    private void prepareFlagParticle() {
+        particle = new ParticleBuilder(Particle.REDSTONE);
+        particle.color(team.getColor().red(), team.getColor().green(), team.getColor().blue());
+        particle.location(position.toCenterLocation()).allPlayers().offset(0.5, 1, 0.5).count(7);
     }
 
 }

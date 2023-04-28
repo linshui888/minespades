@@ -55,6 +55,7 @@ public final class Battleground {
         if (team.getFlag() != null)
             team.getFlag().setTeam(team);
 
+        team.resetFlag();
         this.teams.add(team);
     }
 
