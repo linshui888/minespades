@@ -41,6 +41,7 @@ public final class Battleground {
     }
 
     public void kick(BattlegroundPlayer player) {
+        players.remove(player);
         player.getTeam().kick(player.getPlayer());
         player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }

@@ -1,6 +1,5 @@
 package me.nologic.minespades.game.flag;
 
-import com.destroystokyo.paper.ParticleBuilder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -91,7 +90,6 @@ public class BattlegroundFlag implements Listener {
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
         Player player = carrier.getPlayer();
-        ItemStack flag = position.getBlock().getState().getDrops().stream().findFirst().orElseThrow();
         player.getInventory().setHelmet(flag);
         battleground.broadcast(Component.text(String.format("%s крадёт флаг команды %s!", player.getName(), team.getName())).color(TextColor.color(255, 255, 255)));
         position.getBlock().setType(Material.AIR);

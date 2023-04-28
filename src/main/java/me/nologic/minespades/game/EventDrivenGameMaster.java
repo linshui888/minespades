@@ -73,8 +73,8 @@ public class EventDrivenGameMaster implements Listener {
             if (battlegroundPlayer.isCarryingFlag()) {
                 battlegroundPlayer.getFlag().drop();
             }
-            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
+            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             playerManager.load(event.getPlayer());
             event.getPlayer().displayName(event.getPlayer().name().color(NamedTextColor.WHITE));
             event.getPlayer().playerListName(event.getPlayer().name().color(NamedTextColor.WHITE));

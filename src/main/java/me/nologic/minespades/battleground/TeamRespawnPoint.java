@@ -47,9 +47,8 @@ public class TeamRespawnPoint implements Listener {
                                 BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
                                 if (bgPlayer.isCarryingFlag()) {
                                     // TODO: написать отдельный ивент, что-то типа BattlegroundFlagDeliveryEvent
-                                    bgPlayer.setCarryingFlag(false);
-                                    bgPlayer.getFlag().reset();
                                     battleground.broadcast(Component.text(String.format("%s приносит флаг команды %s на свою базу!", player.getName(), bgPlayer.getFlag().getTeam().getName())));
+                                    bgPlayer.getFlag().reset();
                                 }
                             }
                         }

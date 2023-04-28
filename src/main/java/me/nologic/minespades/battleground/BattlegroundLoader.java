@@ -16,10 +16,13 @@ import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
@@ -61,6 +64,10 @@ public class BattlegroundLoader {
                 JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
                 int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
                 ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
+                ItemMeta meta = itemFlag.getItemMeta();
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+                itemFlag.setItemMeta(meta);
 
                 BattlegroundFlag flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
