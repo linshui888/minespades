@@ -84,6 +84,7 @@ public class BattlegroundManager {
         }
 
         // Обрабатываем лист игроков через итератор чтобы избежать ConcurrentModificationException
+        // TODO: параша всё равно иногда вызывает ошибки, чини
         Iterator<BattlegroundPlayer> players = battleground.getPlayers().iterator();
         while (players.hasNext()) {
             BattlegroundPlayer player = players.next();
