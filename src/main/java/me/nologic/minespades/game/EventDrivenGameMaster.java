@@ -10,6 +10,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
+import me.nologic.minespades.game.event.BattlegroundTeamLoseEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
@@ -27,6 +28,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -90,13 +92,17 @@ public class EventDrivenGameMaster implements Listener {
                         break;
                     }
                 }
-                if (everyPlayerInTeamIsSpectator) {
-                    // TODO: team lose event
-                    event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
-                    Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
-                }
+                if (everyPlayerInTeamIsSpectator)
+                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getTeam()));
             }
         }
+    }
+
+    @EventHandler
+    private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
+        // todo: нормальное сообщение о проигрыше команды
+        event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
+        Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
 
     @EventHandler
@@ -142,14 +148,13 @@ public class EventDrivenGameMaster implements Listener {
             event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
             boolean everyPlayerInTeamIsSpectator = true;
             for (Player p : event.getVictim().getTeam().getPlayers()) {
-                if (p.getGameMode() == GameMode.SURVIVAL) everyPlayerInTeamIsSpectator = false;
+                if (p.getGameMode() == GameMode.SURVIVAL) {
+                    everyPlayerInTeamIsSpectator = false;
+                    break;
+                }
             }
-            if (everyPlayerInTeamIsSpectator) {
-                // TODO: team lose event
-                // Нужно будет написать специальный ивент, но пока просто ресетаем арену, когда у команды закончился лайфпул и все её игроки в спеке.
-                event.getBattleground().broadcast(Component.text("Команда " + event.getVictim().getTeam().getName() + " проиграла.").color(TextColor.color(121, 157, 9)).decorate(TextDecoration.BOLD));
-                Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
-            }
+            if (everyPlayerInTeamIsSpectator)
+                Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getVictim().getTeam()));
         }
 
     }
@@ -165,6 +170,12 @@ public class EventDrivenGameMaster implements Listener {
         event.deathMessage(null);
         BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
         Bukkit.getServer().getPluginManager().callEvent(bpde);
+    }
+
+    @EventHandler
+    private void onPlayerTeleport(PlayerTeleportEvent event) {
+        // телепортация в режиме спектатора должна быть отменена, если целевая локация находится не в мире с ареной
+        // отменять телепортацию будет логично только если игрок это BattlegroundPlayer
     }
 
     @EventHandler
