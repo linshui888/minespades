@@ -42,8 +42,8 @@ public final class Battleground {
 
     public void kick(BattlegroundPlayer player) {
         players.remove(player);
-        player.getTeam().kick(player.getPlayer());
-        player.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        player.getTeam().kick(player.getBukkitPlayer());
+        player.getBukkitPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
 
     public void addTeam(BattlegroundTeam team) {
@@ -74,7 +74,7 @@ public final class Battleground {
     }
 
     public void broadcast(TextComponent message) {
-        players.forEach(p -> p.getPlayer().sendMessage(message));
+        players.forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
 }

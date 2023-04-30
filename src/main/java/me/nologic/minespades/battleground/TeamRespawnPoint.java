@@ -2,6 +2,7 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.game.event.PlayerCarriedFlagEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -46,9 +47,7 @@ public class TeamRespawnPoint implements Listener {
                             if (Objects.equals(player.getScoreboard().getPlayerTeam(player), team.getBukkitTeam())) {
                                 BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
                                 if (bgPlayer.isCarryingFlag()) {
-                                    // TODO: написать отдельный ивент, что-то типа BattlegroundFlagDeliveryEvent
-                                    battleground.broadcast(Component.text(String.format("%s приносит флаг команды %s на свою базу!", player.getName(), bgPlayer.getFlag().getTeam().getName())));
-                                    bgPlayer.getFlag().reset();
+                                    Bukkit.getServer().getPluginManager().callEvent(new PlayerCarriedFlagEvent(battleground, bgPlayer, bgPlayer.getFlag()));
                                 }
                             }
                         }

@@ -100,7 +100,7 @@ public class BattlegroundFlag implements Listener {
         this.carrier = carrier;
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
-        Player player = carrier.getPlayer();
+        Player player = carrier.getBukkitPlayer();
         player.getInventory().setHelmet(flag);
 
         TextComponent stealMessage = Component.text(player.getName()).color(carrier.getTeam().getColor())
@@ -121,13 +121,13 @@ public class BattlegroundFlag implements Listener {
     public void drop() {
 
         // TODO: сообщения нужно куда-то убрать, код станет гораздо чище
-        TextComponent flagDropMessage = Component.text(carrier.getPlayer().getName()).color(carrier.getTeam().getColor())
+        TextComponent flagDropMessage = Component.text(carrier.getBukkitPlayer().getName()).color(carrier.getTeam().getColor())
                 .append(Component.text(" теряет флаг команды ").color(NamedTextColor.WHITE))
                 .append(Component.text(team.getName()).color(team.getColor())).append(Component.text("!").color(NamedTextColor.WHITE));
 
         battleground.broadcast(flagDropMessage);
 
-        Player player = carrier.getPlayer();
+        Player player = carrier.getBukkitPlayer();
         if (player.getLastDamageCause() != null && Objects.equals(player.getLastDamageCause().getCause(), EntityDamageEvent.DamageCause.LAVA)) {
             this.reset();
             return;
@@ -152,7 +152,7 @@ public class BattlegroundFlag implements Listener {
     public void reset() {
         position = base;
         if (carrier != null) {
-            carrier.getPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
+            carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
             carrier.setFlag(null);
             carrier.setCarryingFlag(false);
             carrier = null;

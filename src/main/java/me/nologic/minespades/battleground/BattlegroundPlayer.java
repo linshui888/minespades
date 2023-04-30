@@ -14,7 +14,7 @@ public class BattlegroundPlayer {
 
     private @Getter final Battleground       battleground;
     private @Getter final BattlegroundTeam   team;
-    private @Getter final Player             player;
+    private @Getter final Player             bukkitPlayer;
 
     private @Getter BattlegroundLoadout      loadout;
 
@@ -24,7 +24,7 @@ public class BattlegroundPlayer {
 
     public void setRandomLoadout() {
         loadout = team.getLoadouts().get((int) (Math.random() * team.getLoadouts().size()));
-        player.getInventory().setContents(loadout.getInventory().getContents());
+        bukkitPlayer.getInventory().setContents(loadout.getInventory().getContents());
     }
 
     public static BattlegroundPlayer getBattlegroundPlayer(Player player) {

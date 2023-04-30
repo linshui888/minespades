@@ -9,10 +9,7 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
-import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
-import me.nologic.minespades.game.event.BattlegroundTeamLoseEvent;
-import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
-import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
+import me.nologic.minespades.game.event.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -53,7 +50,7 @@ public class EventDrivenGameMaster implements Listener {
     private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
 
     @EventHandler
-    private void whenPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
+    private void onPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
         Battleground battleground = event.getBattleground();
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
@@ -69,7 +66,7 @@ public class EventDrivenGameMaster implements Listener {
     }
 
     @EventHandler
-    private void whenPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
+    private void onPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
         BattlegroundPlayer battlegroundPlayer = playerManager.getBattlegroundPlayer(event.getPlayer());
         if (battlegroundPlayer != null) {
             if (battlegroundPlayer.isCarryingFlag()) {
@@ -99,16 +96,9 @@ public class EventDrivenGameMaster implements Listener {
     }
 
     @EventHandler
-    private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-        // todo: нормальное сообщение о проигрыше команды
-        event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
-        Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
-    }
-
-    @EventHandler
     private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
 
-        final Player player = event.getVictim().getPlayer();
+        final Player player = event.getVictim().getBukkitPlayer();
 
         this.playerKDA.handlePlayerDeath(event);
 
@@ -145,7 +135,7 @@ public class EventDrivenGameMaster implements Listener {
         } else {
             if (event.getVictim().isCarryingFlag())
                 event.getVictim().getFlag().drop();
-            event.getVictim().getPlayer().setGameMode(GameMode.SPECTATOR);
+            event.getVictim().getBukkitPlayer().setGameMode(GameMode.SPECTATOR);
             boolean everyPlayerInTeamIsSpectator = true;
             for (Player p : event.getVictim().getTeam().getPlayers()) {
                 if (p.getGameMode() == GameMode.SURVIVAL) {
@@ -157,6 +147,19 @@ public class EventDrivenGameMaster implements Listener {
                 Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getVictim().getTeam()));
         }
 
+    }
+
+    @EventHandler
+    private void onPlayerCarriedFlagEvent(PlayerCarriedFlagEvent event) {
+        event.getBattleground().broadcast(Component.text(String.format("%s приносит флаг команды %s на свою базу!", event.getPlayer().getBukkitPlayer().getName(), event.getFlag().getTeam().getName())));
+        event.getFlag().reset();
+    }
+
+    @EventHandler
+    private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
+        // todo: нормальное сообщение о проигрыше команды
+        event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
+        Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
 
     @EventHandler
@@ -174,8 +177,15 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onPlayerTeleport(PlayerTeleportEvent event) {
-        // телепортация в режиме спектатора должна быть отменена, если целевая локация находится не в мире с ареной
-        // отменять телепортацию будет логично только если игрок это BattlegroundPlayer
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE) {
+            BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
+            if (bgPlayer != null) {
+                if (!event.getTo().getWorld().equals(bgPlayer.getBattleground().getWorld())) {
+                    event.setCancelled(true);
+                }
+            }
+
+        }
     }
 
     @EventHandler
@@ -202,7 +212,7 @@ public class EventDrivenGameMaster implements Listener {
          * */
         public BattlegroundPlayer getBattlegroundPlayer(Player player) {
             for (BattlegroundPlayer bgPlayer : playersInGame) {
-                if (bgPlayer.getPlayer().equals(player)) {
+                if (bgPlayer.getBukkitPlayer().equals(player)) {
                     return bgPlayer;
                 }
             }
