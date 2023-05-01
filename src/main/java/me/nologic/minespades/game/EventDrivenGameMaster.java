@@ -11,6 +11,7 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.game.event.*;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -157,8 +158,10 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-        // todo: нормальное сообщение о проигрыше команды
-        event.getBattleground().broadcast(Component.text("Команда " + event.getTeam().getName() + " проиграла.").color(TextColor.color(226, 66, 43)).decorate(TextDecoration.BOLD));
+        TextComponent message = Component.text("Команда ").color(NamedTextColor.WHITE)
+                .append(Component.text(event.getTeam().getName()).color(event.getTeam().getColor()).decorate(TextDecoration.BOLD))
+                .append(Component.text("проиграла!"));
+        event.getBattleground().broadcast(message);
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
 
