@@ -222,7 +222,7 @@ public class BattlegroundEditor implements Listener {
             ResultSet result = selectStatement.executeQuery(); result.next();
 
             if (result.getString("flag") != null) {
-                player.sendMessage("§4Ошибка. У команды %s уже есть флаг.");
+                player.sendMessage(String.format("§4Ошибка. У команды %s уже есть флаг.", this.getTargetTeam(player)));
                 return;
             }
 

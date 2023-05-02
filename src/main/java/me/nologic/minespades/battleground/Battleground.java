@@ -24,7 +24,7 @@ public final class Battleground {
     private final List<BattlegroundTeam> teams;
 
     // TODO: Возможно стоит перенести параметры арены в отдельный класс?
-    private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, skipDeathScreen, colorfulEnding, airStrike;
+    private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, colorfulEnding, airStrike;
 
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;

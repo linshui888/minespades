@@ -106,7 +106,6 @@ public class EventDrivenGameMaster implements Listener {
         // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
         // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
         // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
-        // TODO: Необходимо заблочить телепортацию в режиме наблюдателя.
         int lifepool = event.getVictim().getTeam().getLifepool();
 
         if (lifepool >= 1) {
@@ -182,7 +181,8 @@ public class EventDrivenGameMaster implements Listener {
         Bukkit.getServer().getPluginManager().callEvent(bpde);
     }
 
-    @EventHandler
+
+    @EventHandler // Отмена телепортации на арене в режиме наблюдателя
     private void onPlayerTeleport(PlayerTeleportEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE) {
             BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
