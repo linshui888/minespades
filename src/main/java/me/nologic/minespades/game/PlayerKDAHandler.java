@@ -3,7 +3,6 @@ package me.nologic.minespades.game;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 
 /**
