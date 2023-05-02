@@ -14,8 +14,7 @@ import java.io.ByteArrayInputStream;
 @Getter
 public class LoadoutSupplyRule {
 
-    @SerializedName("loadout")
-    private final String targetLoadout;
+    private final transient BattlegroundLoadout loadout;
 
     @SerializedName("name")
     private final String supplyName;

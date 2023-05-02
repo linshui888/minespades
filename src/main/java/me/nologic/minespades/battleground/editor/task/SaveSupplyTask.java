@@ -25,7 +25,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
         super(player);
         ItemStack itemStack = player.getInventory().getItemInMainHand().clone();
         itemStack.setAmount(1);
-        this.supplyRule = new LoadoutSupplyRule(editor.getTargetLoadout(player), name, super.serializeItemStack(itemStack), permission, interval, amount, maximum);
+        this.supplyRule = new LoadoutSupplyRule(null, name, super.serializeItemStack(itemStack), permission, interval, amount, maximum);
     }
 
     @Override

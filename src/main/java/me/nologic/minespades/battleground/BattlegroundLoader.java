@@ -85,7 +85,7 @@ public class BattlegroundLoader {
                     for (JsonElement supplyElement : supplies) {
                         JsonObject supplyRule = supplyElement.getAsJsonObject();
                         String supplyName = supplyRule.get("name").getAsString();
-                        loadout.addSupplyRule(new LoadoutSupplyRule(loadoutName, supplyName, supplyRule.get("item").getAsString(), supplyRule.get("permission").getAsString(), supplyRule.get("interval").getAsInt(), supplyRule.get("amount").getAsInt(), supplyRule.get("maximum").getAsInt()));
+                        loadout.addSupplyRule(new LoadoutSupplyRule(loadout, supplyName, supplyRule.get("item").getAsString(), supplyRule.get("permission").getAsString(), supplyRule.get("interval").getAsInt(), supplyRule.get("amount").getAsInt(), supplyRule.get("maximum").getAsInt()));
                     }
                     loadout.acceptSupplyRules();
                     team.addLoadout(loadout);

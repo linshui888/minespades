@@ -35,7 +35,7 @@ public class BattlegroundLoadout {
                 public void run() {
                     for (BattlegroundPlayer player : Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getPlayersInGame()) {
                         if (!player.getBukkitPlayer().hasPermission(rule.getPermission())) return;
-                        if (player.getLoadout().getName().equals(rule.getTargetLoadout())) {
+                        if (player.getLoadout().equals(rule.getLoadout())) {
                             ItemStack item = rule.getItemStack();
                             PlayerInventory inventory = player.getBukkitPlayer().getInventory();
                             if (!inventory.containsAtLeast(item, rule.getMaximum())) {
