@@ -2,6 +2,8 @@ package me.nologic.minespades.game;
 
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 
 /**
@@ -19,7 +21,7 @@ public class PlayerKDAHandler {
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
             deathMessage = killer.displayName()
-                    .append(Component.text(" " + symbol + " "))
+                    .append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE))
                     .append(victim.displayName());
         } else {
             deathMessage = Component.text("☠ ")
@@ -44,8 +46,8 @@ public class PlayerKDAHandler {
 
         return switch (event.getDamageCause()) {
             case PROJECTILE -> "➴";
-            case LAVA, FIRE, FIRE_TICK -> "♨";
-            case MAGIC -> "⛒";
+            case LAVA, FIRE, FIRE_TICK -> "♨♨♨";
+            case MAGIC -> "⚡";
             default -> "⚔";
         };
     }

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -38,6 +40,10 @@ public class BattlegroundTeam {
         this.color = TextColor.fromHexString("#" + color);
         this.lifepool = lifepool;
         this.flag = flag;
+    }
+
+    public TextComponent getDisplayName() {
+        return Component.text(name).color(color);
     }
 
     public void addRespawnLocation(Location location) {

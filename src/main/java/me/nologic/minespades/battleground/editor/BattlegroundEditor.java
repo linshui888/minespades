@@ -168,8 +168,17 @@ public class BattlegroundEditor implements Listener {
         player.sendMessage("§7Вы вошли в режим редактирования карты. Взяв в руки золотой меч, выделите кубоид, после чего напишите §6/ms save§7, чтобы сохранить карту.");
     }
 
+    @SneakyThrows
     public void setTargetTeam(Player player, String teamName) {
-        this.teamEditSession.put(player, teamName);
+        try (Connection connection = this.connect(battlegroundEditSession.get(player))) {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
+            statement.setString(1, teamName);
+            ResultSet result = statement.executeQuery();
+            if (result.next()) {
+                this.teamEditSession.put(player, teamName);
+                player.sendMessage("§2Успех. Редактируемая команда: " + teamName);
+            } else player.sendMessage("§4Ошибка. Несуществующая команда: " + teamName);
+        }
     }
     public String getTargetTeam(Player player) {
         return teamEditSession.get(player);

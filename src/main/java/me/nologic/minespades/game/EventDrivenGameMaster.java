@@ -153,7 +153,7 @@ public class EventDrivenGameMaster implements Listener {
     private void onPlayerCarriedFlagEvent(PlayerCarriedFlagEvent event) {
         TextComponent flagCarriedMessage = Component.text("").append(event.getPlayer().getBukkitPlayer().displayName())
                 .append(Component.text(" приносит флаг команды "))
-                .append(Component.text(event.getFlag().getTeam().getName()).color(event.getFlag().getTeam().getColor()))
+                .append(event.getFlag().getTeam().getDisplayName())
                 .append(Component.text(" на свою базу!"));
         event.getBattleground().broadcast(flagCarriedMessage);
         event.getFlag().reset();
@@ -161,8 +161,8 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-        TextComponent message = Component.text("Команда ").color(NamedTextColor.WHITE)
-                .append(Component.text(event.getTeam().getName()).color(event.getTeam().getColor()).decorate(TextDecoration.BOLD))
+        TextComponent message = Component.text("Команда ")
+                .append(event.getTeam().getDisplayName())
                 .append(Component.text(" проиграла!"));
         event.getBattleground().broadcast(message);
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());

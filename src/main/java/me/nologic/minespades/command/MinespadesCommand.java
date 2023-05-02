@@ -34,8 +34,8 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     private void registerCompletions() {
-        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getEnabledBattlegroundNames());
-        plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadoutNames(c.getPlayer()));
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getBattlegroundFileList());
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadouts(c.getPlayer()));
     }
 
     @Subcommand("launch")
@@ -94,6 +94,8 @@ public class MinespadesCommand extends BaseCommand {
     @CommandPermission("minespades.editor")
     public class Delete extends BaseCommand {
 
+
+        // TODO: добавить проверку на нуллики
         @Subcommand("loadout")
         @CommandCompletion("loadouts")
         public void onDeleteLoadout(Player player, String loadoutName) {

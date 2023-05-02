@@ -9,6 +9,7 @@ import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,16 +24,30 @@ public class CommandCompletions {
     private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
     // Возвращает список названий запущенных арен.
-    public List<String> getEnabledBattlegroundNames() {
+    public List<String> getEnabledBattlegrounds() {
         List<String> battlegroundNames = new ArrayList<>();
         battlegrounder.getEnabledBattlegrounds().forEach(b -> battlegroundNames.add(b.getBattlegroundName()));
+        return battlegroundNames;
+    }
+
+    // Возвращает список всех файлов (предположительно арен), которые находятся в папке battlegrounds
+    public List<String> getBattlegroundFileList() {
+        List<String> battlegroundNames = new ArrayList<>();
+
+        String[] files = new File(plugin.getDataFolder() + "/battlegrounds/").list();
+        if (files != null) {
+            for (String file : files) {
+                battlegroundNames.add(file.replace(".db", ""));
+            }
+        }
+
         return battlegroundNames;
     }
 
     // TODO: списки команд редактируемой арены
 
     // Возвращает список лоадаутов команды, редактируемой игроком в данный момент.
-    public List<String> getTargetTeamLoadoutNames(Player player) {
+    public List<String> getTargetTeamLoadouts(Player player) {
         List<String> loadoutNames = new ArrayList<>();
 
         String targetTeamName = battlegrounder.getEditor().getTargetTeam(player);
