@@ -176,8 +176,9 @@ public class BattlegroundEditor implements Listener {
             ResultSet result = statement.executeQuery();
             if (result.next()) {
                 this.teamEditSession.put(player, teamName);
-                player.sendMessage("§2Успех. Редактируемая команда: " + teamName);
-            } else player.sendMessage("§4Ошибка. Несуществующая команда: " + teamName);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+                player.sendMessage("§2Успех. Редактируемая команда: " + teamName + ".");
+            } else player.sendMessage("§4Ошибка. Несуществующая команда: " + teamName + ".");
         }
     }
     public String getTargetTeam(Player player) {
@@ -199,11 +200,12 @@ public class BattlegroundEditor implements Listener {
 
     @SneakyThrows
     public void setTeamColor(Player player, String hexColor) {
-        Connection connection = this.connect(getTargetBattleground(player));
-        PreparedStatement statement = connection.prepareStatement("UPDATE teams SET color = ? WHERE name = ?;");
-        statement.setString(1, hexColor);
-        statement.setString(2, getTargetTeam(player));
-        statement.executeUpdate();
+        try (Connection connection = this.connect(getTargetBattleground(player))) {
+            PreparedStatement statement = connection.prepareStatement("UPDATE teams SET color = ? WHERE name = ?;");
+            statement.setString(1, hexColor);
+            statement.setString(2, getTargetTeam(player));
+            statement.executeUpdate();
+        }
     }
 
     @SneakyThrows

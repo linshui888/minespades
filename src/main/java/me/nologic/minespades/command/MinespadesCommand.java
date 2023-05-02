@@ -15,6 +15,7 @@ import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -152,12 +153,27 @@ public class MinespadesCommand extends BaseCommand {
 
         @Subcommand("team")
         public void onEditTeam(Player player, String teamName) {
+            if (battlegrounder.getEditor().getTargetBattleground(player) == null) {
+                player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
+                return;
+            }
             battlegrounder.getEditor().setTargetTeam(player, teamName);
         }
 
         @Subcommand("color")
         public void onEditColor(Player player, String hexColor) {
+            if (battlegrounder.getEditor().getTargetBattleground(player) == null) {
+                player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
+                return;
+            }
+            if (battlegrounder.getEditor().getTargetTeam(player) == null) {
+                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
+                return;
+            }
             battlegrounder.getEditor().setTeamColor(player, hexColor);
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+            player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", battlegrounder.getEditor().getTargetTeam(player)))
+                    .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
         }
 
         @Subcommand("loadout")
@@ -176,6 +192,7 @@ public class MinespadesCommand extends BaseCommand {
 
             battlegrounder.getEditor().setTargetLoadout(player, name);
             player.sendMessage(String.format("§2Успех. Редактируемый набор экипировки: %s.", name));
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         }
 
     }
