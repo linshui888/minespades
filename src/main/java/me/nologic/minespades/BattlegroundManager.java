@@ -62,7 +62,11 @@ public class BattlegroundManager {
         return loader.load(name);
     }
 
-    private void disable(String battlegroundName) {
+    public void disable(Battleground battleground) {
+        this.disable(battleground.getBattlegroundName());
+    }
+
+    public void disable(String battlegroundName) {
         Battleground battleground = this.getBattlegroundByName(battlegroundName);
         battleground.setEnabled(false);
 

@@ -13,8 +13,6 @@ import me.nologic.minespades.game.event.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -261,7 +259,7 @@ public class EventDrivenGameMaster implements Listener {
         }
 
         @SneakyThrows
-        public void forceload(Player player) {
+        public void fixInventory(Player player) {
             try (Connection connection = connect()) {
                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");
                 preparedStatement.setString(1, player.getName());
@@ -278,7 +276,6 @@ public class EventDrivenGameMaster implements Listener {
                 player.setHealth(health);
                 player.setFoodLevel(hunger);
                 player.setGameMode(GameMode.SURVIVAL);
-                player.sendMessage("§7Инвентарь был восстановлен. Принудительно. Почему Нологик такой дегенерат?");
             }
         }
 

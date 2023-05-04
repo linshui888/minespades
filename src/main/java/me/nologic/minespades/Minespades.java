@@ -48,9 +48,9 @@ public final class Minespades extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        this.getLogger().info("Minespades отключается, все работающие арены будут остановлены.");
         battlegrounder.getEnabledBattlegrounds().forEach(battleground -> {
-            battleground.getPlayers().forEach(battleground::kick);
-            battleground.getPlayers().clear();
+            battlegrounder.disable(battleground);
         });
     }
 

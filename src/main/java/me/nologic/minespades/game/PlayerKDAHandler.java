@@ -19,13 +19,9 @@ public class PlayerKDAHandler {
         Component deathMessage;
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
-            deathMessage = killer.displayName()
-                    .append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE))
-                    .append(victim.displayName());
+            deathMessage = killer.displayName().append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE)).append(victim.displayName());
         } else {
-            deathMessage = Component.text("☠ ")
-                    .append(victim.displayName())
-                    .append(Component.text(" ☠"));
+            deathMessage = Component.text("☠ ").append(victim.displayName()).append(Component.text(" ☠"));
         }
 
         event.getBattleground().getPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().sendActionBar(deathMessage));
