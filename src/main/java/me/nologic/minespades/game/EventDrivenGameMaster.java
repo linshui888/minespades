@@ -261,6 +261,28 @@ public class EventDrivenGameMaster implements Listener {
         }
 
         @SneakyThrows
+        public void forceload(Player player) {
+            try (Connection connection = connect()) {
+                PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");
+                preparedStatement.setString(1, player.getName());
+                ResultSet r = preparedStatement.executeQuery(); r.next();
+
+                World     world     = Bukkit.getWorld(r.getString("world"));
+                Location  location  = this.decodeLocation(world, r.getString("location"));
+                Inventory inventory = this.parseJsonToInventory(r.getString("inventory"));
+                double    health    = r.getDouble("health");
+                int       hunger    = r.getInt("hunger");
+
+                player.teleport(location);
+                player.getInventory().setContents(inventory.getContents());
+                player.setHealth(health);
+                player.setFoodLevel(hunger);
+                player.setGameMode(GameMode.SURVIVAL);
+                player.sendMessage("§7Инвентарь был восстановлен. Принудительно. Почему Нологик такой дегенерат?");
+            }
+        }
+
+        @SneakyThrows
         private void load(Player player) {
             try (Connection connection = connect()) {
                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");

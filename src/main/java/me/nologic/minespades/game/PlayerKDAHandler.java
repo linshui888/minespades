@@ -45,7 +45,7 @@ public class PlayerKDAHandler {
 
         return switch (event.getDamageCause()) {
             case PROJECTILE -> "➴";
-            case LAVA, FIRE, FIRE_TICK -> "♨♨♨";
+            case LAVA, FIRE, FIRE_TICK -> "♨";
             case MAGIC -> "⚡";
             default -> "⚔";
         };

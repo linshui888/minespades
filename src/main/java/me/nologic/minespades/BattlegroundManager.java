@@ -85,15 +85,10 @@ public class BattlegroundManager {
 
         // Обрабатываем лист игроков через итератор чтобы избежать ConcurrentModificationException
         // TODO: параша всё равно иногда вызывает ошибки, чини
-        Iterator<BattlegroundPlayer> players = battleground.getPlayers().iterator();
-        while (players.hasNext()) {
-            BattlegroundPlayer player = players.next();
+        for (BattlegroundPlayer player : battleground.getPlayers()) {
             plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
             battleground.kick(player);
-            // todo: what
         }
-
-        battleground.getPlayers().clear();
     }
 
     /**

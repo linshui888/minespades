@@ -6,10 +6,13 @@ import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.*;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Getter
 public final class Battleground {
@@ -20,7 +23,6 @@ public final class Battleground {
     private @Setter boolean enabled = false;
     private @Setter World world;
 
-    private final Set<BattlegroundPlayer> players;
     private final List<BattlegroundTeam> teams;
 
     // TODO: Возможно стоит перенести параметры арены в отдельный класс?
@@ -28,20 +30,16 @@ public final class Battleground {
 
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;
-        this.players = new HashSet<>();
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
     }
 
     public BattlegroundPlayer connect(Player player) {
         player.setScoreboard(scoreboard);
-        BattlegroundPlayer bgPlayer = this.getSmallestTeam().join(player);
-        players.add(bgPlayer);
-        return bgPlayer;
+        return this.getSmallestTeam().join(player);
     }
 
     public void kick(BattlegroundPlayer player) {
-        players.remove(player);
         player.getTeam().kick(player.getBukkitPlayer());
         player.getBukkitPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
@@ -73,8 +71,18 @@ public final class Battleground {
         return this.teams.stream().filter(b -> b.getName().equals(name)).findFirst().orElse(null);
     }
 
+    public List<BattlegroundPlayer> getPlayers() {
+        final List<BattlegroundPlayer> players = new ArrayList<>();
+        for (BattlegroundTeam team : teams) {
+            for (Player player : team.getPlayers()) {
+                players.add(BattlegroundPlayer.getBattlegroundPlayer(player));
+            }
+        }
+        return players;
+    }
+
     public void broadcast(TextComponent message) {
-        players.forEach(p -> p.getBukkitPlayer().sendMessage(message));
+        this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
 }
