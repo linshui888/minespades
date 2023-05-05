@@ -26,7 +26,7 @@ public class CommandCompletions {
     // Возвращает список названий запущенных арен.
     public List<String> getEnabledBattlegrounds() {
         List<String> battlegroundNames = new ArrayList<>();
-        battlegrounder.getEnabledBattlegrounds().forEach(b -> battlegroundNames.add(b.getBattlegroundName()));
+        battlegrounder.getLoadedBattlegrounds().forEach(b -> battlegroundNames.add(b.getBattlegroundName()));
         return battlegroundNames;
     }
 

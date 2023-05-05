@@ -3,18 +3,20 @@ package me.nologic.minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
+import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 public class BattlegroundManager {
@@ -26,7 +28,7 @@ public class BattlegroundManager {
 
     private final Minespades plugin;
 
-    public BattlegroundManager (Minespades plugin) {
+    public BattlegroundManager(Minespades plugin) {
         this.plugin = plugin;
         this.editor = new BattlegroundEditor();
         this.loader = new BattlegroundLoader(plugin);
@@ -37,7 +39,7 @@ public class BattlegroundManager {
         return editor;
     }
 
-    public List<Battleground> getEnabledBattlegrounds() {
+    public List<Battleground> getLoadedBattlegrounds() {
         return enabledBattlegrounds.values().stream().toList();
     }
 
@@ -68,6 +70,20 @@ public class BattlegroundManager {
 
     public void disable(String battlegroundName) {
         Battleground battleground = this.getBattlegroundByName(battlegroundName);
+
+        // Кикаем всех игроков с арены
+        for (BattlegroundPlayer player : battleground.getPlayers()) {
+            if (player.isCarryingFlag()) {
+                player.getFlag().drop();
+            }
+            plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
+            player.getBattleground().kick(player);
+            plugin.getGameMaster().getPlayerManager().load(player.getBukkitPlayer());
+            Player p = player.getBukkitPlayer();
+            p.displayName(p.name().color(NamedTextColor.WHITE));
+            p.playerListName(p.name().color(NamedTextColor.WHITE));
+        }
+
         battleground.setEnabled(false);
 
         // Останавливаем все BukkitRunnable из правил автовыдачи
@@ -85,13 +101,6 @@ public class BattlegroundManager {
                     task.cancel();
                 }
             }
-        }
-
-        // Обрабатываем лист игроков через итератор чтобы избежать ConcurrentModificationException
-        // TODO: параша всё равно иногда вызывает ошибки, чини
-        for (BattlegroundPlayer player : battleground.getPlayers()) {
-            plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
-            battleground.kick(player);
         }
     }
 

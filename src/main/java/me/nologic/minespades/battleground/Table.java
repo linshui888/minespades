@@ -14,7 +14,8 @@ public enum Table {
     TEAMS("CREATE TABLE IF NOT EXISTS teams (name VARCHAR(16) NOT NULL UNIQUE, lifepool INTEGER DEFAULT 100, color CHAR(6) DEFAULT 'FFFFFF', loadouts TEXT, respawnPoints TEXT, flag TEXT);",
             "INSERT INTO teams (name) VALUES (?);",
             "SELECT * FROM teams"),
-    PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (autoAssign BOOLEAN DEFAULT FALSE, friendlyFire BOOLEAN DEFAULT FALSE, world VARCHAR(64) NOT NULL);",
+    // TODO: Возможно, стоит хранить настройки как JsonArray. Это экономно и удобно.
+    PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (world VARCHAR(64) NOT NULL, autoAssign BOOLEAN DEFAULT FALSE, friendlyFire BOOLEAN DEFAULT FALSE, deleteEmptyBottles BOOLEAN DEFAULT FALSE, flagParticles BOOLEAN DEFAULT FALSE, flagStealerTrails BOOLEAN DEFAULT FALSE, keepInventory BOOLEAN DEFAULT FALSE, colorfulEnding BOOLEAN DEFAULT FALSE);",
             "INSERT INTO preferences (world) VALUES (?);",
             "SELECT * FROM preferences");
 

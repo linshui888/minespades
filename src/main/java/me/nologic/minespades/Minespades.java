@@ -2,14 +2,13 @@ package me.nologic.minespades;
 
 import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
+import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 public final class Minespades extends JavaPlugin {
@@ -49,9 +48,9 @@ public final class Minespades extends JavaPlugin {
     @Override
     public void onDisable() {
         this.getLogger().info("Minespades отключается, все работающие арены будут остановлены.");
-        battlegrounder.getEnabledBattlegrounds().forEach(battleground -> {
+        for (Battleground battleground : battlegrounder.getLoadedBattlegrounds()) {
             battlegrounder.disable(battleground);
-        });
+        }
     }
 
 }

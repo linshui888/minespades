@@ -1,6 +1,5 @@
 package me.nologic.minespades.battleground;
 
-import com.destroystokyo.paper.ParticleBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,8 +11,14 @@ import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
-import org.bukkit.*;
-import org.bukkit.block.*;
+import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
+import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -31,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+
 /**
  * BattlegroundLoader подготавливает арены к использованию по их прямому назначению.
  * В этом классе создаются новые инстанции арен, загружаются их настройки и прочая
@@ -46,8 +53,7 @@ public class BattlegroundLoader {
     private Battleground     battleground;
 
     public Battleground load(String name) {
-        this.battleground = new Battleground(name);
-        this.loadPreferences();
+        this.battleground = new Battleground(name, this.loadPreferences());
         this.loadVolume();
         this.loadTeams().forEach(team -> battleground.addTeam(team));
         return battleground;
@@ -104,14 +110,23 @@ public class BattlegroundLoader {
     }
 
     /* Инициализация полей арены. */
-    private void loadPreferences() {
+    private BattlegroundPreferences loadPreferences() {
+        BattlegroundPreferences bp = new BattlegroundPreferences(battleground);
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet prefs = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
             prefs.next();
             this.battleground.setWorld(Bukkit.getWorld(prefs.getString("world")));
+            bp.apply(Preference.DELETE_EMPTY_BOTTLES, prefs.getBoolean("deleteEmptyBottles"));
+            bp.apply(Preference.AUTO_ASSIGN, prefs.getBoolean("autoAssign"));
+            bp.apply(Preference.FLAG_PARTICLES, prefs.getBoolean("flagParticles"));
+            bp.apply(Preference.FRIENDLY_FIRE, prefs.getBoolean("friendlyFire"));
+            bp.apply(Preference.FLAG_STEALER_TRAILS, prefs.getBoolean("flagStealerTrails"));
+            bp.apply(Preference.KEEP_INVENTORY, prefs.getBoolean("keepInventory"));
+            bp.apply(Preference.COLORFUL_ENDING, prefs.getBoolean("colorfulEnding"));
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+        return bp;
     }
 
     private void loadVolume() {

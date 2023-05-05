@@ -23,15 +23,14 @@ public final class Battleground {
     private @Setter boolean enabled = false;
     private @Setter World world;
 
-    private final List<BattlegroundTeam> teams;
+    private final List<BattlegroundTeam>  teams;
+    private final BattlegroundPreferences preferences;
 
-    // TODO: Возможно стоит перенести параметры арены в отдельный класс?
-    private boolean autoAssign, allowFriendlyFire, maxTeamSize, keepInventory, useCorpses, colorfulEnding, airStrike;
-
-    public Battleground(String battlegroundName) {
+    public Battleground(String battlegroundName, BattlegroundPreferences preferences) {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        this.preferences = preferences;
     }
 
     public BattlegroundPlayer connect(Player player) {

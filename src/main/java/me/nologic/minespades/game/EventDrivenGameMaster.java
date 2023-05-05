@@ -280,7 +280,7 @@ public class EventDrivenGameMaster implements Listener {
         }
 
         @SneakyThrows
-        private void load(Player player) {
+        public void load(Player player) {
             try (Connection connection = connect()) {
                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");
                 preparedStatement.setString(1, player.getName());

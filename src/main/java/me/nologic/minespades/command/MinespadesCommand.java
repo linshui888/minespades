@@ -227,7 +227,7 @@ public class MinespadesCommand extends BaseCommand {
         }
     }
 
-    @Subcommand("quit|leave")
+    @Subcommand("quit|leave|q")
     public void onQuit(Player player) {
         BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
         if (bgPlayer != null)
