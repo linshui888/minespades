@@ -154,8 +154,6 @@ public class MinespadesCommand extends BaseCommand {
             } else player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
         }
 
-        // TODO: add logback
-
         @Subcommand("volume")
         public void onEditBattlegroundVolume(Player player) {
             battlegrounder.getEditor().setAsVolumeEditor(player);

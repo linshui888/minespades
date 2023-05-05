@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
@@ -85,6 +86,7 @@ public class BattlegroundManager {
         }
 
         battleground.setEnabled(false);
+        HandlerList.unregisterAll(battleground.getPreferences());
 
         // Останавливаем все BukkitRunnable из правил автовыдачи
         for (BattlegroundTeam team : battleground.getTeams()) {

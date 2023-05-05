@@ -5,9 +5,9 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 
 import java.util.HashMap;
-import java.util.prefs.Preferences;
 
 @RequiredArgsConstructor
 public class BattlegroundPreferences implements Listener {
@@ -32,6 +32,15 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
+    @EventHandler
+    private void onPortalCreate(PortalCreateEvent event) {
+        if (preferences.get(Preference.DISABLE_PORTALS)) {
+            if (event.getWorld().equals(battleground.getWorld())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
     public enum Preference {
 
         AUTO_ASSIGN,
@@ -40,7 +49,8 @@ public class BattlegroundPreferences implements Listener {
         DELETE_EMPTY_BOTTLES,
         COLORFUL_ENDING,
         FLAG_PARTICLES,
-        FLAG_STEALER_TRAILS
+        FLAG_STEALER_TRAILS,
+        DISABLE_PORTALS
 
     }
 

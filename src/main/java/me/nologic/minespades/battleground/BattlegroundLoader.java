@@ -123,6 +123,7 @@ public class BattlegroundLoader {
             bp.apply(Preference.FLAG_STEALER_TRAILS, prefs.getBoolean("flagStealerTrails"));
             bp.apply(Preference.KEEP_INVENTORY, prefs.getBoolean("keepInventory"));
             bp.apply(Preference.COLORFUL_ENDING, prefs.getBoolean("colorfulEnding"));
+            bp.apply(Preference.DISABLE_PORTALS, prefs.getBoolean("disablePortals"));
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
