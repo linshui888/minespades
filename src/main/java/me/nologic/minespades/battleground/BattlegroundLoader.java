@@ -53,7 +53,8 @@ public class BattlegroundLoader {
     private Battleground     battleground;
 
     public Battleground load(String name) {
-        this.battleground = new Battleground(name, this.loadPreferences());
+        this.battleground = new Battleground(name);
+        this.battleground.setPreferences(this.loadPreferences());
         this.loadVolume();
         this.loadTeams().forEach(team -> battleground.addTeam(team));
         return battleground;
@@ -115,15 +116,26 @@ public class BattlegroundLoader {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             ResultSet prefs = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
             prefs.next();
+
             this.battleground.setWorld(Bukkit.getWorld(prefs.getString("world")));
-            bp.apply(Preference.DELETE_EMPTY_BOTTLES, prefs.getBoolean("deleteEmptyBottles"));
-            bp.apply(Preference.AUTO_ASSIGN, prefs.getBoolean("autoAssign"));
-            bp.apply(Preference.FLAG_PARTICLES, prefs.getBoolean("flagParticles"));
-            bp.apply(Preference.FRIENDLY_FIRE, prefs.getBoolean("friendlyFire"));
-            bp.apply(Preference.FLAG_STEALER_TRAILS, prefs.getBoolean("flagStealerTrails"));
-            bp.apply(Preference.KEEP_INVENTORY, prefs.getBoolean("keepInventory"));
-            bp.apply(Preference.COLORFUL_ENDING, prefs.getBoolean("colorfulEnding"));
-            bp.apply(Preference.DISABLE_PORTALS, prefs.getBoolean("disablePortals"));
+            if (prefs.getString("values") != null) {
+                JsonArray values = JsonParser.parseString(prefs.getString("values")).getAsJsonArray();
+                for (JsonElement element : values) {
+                    bp.apply(Preference.valueOf(element.getAsJsonObject().get("name").getAsString()), element.getAsJsonObject().get("value").getAsBoolean());
+                }
+            } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе
+                JsonArray values = new JsonArray();
+                for (Preference preference : Preference.values()) {
+                    JsonObject json = new JsonObject();
+                    json.addProperty(preference.toString(), preference.getDefaultValue());
+                    values.add(json);
+                    bp.apply(preference, preference.getDefaultValue());
+                }
+                PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET values = ?");
+                saveStatement.setString(1, values.toString());
+                saveStatement.executeUpdate();
+            }
+
         } catch (SQLException ex) {
             ex.printStackTrace();
         }

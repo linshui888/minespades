@@ -1,11 +1,15 @@
 package me.nologic.minespades.battleground;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 
@@ -26,8 +30,8 @@ public class BattlegroundPreferences implements Listener {
     @EventHandler
     private void onPotionConsume(PlayerItemConsumeEvent event) {
         if (preferences.get(Preference.DELETE_EMPTY_BOTTLES)) {
-            if (event.getReplacement() != null && event.getReplacement().getType() == Material.GLASS_BOTTLE) {
-                event.setReplacement(null);
+            if (event.getItem().getType() == Material.POTION) {
+                event.setReplacement(new ItemStack(Material.AIR));
             }
         }
     }
@@ -41,16 +45,34 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
+    @EventHandler
+    private void onPlayerItemDamage(PlayerItemDamageEvent event) {
+        if (preferences.get(Preference.PREVENT_ITEM_DAMAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
+            event.setCancelled(true);
+        }
+    }
+
     public enum Preference {
 
-        AUTO_ASSIGN,
-        FRIENDLY_FIRE,
-        KEEP_INVENTORY,
-        DELETE_EMPTY_BOTTLES,
-        COLORFUL_ENDING,
-        FLAG_PARTICLES,
-        FLAG_STEALER_TRAILS,
-        DISABLE_PORTALS
+        AUTO_ASSIGN(true),
+        FRIENDLY_FIRE(false),
+        KEEP_INVENTORY(true),
+        DELETE_EMPTY_BOTTLES(true),
+        COLORFUL_ENDING(true),
+        FLAG_PARTICLES(true),
+        FLAG_STEALER_TRAILS(true),
+        DISABLE_PORTALS(true),
+        PREVENT_ITEM_DAMAGE(true);
+
+        private final boolean defaultValue;
+
+        public boolean getDefaultValue() {
+            return this.defaultValue;
+        }
+
+        Preference(boolean defaultValue) {
+            this.defaultValue = defaultValue;
+        }
 
     }
 

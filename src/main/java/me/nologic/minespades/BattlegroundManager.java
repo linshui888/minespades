@@ -54,6 +54,7 @@ public class BattlegroundManager {
         battleground.setEnabled(true);
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
         this.callToArms(name);
+        Bukkit.getServer().getPluginManager().registerEvents(battleground.getPreferences(), plugin);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);
         plugin.getConfig().set("Battlegrounds", name);

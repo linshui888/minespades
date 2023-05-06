@@ -15,7 +15,7 @@ public enum Table {
             "INSERT INTO teams (name) VALUES (?);",
             "SELECT * FROM teams"),
     // TODO: Возможно, стоит хранить настройки как JsonArray. Это экономно и удобно.
-    PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (world VARCHAR(64) NOT NULL, autoAssign BOOLEAN DEFAULT TRUE, friendlyFire BOOLEAN DEFAULT FALSE, deleteEmptyBottles BOOLEAN DEFAULT TRUE, flagParticles BOOLEAN DEFAULT TRUE, flagStealerTrails BOOLEAN DEFAULT TRUE, keepInventory BOOLEAN DEFAULT TRUE, colorfulEnding BOOLEAN DEFAULT TRUE, disablePortals BOOLEAN DEFAULT TRUE);",
+    PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (world VARCHAR(64) NOT NULL, values TEXT NOT NULL);",
             "INSERT INTO preferences (world) VALUES (?);",
             "SELECT * FROM preferences");
 

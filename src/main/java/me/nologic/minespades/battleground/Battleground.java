@@ -24,13 +24,12 @@ public final class Battleground {
     private @Setter World world;
 
     private final List<BattlegroundTeam>  teams;
-    private final BattlegroundPreferences preferences;
+    private BattlegroundPreferences preferences;
 
-    public Battleground(String battlegroundName, BattlegroundPreferences preferences) {
+    public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        this.preferences = preferences;
     }
 
     public BattlegroundPlayer connect(Player player) {
@@ -84,4 +83,7 @@ public final class Battleground {
         this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
+    public void setPreferences(BattlegroundPreferences preferences) {
+        this.preferences = preferences;
+    }
 }
