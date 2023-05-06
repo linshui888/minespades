@@ -114,24 +114,30 @@ public class BattlegroundLoader {
     private BattlegroundPreferences loadPreferences() {
         BattlegroundPreferences bp = new BattlegroundPreferences(battleground);
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
-            ResultSet prefs = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
-            prefs.next();
+            ResultSet result = statement.executeQuery(Table.PREFERENCES.getSelectStatement());
+            result.next();
 
-            this.battleground.setWorld(Bukkit.getWorld(prefs.getString("world")));
-            if (prefs.getString("values") != null) {
-                JsonArray values = JsonParser.parseString(prefs.getString("values")).getAsJsonArray();
-                for (JsonElement element : values) {
-                    bp.apply(Preference.valueOf(element.getAsJsonObject().get("name").getAsString()), element.getAsJsonObject().get("value").getAsBoolean());
-                }
-            } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе
-                JsonArray values = new JsonArray();
+            this.battleground.setWorld(Bukkit.getWorld(result.getString("world")));
+            if (result.getString("parameters") != null) {
+                JsonObject values = JsonParser.parseString(result.getString("values")).getAsJsonObject();
                 for (Preference preference : Preference.values()) {
-                    JsonObject json = new JsonObject();
-                    json.addProperty(preference.toString(), preference.getDefaultValue());
-                    values.add(json);
+                    if (values.get(preference.toString()) != null) {
+                        bp.apply(preference, values.get(preference.toString()).getAsBoolean());
+                    } else {
+                        bp.apply(preference, preference.getDefaultValue());
+                        values.addProperty(preference.toString(), preference.getDefaultValue());
+                    }
+                }
+                PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?");
+                saveStatement.setString(1, values.toString());
+                saveStatement.executeUpdate();
+            } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе
+                JsonObject values = new JsonObject();
+                for (Preference preference : Preference.values()) {
+                    values.addProperty(preference.toString(), preference.getDefaultValue());
                     bp.apply(preference, preference.getDefaultValue());
                 }
-                PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET values = ?");
+                PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?");
                 saveStatement.setString(1, values.toString());
                 saveStatement.executeUpdate();
             }

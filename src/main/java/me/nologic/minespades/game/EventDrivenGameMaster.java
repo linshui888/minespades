@@ -59,6 +59,7 @@ public class EventDrivenGameMaster implements Listener {
             event.getPlayer().displayName(name);
             event.getPlayer().setHealth(20);
             event.getPlayer().setFoodLevel(20);
+            event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
