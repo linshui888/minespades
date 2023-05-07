@@ -119,7 +119,7 @@ public class BattlegroundLoader {
 
             this.battleground.setWorld(Bukkit.getWorld(result.getString("world")));
             if (result.getString("parameters") != null) {
-                JsonObject values = JsonParser.parseString(result.getString("values")).getAsJsonObject();
+                JsonObject values = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
                 for (Preference preference : Preference.values()) {
                     if (values.get(preference.toString()) != null) {
                         bp.apply(preference, values.get(preference.toString()).getAsBoolean());
