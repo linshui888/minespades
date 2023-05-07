@@ -105,16 +105,6 @@ public class MinespadesCommand extends BaseCommand {
 
     }
 
-    @Subcommand("fixinventory")
-    @CommandPermission("minespades.admin")
-    @CommandCompletion("@players")
-    public void onFixInventory(Player player, String target) {
-        Player p = Bukkit.getPlayer(target);
-        if (p != null) {
-            plugin.getGameMaster().getPlayerManager().fixInventory(p);
-        } else player.sendMessage("§4Ошибка. Игрок не обнаружен.");
-    }
-
     @Subcommand("list")
     public class List extends BaseCommand {
         // TODO

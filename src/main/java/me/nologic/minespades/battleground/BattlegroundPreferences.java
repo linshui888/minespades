@@ -1,13 +1,12 @@
 package me.nologic.minespades.battleground;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -52,6 +51,49 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
+    @EventHandler
+    private void onPlayerBucket(PlayerBucketFillEvent event) {
+        Player player = event.getPlayer();
+        if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
+            if (!player.isOp()) {
+                event.setCancelled(true);
+                player.setFireTicks(100);
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPlayerBucket(PlayerBucketEmptyEvent event) {
+        Player player = event.getPlayer();
+        if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
+            if (!player.isOp()) {
+                if (event.getBucket() == Material.LAVA_BUCKET) {
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPlayerBucket(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
+            if (!player.isOp()) {
+                if (event.getPlayer().getInventory().getItemInMainHand().getType() == Material.LAVA_BUCKET) {
+                    player.setFireTicks(100);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onBlockDispense(BlockDispenseEvent event) {
+        if (preferences.get(Preference.BLOCK_LAVA_USAGE) && event.getBlock().getWorld().equals(battleground.getWorld()) && event.getItem().getType() == Material.LAVA_BUCKET) {
+            event.setCancelled(true);
+            event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 5);
+        }
+    }
+
     public enum Preference {
 
         AUTO_ASSIGN(true),
@@ -62,7 +104,8 @@ public class BattlegroundPreferences implements Listener {
         FLAG_PARTICLES(true),
         FLAG_STEALER_TRAILS(true),
         DISABLE_PORTALS(true),
-        PREVENT_ITEM_DAMAGE(true);
+        PREVENT_ITEM_DAMAGE(true),
+        BLOCK_LAVA_USAGE(true);
 
         private final boolean defaultValue;
 
