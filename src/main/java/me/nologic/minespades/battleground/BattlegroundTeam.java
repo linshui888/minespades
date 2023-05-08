@@ -27,7 +27,8 @@ public class BattlegroundTeam {
     private final String         name;
     private @Setter int          lifepool;
 
-    private final List<TeamRespawnPoint>     respawnLocations = new ArrayList<>();
+    @Getter
+    private final List<TeamRespawnPoint>     respawnPoints = new ArrayList<>();
     private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
     private final Set<Player>                players = new HashSet<>();
 
@@ -47,7 +48,7 @@ public class BattlegroundTeam {
     }
 
     public void addRespawnLocation(Location location) {
-        this.respawnLocations.add(new TeamRespawnPoint(this, location));
+        this.respawnPoints.add(new TeamRespawnPoint(this, location));
     }
 
     public void addLoadout(BattlegroundLoadout loadout) {
@@ -55,7 +56,7 @@ public class BattlegroundTeam {
     }
 
     public Location getRandomRespawnLocation() {
-        return respawnLocations.get((int) (Math.random() * respawnLocations.size())).getPosition();
+        return respawnPoints.get((int) (Math.random() * respawnPoints.size())).getPosition();
     }
 
     public void resetFlag() {

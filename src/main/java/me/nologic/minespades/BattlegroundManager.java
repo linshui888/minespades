@@ -3,7 +3,6 @@ package me.nologic.minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -95,7 +94,7 @@ public class BattlegroundManager {
             if (team.getFlag() != null)
                 team.getFlag().getTick().cancel();
 
-            for (TeamRespawnPoint respawnPoint : team.getRespawnLocations()) {
+            for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
                 respawnPoint.getTick().cancel();
             }
 

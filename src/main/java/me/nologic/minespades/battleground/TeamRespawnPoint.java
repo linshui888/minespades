@@ -3,7 +3,6 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.game.event.PlayerCarriedFlagEvent;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -27,7 +26,9 @@ public class TeamRespawnPoint implements Listener {
 
     @Getter
     private final Location position;
-    private final BoundingBox box;
+
+    @Getter
+    private final BoundingBox boundingBox;
 
     @Getter
     private final BukkitRunnable tick;
@@ -36,12 +37,12 @@ public class TeamRespawnPoint implements Listener {
         this.battleground = team.getBattleground();
         this.team = team;
         this.position = position;
-        box = BoundingBox.of(position, 2, 2, 2);
+        boundingBox = BoundingBox.of(position.getBlock().getLocation().toCenterLocation(), 2.5, 3, 2.5);
         this.tick = new BukkitRunnable() {
 
             @Override
             public void run() {
-                for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
+                for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
                     if (entity instanceof Player player) {
                         if (battleground.getScoreboard().equals(player.getScoreboard())) {
                             if (Objects.equals(player.getScoreboard().getPlayerTeam(player), team.getBukkitTeam())) {
@@ -68,7 +69,7 @@ public class TeamRespawnPoint implements Listener {
         Player player = event.getPlayer();
         if (plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player) != null) {
             if (!player.getGameMode().equals(GameMode.CREATIVE)) {
-                if (box.contains(event.getBlock().getLocation().toVector())) {
+                if (boundingBox.contains(event.getBlock().getLocation().toVector())) {
                     event.setCancelled(true);
                 }
             }
@@ -83,7 +84,7 @@ public class TeamRespawnPoint implements Listener {
         Player player = event.getPlayer();
         if (plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player) != null) {
             if (!player.getGameMode().equals(GameMode.CREATIVE)) {
-                if (box.contains(event.getBlock().getLocation().toVector())) {
+                if (boundingBox.contains(event.getBlock().getLocation().toVector())) {
                     event.setCancelled(true);
                 }
             }

@@ -2,10 +2,14 @@ package me.nologic.minespades.battleground;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
@@ -45,14 +49,43 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @EventHandler
+    private void onPistonExtend(BlockPistonExtendEvent event) {
+        if (preferences.get(Preference.PROTECT_RESPAWN)) {
+            for (BattlegroundTeam team : battleground.getTeams()) {
+                for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
+                    for (Block block : event.getBlocks()) {
+                        if (respawnPoint.getBoundingBox().contains(block.getBoundingBox().getCenter())) {
+                            event.setCancelled(true);
+                            event.getBlock().getLocation().createExplosion(1, false, false);
+                            event.getBlock().breakNaturally();
+                            event.getBlocks().forEach(Block::breakNaturally);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
     private void onPlayerItemDamage(PlayerItemDamageEvent event) {
         if (preferences.get(Preference.PREVENT_ITEM_DAMAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
             event.setCancelled(true);
         }
     }
 
+    /** С целью безопасности игроков, физика блоков на респе должна быть отключена. */
     @EventHandler
-    private void onPlayerBucket(PlayerBucketFillEvent event) {
+    private void onBlockFall(EntityChangeBlockEvent event) {
+        if (preferences.get(Preference.PROTECT_RESPAWN) && event.getBlock().getWorld().equals(battleground.getWorld())) {
+            if (event.getEntityType() == EntityType.FALLING_BLOCK && event.getTo() == Material.AIR) {
+                event.setCancelled(true);
+            }
+        }
+
+    }
+
+    @EventHandler
+    private void onPlayerBucketFill(PlayerBucketFillEvent event) {
         Player player = event.getPlayer();
         if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
             if (!player.isOp()) {
@@ -63,7 +96,7 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @EventHandler
-    private void onPlayerBucket(PlayerBucketEmptyEvent event) {
+    private void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
         Player player = event.getPlayer();
         if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
             if (!player.isOp()) {
@@ -75,7 +108,7 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @EventHandler
-    private void onPlayerBucket(PlayerItemHeldEvent event) {
+    private void onPlayerHeldLavaBucket(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
         if (preferences.get(Preference.BLOCK_LAVA_USAGE) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
             if (!player.isOp()) {
@@ -105,7 +138,8 @@ public class BattlegroundPreferences implements Listener {
         FLAG_STEALER_TRAILS(true),
         DISABLE_PORTALS(true),
         PREVENT_ITEM_DAMAGE(true),
-        BLOCK_LAVA_USAGE(true);
+        BLOCK_LAVA_USAGE(true),
+        PROTECT_RESPAWN(true);
 
         private final boolean defaultValue;
 
