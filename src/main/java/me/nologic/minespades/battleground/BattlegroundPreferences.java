@@ -1,6 +1,9 @@
 package me.nologic.minespades.battleground;
 
 import lombok.RequiredArgsConstructor;
+import me.nologic.minespades.Minespades;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
@@ -11,10 +14,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 
@@ -61,6 +66,23 @@ public class BattlegroundPreferences implements Listener {
                             event.getBlock().getLocation().createExplosion(1, false, false);
                             event.getBlock().breakNaturally();
                             event.getBlocks().forEach(Block::breakNaturally);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onPistonRetract(BlockPistonRetractEvent event) {
+        if (preferences.get(Preference.PROTECT_RESPAWN)) {
+            for (BattlegroundTeam team : battleground.getTeams()) {
+                for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
+                    for (Block block : event.getBlocks()) {
+                        if (respawnPoint.getBoundingBox().contains(block.getBoundingBox().getCenter())) {
+                            event.setCancelled(true);
+                            event.getBlock().getLocation().createExplosion(1, false, false);
+                            event.getBlock().breakNaturally();
                         }
                     }
                 }
@@ -125,6 +147,8 @@ public class BattlegroundPreferences implements Listener {
     private void onBlockDispense(BlockDispenseEvent event) {
         if (preferences.get(Preference.BLOCK_LAVA_USAGE) && event.getBlock().getWorld().equals(battleground.getWorld()) && event.getItem().getType() == Material.LAVA_BUCKET) {
             event.setCancelled(true);
+
+
             event.getBlock().setType(Material.AIR);
             event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 5);
         }
@@ -141,6 +165,25 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
+    {
+        BukkitRunnable cowardTracker = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!preferences.get(Preference.PUNISH_COWARDS)) return;
+                for (BattlegroundPlayer player : battleground.getPlayers()) {
+                    if (!battleground.getInsideBox().contains(player.getBukkitPlayer().getLocation().toVector())) {
+                        if (!player.getBukkitPlayer().isOp() && player.getBukkitPlayer().getGameMode() == GameMode.SURVIVAL) {
+                            player.getBukkitPlayer().damage(4);
+                            player.getBukkitPlayer().setNoDamageTicks(0);
+                        }
+                    }
+                }
+            }
+        };
+
+        cowardTracker.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 20);
+    }
+
     public enum Preference {
 
         AUTO_ASSIGN(true),
@@ -154,7 +197,8 @@ public class BattlegroundPreferences implements Listener {
         PREVENT_ITEM_DAMAGE(true),
         BLOCK_LAVA_USAGE(true),
         PROTECT_RESPAWN(true),
-        DENY_BED_SLEEP(true);
+        DENY_BED_SLEEP(true),
+        PUNISH_COWARDS(true);
 
         private final boolean defaultValue;
 

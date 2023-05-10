@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ public final class Battleground {
 
     private final List<BattlegroundTeam> teams;
     private BattlegroundPreferences      preferences;
+
+    @Getter @Setter
+    private BoundingBox insideBox;
 
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;

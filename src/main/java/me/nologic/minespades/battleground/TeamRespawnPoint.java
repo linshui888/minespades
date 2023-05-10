@@ -37,7 +37,7 @@ public class TeamRespawnPoint implements Listener {
         this.battleground = team.getBattleground();
         this.team = team;
         this.position = position;
-        boundingBox = BoundingBox.of(position.getBlock().getLocation().toCenterLocation(), 2.5, 3, 2.5);
+        boundingBox = BoundingBox.of(position.getBlock().getLocation().toCenterLocation(), 1.5, 2.5, 1.5);
         this.tick = new BukkitRunnable() {
 
             @Override
