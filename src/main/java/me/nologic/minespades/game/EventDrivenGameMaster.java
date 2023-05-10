@@ -60,6 +60,7 @@ public class EventDrivenGameMaster implements Listener {
             event.getPlayer().setHealth(20);
             event.getPlayer().setFoodLevel(20);
             event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
+            BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()).showSidebar();
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
@@ -256,27 +257,6 @@ public class EventDrivenGameMaster implements Listener {
                 preparedStatement.executeUpdate();
 
                 plugin.getLogger().info(String.format("Инвентарь игрока %s был сохранён.", player.getName()));
-            }
-        }
-
-        @SneakyThrows
-        public void fixInventory(Player player) {
-            try (Connection connection = connect()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM players WHERE name = ?;");
-                preparedStatement.setString(1, player.getName());
-                ResultSet r = preparedStatement.executeQuery(); r.next();
-
-                World     world     = Bukkit.getWorld(r.getString("world"));
-                Location  location  = this.decodeLocation(world, r.getString("location"));
-                Inventory inventory = this.parseJsonToInventory(r.getString("inventory"));
-                double    health    = r.getDouble("health");
-                int       hunger    = r.getInt("hunger");
-
-                player.teleport(location);
-                player.getInventory().setContents(inventory.getContents());
-                player.setHealth(health);
-                player.setFoodLevel(hunger);
-                player.setGameMode(GameMode.SURVIVAL);
             }
         }
 

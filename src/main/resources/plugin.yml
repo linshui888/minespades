@@ -4,3 +4,6 @@ main: me.nologic.minespades.Minespades
 api-version: 1.19
 authors: [ NoLogic ]
 description: Modern battlegrounds plugin.
+
+softdepend:
+  - PlaceholderAPI

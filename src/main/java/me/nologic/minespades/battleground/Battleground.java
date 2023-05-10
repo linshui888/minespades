@@ -17,14 +17,14 @@ import java.util.List;
 @Getter
 public final class Battleground {
 
+    private @Setter boolean  enabled = false;
+
     private final Scoreboard scoreboard;
+    private final String     battlegroundName;
+    private @Setter World    world;
 
-    private final String battlegroundName;
-    private @Setter boolean enabled = false;
-    private @Setter World world;
-
-    private final List<BattlegroundTeam>  teams;
-    private BattlegroundPreferences preferences;
+    private final List<BattlegroundTeam> teams;
+    private BattlegroundPreferences      preferences;
 
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;

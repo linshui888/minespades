@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
+import me.nologic.minespades.util.MinespadesPlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,9 +15,8 @@ import java.io.File;
 public final class Minespades extends JavaPlugin {
 
     private EventDrivenGameMaster gameMaster;
-    private BattlegroundManager battlegrounder;
-
-    private PaperCommandManager commandManager;
+    private BattlegroundManager   battlegrounder;
+    private PaperCommandManager   commandManager;
 
     @Override
     public void onEnable() {
@@ -33,6 +33,10 @@ public final class Minespades extends JavaPlugin {
         commandManager.registerCommand(new MinespadesCommand());
         getServer().getPluginManager().registerEvents(gameMaster, this);
         this.enableBattlegrounds();
+
+        // Поддержка для PAPI
+        if (super.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null)
+            new MinespadesPlaceholderExpansion().register();
     }
 
     private void enableBattlegrounds() {

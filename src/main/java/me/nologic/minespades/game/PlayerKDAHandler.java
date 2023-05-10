@@ -15,11 +15,13 @@ public class PlayerKDAHandler {
 
         Player victim = event.getVictim().getBukkitPlayer(), killer = null;
         if (event.getKiller() != null) killer = event.getKiller().getBukkitPlayer();
+        event.getVictim().setDeaths(event.getVictim().getDeaths() + 1);
 
         Component deathMessage;
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
             deathMessage = killer.displayName().append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE)).append(victim.displayName());
+            event.getKiller().setKills(event.getKiller().getKills() + 1);
         } else {
             deathMessage = Component.text("☠ ").append(victim.displayName()).append(Component.text(" ☠"));
         }
