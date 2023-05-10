@@ -11,6 +11,7 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
+import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -62,6 +63,11 @@ public class EventDrivenGameMaster implements Listener {
             event.getPlayer().setFoodLevel(20);
             event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
             BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()).showSidebar();
+            for (BattlegroundTeam team : event.getBattleground().getTeams()) {
+                if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
+                    event.getPlayer().showBossBar(team.getFlag().getRecoveryBossBar());
+                }
+            }
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
@@ -76,6 +82,12 @@ public class EventDrivenGameMaster implements Listener {
             }
 
             battlegroundPlayer.removeSidebar();
+            for (BattlegroundTeam team : event.getBattleground().getTeams()) {
+                if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
+                    event.getPlayer().hideBossBar(team.getFlag().getRecoveryBossBar());
+                }
+            }
+
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
             battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             playerManager.load(event.getPlayer());

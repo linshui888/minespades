@@ -50,6 +50,9 @@ public class BattlegroundFlag implements Listener {
     private ParticleBuilder particle;
     private BukkitRunnable flagRecoveryTimer;
 
+    @Getter
+    private BossBar recoveryBossBar;
+
     {
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
         this.tick = new BukkitRunnable() {
@@ -158,13 +161,14 @@ public class BattlegroundFlag implements Listener {
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(Component.text(String.format("Флаг исчезнет через %s...", timer / 20)), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
+            final BossBar bossBar = BossBar.bossBar(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" восстановится через §e%sс§f..", timer / 20))), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
                     .addFlag(BossBar.Flag.CREATE_WORLD_FOG);
 
             @Override
             public void run() {
+                BattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.name(Component.text(String.format("Флаг исчезнет через §e%s§fс...", timer / 20)));
+                bossBar.name(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" восстановится через §e%sс§f..", timer / 20))));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -224,7 +228,7 @@ public class BattlegroundFlag implements Listener {
      * Возвращение флага к изначальному состоянию.
      */
     public void reset() {
-        position.getBlock().setType(Material.AIR);
+        if (position != null) position.getBlock().setType(Material.AIR);
         position = base;
         if (carrier != null) {
             carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
