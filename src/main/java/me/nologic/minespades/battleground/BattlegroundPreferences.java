@@ -97,7 +97,6 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
-    /** С целью безопасности игроков, физика блоков на респе должна быть отключена. */
     @EventHandler
     private void onBlockFall(EntityChangeBlockEvent event) {
         if (preferences.get(Preference.PROTECT_RESPAWN) && event.getBlock().getWorld().equals(battleground.getWorld())) {

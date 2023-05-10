@@ -8,9 +8,11 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockFace;
@@ -46,6 +48,7 @@ public class BattlegroundFlag implements Listener {
     private BoundingBox        box;
 
     private ParticleBuilder particle;
+    private BukkitRunnable flagRecoveryTimer;
 
     {
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
@@ -112,6 +115,9 @@ public class BattlegroundFlag implements Listener {
         position.getBlock().setType(Material.AIR);
         position = null;
         box = null;
+        if (flagRecoveryTimer != null) {
+            flagRecoveryTimer.cancel();
+        }
     }
 
     // TODO: дроп флага в воздухе и в лаве должен обрабатываться отдельно
@@ -128,7 +134,7 @@ public class BattlegroundFlag implements Listener {
         battleground.broadcast(flagDropMessage);
 
         Player player = carrier.getBukkitPlayer();
-        if (player.getLastDamageCause() != null && Objects.equals(player.getLastDamageCause().getCause(), EntityDamageEvent.DamageCause.LAVA)) {
+        if (player.getLastDamageCause() != null && Objects.equals(player.getLastDamageCause().getCause(), EntityDamageEvent.DamageCause.LAVA) || player.getLocation().getBlock().getType() == Material.LAVA) {
             this.reset();
             return;
         }
@@ -140,16 +146,85 @@ public class BattlegroundFlag implements Listener {
         particle.location(position.toCenterLocation());
         this.updateBoundingBox();
 
+        // FIXME: Необходимо сохранять предыдущий шлем игрока, дабы он не исчезал, как слёзы во время дождя. (што)
         player.getInventory().setHelmet(new ItemStack(Material.AIR));
         carrier = null;
 
         this.validateBannerData();
+
+        // Запускаем таймер, который отсчитывает время до ресета флага. Если флаг лежит на земле слишком долго, целесообразно восстановить его изначальную позицию.
+        this.flagRecoveryTimer = new BukkitRunnable() {
+
+            final int timeToReset = 45;
+            int timer = timeToReset * 20;
+
+            final BossBar bossBar = BossBar.bossBar(Component.text(String.format("Флаг исчезнет через %s...", timer / 20)), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
+                    .addFlag(BossBar.Flag.CREATE_WORLD_FOG);
+
+            @Override
+            public void run() {
+                timer = timer - 20;
+                bossBar.name(Component.text(String.format("Флаг исчезнет через §e%s§fс...", timer / 20)));
+
+                if (timer != 0) {
+                    bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
+                }
+
+                if (timer <= 100 && timer != 0) {
+                    for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
+                        bgPlayer.getBukkitPlayer().playSound(bgPlayer.getBukkitPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2 / (timer / 10f));
+                    }
+                }
+
+                if (timer == 0) {
+
+                    // Попытаемся сделать всё красиво, нам нужно заполнить боссбар, изменить сообщение на ФЛАГ ВОССТАНОВЛЕН! и сменить цвет
+                    bossBar.name(Component.text("Флаг восстановлен!").decorate(TextDecoration.BOLD));
+                    bossBar.color(BossBar.Color.RED);
+                    bossBar.progress(0);
+
+                    BattlegroundFlag.this.reset();
+
+                    BukkitRunnable smoothFillerTask = new BukkitRunnable() {
+
+                        // Число, на которое увеличивается прогресс боссбара каждый тик
+                        private final float number = 0.02f;
+
+                        @Override
+                        public void run() {
+                            if (bossBar.progress() + number < 1.0f) {
+                                bossBar.progress(bossBar.progress() + number);
+                            } else  {
+                                // Скрываем боссбар через полторы секунды после заполнения
+                                bossBar.progress(1.0f);
+                                bossBar.color(BossBar.Color.GREEN);
+                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(bossBar)), 30);
+                                this.cancel();
+                            }
+                        }
+
+                    };
+
+                    smoothFillerTask.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 1);
+                    this.cancel();
+                }
+
+                for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
+                    Player player = bgPlayer.getBukkitPlayer();
+                    player.showBossBar(bossBar);
+                }
+            }
+
+        };
+
+        flagRecoveryTimer.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 20);
     }
 
     /**
      * Возвращение флага к изначальному состоянию.
      */
     public void reset() {
+        position.getBlock().setType(Material.AIR);
         position = base;
         if (carrier != null) {
             carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
@@ -160,6 +235,10 @@ public class BattlegroundFlag implements Listener {
         updateBoundingBox();
         validateBannerData();
         prepareFlagParticle();
+
+        if (flagRecoveryTimer != null) {
+            flagRecoveryTimer.cancel();
+        }
     }
 
     /**
