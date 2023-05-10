@@ -77,6 +77,7 @@ public class BattlegroundManager {
             if (player.isCarryingFlag()) {
                 player.getFlag().drop();
             }
+            player.removeSidebar();
             plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
             player.getBattleground().kick(player);
             plugin.getGameMaster().getPlayerManager().load(player.getBukkitPlayer());

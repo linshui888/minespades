@@ -27,33 +27,26 @@ public class BattlegroundPlayer {
     private @Setter @Getter boolean          carryingFlag;
     private @Setter @Getter BattlegroundFlag flag;
 
+    private Sidebar<Component> sidebar;
+
     public void showSidebar() {
-        Sidebar<Component> sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel("SIDEBAR"), Minespades.getPlugin(Minespades.class));
-        // let's add some lines
-        sidebar.addLine(Component.text("Just a static line").color(NamedTextColor.GREEN));
-
-        // add an empty line
-        sidebar.addBlankLine();// also you can add updatable lines which applies to all players
-
-        sidebar.addUpdatableLine(
-                player -> Component.text("покушать-то: ")
-                        .append(Component.text(player.getFoodLevel())
-                                .color(NamedTextColor.GREEN))
-        );
-
+        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text("Minespades"), Minespades.getPlugin(Minespades.class));
+        sidebar.addUpdatableLine(player -> Component.text("K/D/A: " + kills + "/" + deaths + "/" + assists));
         sidebar.addBlankLine();
-        sidebar.addUpdatableLine(
-                player -> Component.text("не стукай: ")
-                        .append(Component.text(player.getHealth())
-                                .color(NamedTextColor.GREEN))
-        );
+        // Команда и лайфпул
+        sidebar.addLine(Component.text("Команда ").append(team.getDisplayName()));
+        sidebar.addUpdatableLine(player -> Component.text("Лайфпул: " + team.getLifepool()));
+        // Пустая линия
         sidebar.addBlankLine();
-
-        // update all lines except static ones every 10 ticks
+        // Название карты
+        sidebar.addLine(Component.text("Карта " + battleground.getBattlegroundName()));
+        // Обновляем все линии каждые 10 тиков, то есть 2 раза в секунду
         sidebar.updateLinesPeriodically(0, 10);
-
-        // show to the player
         sidebar.addViewer(bukkitPlayer);
+    }
+
+    public void removeSidebar() {
+        this.sidebar.removeViewer(bukkitPlayer);
     }
 
     public void setRandomLoadout() {

@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -73,6 +74,8 @@ public class EventDrivenGameMaster implements Listener {
             if (battlegroundPlayer.isCarryingFlag()) {
                 battlegroundPlayer.getFlag().drop();
             }
+
+            battlegroundPlayer.removeSidebar();
             playerManager.getPlayersInGame().remove(battlegroundPlayer);
             battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             playerManager.load(event.getPlayer());
@@ -151,12 +154,22 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onPlayerCarriedFlagEvent(PlayerCarriedFlagEvent event) {
+
+        BattlegroundTeam team = event.getFlag().getTeam();
+
         TextComponent flagCarriedMessage = Component.text("").append(event.getPlayer().getBukkitPlayer().displayName())
                 .append(Component.text(" приносит флаг команды "))
-                .append(event.getFlag().getTeam().getDisplayName())
+                .append(team.getDisplayName())
                 .append(Component.text(" на свою базу!"));
+
+        TextComponent lifepoolMessage = Component.text("Команда ").append(team.getDisplayName())
+                .append(Component.text(" теряет " + team.getFlagLifepoolPenalty() + " жизней!"));
+
         event.getBattleground().broadcast(flagCarriedMessage);
+        event.getBattleground().broadcast(lifepoolMessage);
+
         event.getFlag().reset();
+        team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
     }
 
     @EventHandler

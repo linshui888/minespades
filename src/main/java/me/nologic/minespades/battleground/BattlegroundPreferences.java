@@ -5,8 +5,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -123,7 +125,19 @@ public class BattlegroundPreferences implements Listener {
     private void onBlockDispense(BlockDispenseEvent event) {
         if (preferences.get(Preference.BLOCK_LAVA_USAGE) && event.getBlock().getWorld().equals(battleground.getWorld()) && event.getItem().getType() == Material.LAVA_BUCKET) {
             event.setCancelled(true);
+            event.getBlock().setType(Material.AIR);
             event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 5);
+        }
+    }
+
+    @EventHandler
+    private void onPlayerLeaveBed(PlayerInteractEvent event) {
+        if (preferences.get(Preference.DENY_BED_SLEEP) && BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()) != null) {
+            if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+                if (event.getClickedBlock().getType().toString().toLowerCase().contains("_bed")) {
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 
@@ -139,7 +153,8 @@ public class BattlegroundPreferences implements Listener {
         DISABLE_PORTALS(true),
         PREVENT_ITEM_DAMAGE(true),
         BLOCK_LAVA_USAGE(true),
-        PROTECT_RESPAWN(true);
+        PROTECT_RESPAWN(true),
+        DENY_BED_SLEEP(true);
 
         private final boolean defaultValue;
 

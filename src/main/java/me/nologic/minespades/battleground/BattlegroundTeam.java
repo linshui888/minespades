@@ -27,8 +27,8 @@ public class BattlegroundTeam {
     private final String         name;
     private @Setter int          lifepool;
 
-    // Очки за доставку флагов
-    private @Setter int          scores;
+    // Количество очков, забираемое в случае потери флага
+    private final @Getter int flagLifepoolPenalty = 20;
 
     @Getter
     private final List<TeamRespawnPoint>     respawnPoints = new ArrayList<>();
@@ -44,12 +44,6 @@ public class BattlegroundTeam {
         this.color = TextColor.fromHexString("#" + color);
         this.lifepool = lifepool;
         this.flag = flag;
-    }
-
-    public int getScorePoints() {
-        if (flag == null) {
-            return 265;
-        } else return scores;
     }
 
     public TextComponent getDisplayName() {

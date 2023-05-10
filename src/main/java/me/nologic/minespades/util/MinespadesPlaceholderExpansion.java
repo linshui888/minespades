@@ -31,7 +31,6 @@ public class MinespadesPlaceholderExpansion extends PlaceholderExpansion {
             return switch (params.toLowerCase()) {
                 case "player_kda" -> player.getKills() + "/" + player.getDeaths() + "/" + player.getAssists();
                 case "player_team_lifepool" -> "" + player.getTeam().getLifepool();
-                case "player_team_scores" -> "" + player.getTeam().getScores();
                 default -> null;
             };
         }
