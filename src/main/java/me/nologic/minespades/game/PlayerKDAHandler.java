@@ -4,6 +4,9 @@ import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 
 /**
  * Специализированный класс, который крайне подробно обрабатывает событие смерти игрока.
@@ -22,6 +25,14 @@ public class PlayerKDAHandler {
             String symbol = this.getDeathSymbol(event);
             deathMessage = killer.displayName().append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE)).append(victim.displayName());
             event.getKiller().setKills(event.getKiller().getKills() + 1);
+
+            // Обновляем счётчик киллов для убийцы в таблисте
+            Scoreboard scoreboard = event.getBattleground().getScoreboard();
+            Objective objective = scoreboard.getObjective("kill_counter");
+            if (objective != null) {
+                objective.getScoreFor(killer).setScore(event.getKiller().getKills());
+            }
+
         } else {
             deathMessage = Component.text("☠ ").append(victim.displayName()).append(Component.text(" ☠"));
         }

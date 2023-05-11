@@ -120,6 +120,10 @@ public class BattlegroundFlag implements Listener {
         box = null;
         if (flagRecoveryTimer != null) {
             flagRecoveryTimer.cancel();
+
+            // Не забываем скрывать таймер, если флаг был поднят
+            Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(recoveryBossBar)));
+            flagRecoveryTimer = null;
         }
     }
 
@@ -161,14 +165,14 @@ public class BattlegroundFlag implements Listener {
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" восстановится через §e%sс§f..", timer / 20))), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
+            final BossBar bossBar = BossBar.bossBar(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" пропадёт через §e%sс§f..", timer / 20))), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
                     .addFlag(BossBar.Flag.CREATE_WORLD_FOG);
 
             @Override
             public void run() {
                 BattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.name(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" восстановится через §e%sс§f..", timer / 20))));
+                bossBar.name(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" пропадёт через §e%sс§f..", timer / 20))));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -192,7 +196,7 @@ public class BattlegroundFlag implements Listener {
                     BukkitRunnable smoothFillerTask = new BukkitRunnable() {
 
                         // Число, на которое увеличивается прогресс боссбара каждый тик
-                        private final float number = 0.02f;
+                        private final float number = 0.03f;
 
                         @Override
                         public void run() {

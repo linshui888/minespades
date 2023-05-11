@@ -74,9 +74,6 @@ public class BattlegroundManager {
 
         // Кикаем всех игроков с арены
         for (BattlegroundPlayer player : battleground.getPlayers()) {
-            if (player.isCarryingFlag()) {
-                player.getFlag().drop();
-            }
             player.removeSidebar();
             plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
             player.getBattleground().kick(player);

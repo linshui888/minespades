@@ -2,12 +2,12 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
+import org.bukkit.scoreboard.*;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,6 +34,8 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective killCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, Component.text(0));
+        killCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
     }
 
     public BattlegroundPlayer connect(Player player) {
@@ -49,7 +51,7 @@ public final class Battleground {
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
-        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OWN_TEAM);
         team.setBukkitTeam(bukkitTeam);
 
         if (team.getFlag() != null)
