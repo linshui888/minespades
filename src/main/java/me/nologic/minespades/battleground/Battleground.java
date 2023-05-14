@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+
 @Getter
 public final class Battleground {
 
@@ -28,6 +30,9 @@ public final class Battleground {
     private BattlegroundPreferences      preferences;
 
     @Getter @Setter
+    private Multiground multiground;
+
+    @Getter @Setter
     private BoundingBox insideBox;
 
     public Battleground(String battlegroundName) {
@@ -38,6 +43,7 @@ public final class Battleground {
         killCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
     }
 
+    @Nullable
     public BattlegroundPlayer connect(Player player) {
         player.setScoreboard(scoreboard);
         return this.getSmallestTeam().join(player);
@@ -92,4 +98,9 @@ public final class Battleground {
     public void setPreferences(BattlegroundPreferences preferences) {
         this.preferences = preferences;
     }
+
+    public boolean getPreference(Preference preference) {
+        return this.preferences.get(preference);
+    }
+
 }

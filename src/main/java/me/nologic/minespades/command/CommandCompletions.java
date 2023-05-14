@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -23,10 +24,14 @@ public class CommandCompletions {
     private final Minespades          plugin         = Minespades.getPlugin(Minespades.class);
     private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
-    // Возвращает список названий запущенных арен.
+    // Возвращает список названий запущенных арен. (арена не должна быть запущена через мультиграунд)
     public List<String> getEnabledBattlegrounds() {
         List<String> battlegroundNames = new ArrayList<>();
-        battlegrounder.getLoadedBattlegrounds().forEach(b -> battlegroundNames.add(b.getBattlegroundName()));
+        battlegrounder.getLoadedBattlegrounds().forEach(b -> {
+            if (!b.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+                battlegroundNames.add(b.getBattlegroundName());
+            }
+        });
         return battlegroundNames;
     }
 

@@ -5,19 +5,28 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
+import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @CommandAlias("minespades|ms")
 @CommandPermission("minespades.player")
@@ -105,9 +114,75 @@ public class MinespadesCommand extends BaseCommand {
 
     }
 
-    @Subcommand("list")
-    public class List extends BaseCommand {
-        // TODO
+    @Subcommand("multiground")
+    public class Multiground extends BaseCommand {
+
+        @Subcommand("create") @SneakyThrows
+        public void onMultigroundCreate(Player player, String multigroundName) {
+            multigroundName = multigroundName.toLowerCase();
+            File path = new File(plugin.getDataFolder(), "multigrounds.yml");
+            if (path.createNewFile()) plugin.getLogger().info("Creating multigrounds.yml...");
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
+            if (yaml.getConfigurationSection(multigroundName) == null) {
+                yaml.createSection(multigroundName);
+                yaml.save(path);
+                player.sendMessage("Мультиграунд %s успешно создан. Теперь нужно добавть в него арены. Используйте /ms multiground add <название>");
+            } else player.sendMessage("Мультиграунд с таким названием уже существует.");
+        }
+
+        @Subcommand("add") @SneakyThrows
+        public void onMultigroundAdd(Player player, String multigroundName, String battlegroundName) {
+            File path = new File(plugin.getDataFolder(), "multigrounds.yml");
+            if (path.createNewFile()) plugin.getLogger().info("Creating multigrounds.yml...");
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
+            ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
+            if (section == null) {
+                player.sendMessage("Несуществующий мультиграунд.");
+                return;
+            }
+            if (BattlegroundValidator.isValid(battlegroundName)) {
+                List<String> battlegrounds = section.getStringList("battlegrounds");
+                battlegrounds.add(battlegroundName);
+                section.set("battlegrounds", battlegrounds);
+                yaml.save(path);
+                player.sendMessage(String.format("Арена %s успешно добавлена в мультиграунд %s.", battlegroundName, multigroundName));
+            } else player.sendMessage(String.format("Арена %s невалидна.", battlegroundName));
+        }
+
+        @Subcommand("remove") @SneakyThrows
+        public void onMultigroundRemove(Player player, String multigroundName, String battlegroundName) {
+            File path = new File(plugin.getDataFolder(), "multigrounds.yml");
+            if (path.createNewFile()) plugin.getLogger().info("Creating multigrounds.yml...");
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
+            ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
+            if (section == null) {
+                player.sendMessage("Несуществующий мультиграунд.");
+                return;
+            }
+            if (section.getStringList("battlegrounds").contains(battlegroundName)) {
+                List<String> battlegrounds = section.getStringList("battlegrounds");
+                battlegrounds.remove(battlegroundName);
+                section.set("battlegrounds", battlegrounds);
+                yaml.save(path);
+                player.sendMessage(String.format("Арена %s успешно удалена из мультиграунда %s.", battlegroundName, multigroundName));
+            } else player.sendMessage("В мультиграунде нет такой арены.");
+        }
+
+        @Subcommand("launch") @SneakyThrows
+        public void onMultigroundLaunch(Player player, String multigroundName) {
+            File path = new File(plugin.getDataFolder(), "multigrounds.yml");
+            if (path.createNewFile()) plugin.getLogger().info("Creating multigrounds.yml...");
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
+            ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
+            if (section != null) {
+                if (plugin.getBattlegrounder().getMultigrounds().stream().noneMatch(m -> m.getName().equals(multigroundName))) {
+                    plugin.getBattlegrounder().launchMultiground(multigroundName);
+                } else player.sendMessage(String.format("Ошибка. Мультиграунд %s уже запущен.", multigroundName));
+            } else player.sendMessage("Несуществующий мультиграунд.");
+        }
+
+        // TODO: launchOnStart
+
     }
 
     @Subcommand("create")
@@ -208,6 +283,10 @@ public class MinespadesCommand extends BaseCommand {
         try {
             name = name.toLowerCase();
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
+            if (battleground.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+                player.sendMessage("К этой арене нельзя подключиться напрямую.");
+                return;
+            }
             BattlegroundTeam team = battleground.getSmallestTeam();
             Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
         } catch (NullPointerException ex) {

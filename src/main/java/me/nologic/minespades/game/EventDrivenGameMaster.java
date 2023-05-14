@@ -9,9 +9,9 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
-import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -190,6 +190,22 @@ public class EventDrivenGameMaster implements Listener {
                 .append(event.getTeam().getDisplayName())
                 .append(Component.text(" проиграла!"));
         event.getBattleground().broadcast(message);
+
+        // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
+        // Необходим новый ивент: BattlegroundGameOverEvent
+        if (event.getBattleground().getTeams().stream().filter(t -> !t.isLose()).count() <= 1) {
+            Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
+        }
+    }
+
+    /* Проигрыш команды. */
+    @EventHandler
+    private void onBattlegroundGameOver(BattlegroundGameOverEvent event) {
+        final Battleground battleground = event.getBattleground();
+        if (battleground.getPreference(Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+            Minespades.getPlugin(Minespades.class).getBattlegrounder().disable(event.getBattleground());
+            battleground.getMultiground().launchNextBattleground();
+        }
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
 

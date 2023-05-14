@@ -130,7 +130,6 @@ public class BattlegroundLoader {
                 }
                 PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?");
 
-
                 saveStatement.setString(1, values.toString());
                 saveStatement.executeUpdate();
             } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе

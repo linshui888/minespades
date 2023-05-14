@@ -7,6 +7,7 @@ import me.nologic.minespades.game.flag.BattlegroundFlag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
@@ -85,6 +86,10 @@ public class BattlegroundTeam {
 
     public int size() {
         return bukkitTeam.getSize();
+    }
+
+    public boolean isLose() {
+        return lifepool == 0 && players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR);
     }
 
 }

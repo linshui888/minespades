@@ -124,6 +124,7 @@ public class BattlegroundFlag implements Listener {
             // Не забываем скрывать таймер, если флаг был поднят
             Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(recoveryBossBar)));
             flagRecoveryTimer = null;
+            recoveryBossBar = null;
         }
     }
 

@@ -3,6 +3,7 @@ package me.nologic.minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
+import me.nologic.minespades.command.MinespadesCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -14,6 +15,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import java.util.List;
 public class BattlegroundManager {
 
     private final HashMap<String, Battleground> enabledBattlegrounds;
+    private final HashMap<String, Multiground> enabledMultigrounds;
 
     private final BattlegroundEditor editor;
     private final BattlegroundLoader loader;
@@ -33,6 +36,7 @@ public class BattlegroundManager {
         this.editor = new BattlegroundEditor();
         this.loader = new BattlegroundLoader(plugin);
         this.enabledBattlegrounds = new HashMap<>();
+        this.enabledMultigrounds = new HashMap<>();
     }
 
     public BattlegroundEditor getEditor() {
@@ -43,21 +47,42 @@ public class BattlegroundManager {
         return enabledBattlegrounds.values().stream().toList();
     }
 
+    public List<Multiground> getMultigrounds() {
+        return this.enabledMultigrounds.values().stream().toList();
+    }
+
+    @Nullable
+    public Multiground getMultiground(String name) {
+        return this.enabledMultigrounds.get(name);
+    }
+
     public void reset(Battleground battleground) {
         disable(battleground.getBattlegroundName());
         enable(battleground.getBattlegroundName());
     }
 
-    public void enable(String name) {
+    public void launchMultiground(String name) {
+        Multiground multiground = new Multiground(name);
+        multiground.launchRandomMultiground();
+    }
+
+    public Battleground enable(String name, Multiground multiground) {
+        Battleground battleground = this.enable(name);
+        battleground.setMultiground(multiground);
+        return battleground;
+    }
+
+    public Battleground enable(String name) {
         Battleground battleground = this.load(name);
         battleground.setEnabled(true);
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        this.callToArms(name);
+        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND) ? battleground.getBattlegroundName() : battleground.getMultiground().getName());
         Bukkit.getServer().getPluginManager().registerEvents(battleground.getPreferences(), plugin);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);
         plugin.getConfig().set("Battlegrounds", name);
         plugin.saveConfig();
+        return battleground;
     }
 
     /* Загрузка арены из датабазы. */

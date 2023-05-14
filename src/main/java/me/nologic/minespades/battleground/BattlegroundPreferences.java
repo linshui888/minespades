@@ -197,7 +197,8 @@ public class BattlegroundPreferences implements Listener {
         BLOCK_LAVA_USAGE(true),
         PROTECT_RESPAWN(true),
         DENY_BED_SLEEP(true),
-        PUNISH_COWARDS(true);
+        PUNISH_COWARDS(true),
+        JOIN_ONLY_FROM_MULTIGROUND(false);
 
         private final boolean defaultValue;
 
