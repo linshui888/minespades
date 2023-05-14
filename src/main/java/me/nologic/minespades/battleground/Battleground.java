@@ -29,7 +29,7 @@ public final class Battleground {
     private final List<BattlegroundTeam> teams;
     private BattlegroundPreferences      preferences;
 
-    @Getter @Setter
+    @Getter @Setter @Nullable
     private Multiground multiground;
 
     @Getter @Setter
@@ -57,7 +57,7 @@ public final class Battleground {
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
-        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OWN_TEAM);
+        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
         team.setBukkitTeam(bukkitTeam);
 
         if (team.getFlag() != null)

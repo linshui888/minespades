@@ -34,13 +34,13 @@ public class Multiground {
 
     // Нам нужен метод, который будет менять карту (по сути загружать другую, заранее подготовленную арену)
     // На нулики можно не проверять, ведь невалидную арену нельзя добавить в список мультиграунда
-    public void launchNextBattleground() {
+    public void launchNextInOrder() {
         int index = battlegrounds.indexOf(battleground.getBattlegroundName());
         if (index < battlegrounds.size()) this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get(index + 1), this);
         else this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get(0), this);
     }
 
-    public void launchRandomMultiground() {
+    public void launchRandomly() {
         this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get((int) (Math.random() * battlegrounds.size())), this);
     }
 

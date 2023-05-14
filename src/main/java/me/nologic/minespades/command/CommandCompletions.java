@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public class CommandCompletions {
         battlegrounder.getLoadedBattlegrounds().forEach(b -> {
             if (!b.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
                 battlegroundNames.add(b.getBattlegroundName());
-            }
+            } else if (b.getMultiground() != null) battlegroundNames.add(b.getMultiground().getName());
         });
         return battlegroundNames;
     }
@@ -75,6 +76,12 @@ public class CommandCompletions {
         }
 
         return loadoutNames;
+    }
+
+    public List<String> gatBattlegroundPreferences() {
+        List<String> prefs = new ArrayList<>();
+        Arrays.stream(BattlegroundPreferences.Preference.values()).forEach(p -> prefs.add(p.toString()));
+        return prefs;
     }
 
     @SneakyThrows

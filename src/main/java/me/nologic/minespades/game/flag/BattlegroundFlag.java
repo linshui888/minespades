@@ -122,9 +122,11 @@ public class BattlegroundFlag implements Listener {
             flagRecoveryTimer.cancel();
 
             // Не забываем скрывать таймер, если флаг был поднят
-            Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(recoveryBossBar)));
+            Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> {
+                Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(recoveryBossBar));
+                recoveryBossBar = null;
+            });
             flagRecoveryTimer = null;
-            recoveryBossBar = null;
         }
     }
 
@@ -247,6 +249,7 @@ public class BattlegroundFlag implements Listener {
 
         if (flagRecoveryTimer != null) {
             flagRecoveryTimer.cancel();
+            recoveryBossBar = null;
         }
     }
 

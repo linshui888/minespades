@@ -1,14 +1,15 @@
 package me.nologic.minespades.battleground;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -21,6 +22,7 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.sql.*;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
@@ -29,8 +31,32 @@ public class BattlegroundPreferences implements Listener {
     private final Battleground battleground;
     private final HashMap<Preference, Boolean> preferences = new HashMap<>();
 
-    public void apply(Preference preference, boolean state) {
+    // init() применяется при инициализации, set() через команду конфиг
+    @SneakyThrows
+    public void set(Preference preference, boolean state) {
         this.preferences.put(preference, state);
+        // Пишем изменение в дб
+        try (Connection connection = this.connect()) {
+            Statement selectPreferencesStatement = connection.createStatement();
+            ResultSet prefsSet = selectPreferencesStatement.executeQuery("SELECT parameters FROM preferences;"); prefsSet.next();
+            JsonObject jsonPrefs = JsonParser.parseString(prefsSet.getString("parameters")).getAsJsonObject();
+            selectPreferencesStatement.close();
+            prefsSet.close();
+
+            jsonPrefs.remove(preference.toString());
+            jsonPrefs.addProperty(preference.toString(), state);
+            PreparedStatement updatePrefsStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?;");
+            updatePrefsStatement.setString(1, jsonPrefs.toString());
+            updatePrefsStatement.executeUpdate();
+        }
+    }
+
+    public void init(Preference preference, boolean state) {
+        this.preferences.put(preference, state);
+    }
+
+    private Connection connect() throws SQLException {
+        return DriverManager.getConnection("jdbc:sqlite:" + Minespades.getPlugin(Minespades.class).getDataFolder() + "/battlegrounds/" + battleground.getBattlegroundName() + ".db");
     }
 
     public boolean get(Preference preference) {
@@ -204,6 +230,15 @@ public class BattlegroundPreferences implements Listener {
 
         public boolean getDefaultValue() {
             return this.defaultValue;
+        }
+
+        public static boolean isValid(String preference) {
+            try {
+                valueOf(preference);
+                return true;
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
         }
 
         Preference(boolean defaultValue) {

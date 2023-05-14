@@ -8,10 +8,8 @@ import co.aikar.commands.annotation.Subcommand;
 import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
-import me.nologic.minespades.battleground.Battleground;
-import me.nologic.minespades.battleground.BattlegroundPlayer;
-import me.nologic.minespades.battleground.BattlegroundPreferences;
-import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.battleground.*;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
@@ -25,7 +23,6 @@ import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 @CommandAlias("minespades|ms")
@@ -44,8 +41,10 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     private void registerCompletions() {
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("enabledBattlegrounds", c -> completions.getEnabledBattlegrounds());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getBattlegroundFileList());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadouts(c.getPlayer()));
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferences", c -> completions.gatBattlegroundPreferences());
     }
 
     @Subcommand("launch")
@@ -53,6 +52,16 @@ public class MinespadesCommand extends BaseCommand {
     @CommandPermission("minespades.editor")
     public void onLaunch(Player player, String name) {
         battlegrounder.enable(name.toLowerCase());
+    }
+
+    @Subcommand("config")
+    @CommandCompletion("@battlegroundPreferences")
+    public void onConfig(Player player, String preference, boolean value) {
+        Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().getTargetBattleground(player));
+        if (Preference.isValid(preference)) {
+            battleground.getPreferences().set(Preference.valueOf(preference), value);
+            player.sendMessage(String.format("§2Успех. Параметр %s теперь равняется %s.", preference, value));
+        }
     }
 
     @Subcommand("add")
@@ -115,7 +124,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("multiground")
-    public class Multiground extends BaseCommand {
+    public class MultigroundCommand extends BaseCommand {
 
         @Subcommand("create") @SneakyThrows
         public void onMultigroundCreate(Player player, String multigroundName) {
@@ -126,7 +135,7 @@ public class MinespadesCommand extends BaseCommand {
             if (yaml.getConfigurationSection(multigroundName) == null) {
                 yaml.createSection(multigroundName);
                 yaml.save(path);
-                player.sendMessage("Мультиграунд %s успешно создан. Теперь нужно добавть в него арены. Используйте /ms multiground add <название>");
+                player.sendMessage(String.format("Мультиграунд %s успешно создан. Теперь нужно добавть в него арены. Используйте /ms multiground add <название>", multigroundName));
             } else player.sendMessage("Мультиграунд с таким названием уже существует.");
         }
 
@@ -176,7 +185,7 @@ public class MinespadesCommand extends BaseCommand {
             ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
             if (section != null) {
                 if (plugin.getBattlegrounder().getMultigrounds().stream().noneMatch(m -> m.getName().equals(multigroundName))) {
-                    plugin.getBattlegrounder().launchMultiground(multigroundName);
+                    plugin.getBattlegrounder().launchMultiground(multigroundName, section.getStringList("battlegrounds"));
                 } else player.sendMessage(String.format("Ошибка. Мультиграунд %s уже запущен.", multigroundName));
             } else player.sendMessage("Несуществующий мультиграунд.");
         }
@@ -278,13 +287,21 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("join")
-    @CommandCompletion("@battlegrounds")
+    @CommandCompletion("@enabledBattlegrounds")
     public void onJoin(Player player, String name) {
         try {
             name = name.toLowerCase();
+
+            // Проверка на мультиграунд
+            Multiground multiground = battlegrounder.getMultiground(name);
+            if (multiground != null) {
+                multiground.connect(player);
+                return;
+            }
+
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
             if (battleground.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
-                player.sendMessage("К этой арене нельзя подключиться напрямую.");
+                player.sendMessage("§4Ошибка. К этой арене нельзя подключиться напрямую.");
                 return;
             }
             BattlegroundTeam team = battleground.getSmallestTeam();

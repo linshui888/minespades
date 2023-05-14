@@ -3,7 +3,6 @@ package me.nologic.minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import me.nologic.minespades.command.MinespadesCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,7 +23,7 @@ import java.util.List;
 public class BattlegroundManager {
 
     private final HashMap<String, Battleground> enabledBattlegrounds;
-    private final HashMap<String, Multiground> enabledMultigrounds;
+    private final HashMap<String, Multiground>  enabledMultigrounds;
 
     private final BattlegroundEditor editor;
     private final BattlegroundLoader loader;
@@ -61,22 +60,23 @@ public class BattlegroundManager {
         enable(battleground.getBattlegroundName());
     }
 
-    public void launchMultiground(String name) {
+    public void launchMultiground(String name, List<String> battlegrounds) {
         Multiground multiground = new Multiground(name);
-        multiground.launchRandomMultiground();
+        battlegrounds.forEach(multiground::add);
+        this.enabledMultigrounds.put(name, multiground);
+        multiground.launchRandomly();
+    }
+
+    public void enable(String name) {
+        this.enable(name, null);
     }
 
     public Battleground enable(String name, Multiground multiground) {
-        Battleground battleground = this.enable(name);
-        battleground.setMultiground(multiground);
-        return battleground;
-    }
-
-    public Battleground enable(String name) {
         Battleground battleground = this.load(name);
         battleground.setEnabled(true);
+        battleground.setMultiground(multiground);
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND) ? battleground.getBattlegroundName() : battleground.getMultiground().getName());
+        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName());
         Bukkit.getServer().getPluginManager().registerEvents(battleground.getPreferences(), plugin);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);

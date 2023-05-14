@@ -122,9 +122,9 @@ public class BattlegroundLoader {
                 JsonObject values = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
                 for (Preference preference : Preference.values()) {
                     if (values.get(preference.toString()) != null) {
-                        bp.apply(preference, values.get(preference.toString()).getAsBoolean());
+                        bp.init(preference, values.get(preference.toString()).getAsBoolean());
                     } else {
-                        bp.apply(preference, preference.getDefaultValue());
+                        bp.init(preference, preference.getDefaultValue());
                         values.addProperty(preference.toString(), preference.getDefaultValue());
                     }
                 }
@@ -136,7 +136,7 @@ public class BattlegroundLoader {
                 JsonObject values = new JsonObject();
                 for (Preference preference : Preference.values()) {
                     values.addProperty(preference.toString(), preference.getDefaultValue());
-                    bp.apply(preference, preference.getDefaultValue());
+                    bp.init(preference, preference.getDefaultValue());
                 }
                 PreparedStatement saveStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?");
                 saveStatement.setString(1, values.toString());

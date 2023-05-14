@@ -59,6 +59,7 @@ public class EventDrivenGameMaster implements Listener {
             Component name = event.getPlayer().name().color(event.getTeam().getColor());
             event.getPlayer().playerListName(name);
             event.getPlayer().displayName(name);
+            event.getPlayer().customName(name);
             event.getPlayer().setHealth(20);
             event.getPlayer().setFoodLevel(20);
             event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
@@ -93,6 +94,7 @@ public class EventDrivenGameMaster implements Listener {
             playerManager.load(event.getPlayer());
             event.getPlayer().displayName(event.getPlayer().name().color(NamedTextColor.WHITE));
             event.getPlayer().playerListName(event.getPlayer().name().color(NamedTextColor.WHITE));
+            event.getPlayer().customName(event.getPlayer().name().color(NamedTextColor.WHITE));
 
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
@@ -204,7 +206,7 @@ public class EventDrivenGameMaster implements Listener {
         final Battleground battleground = event.getBattleground();
         if (battleground.getPreference(Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
             Minespades.getPlugin(Minespades.class).getBattlegrounder().disable(event.getBattleground());
-            battleground.getMultiground().launchNextBattleground();
+            battleground.getMultiground().launchNextInOrder();
         }
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
