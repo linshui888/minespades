@@ -9,16 +9,18 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.apache.commons.lang3.StringUtils;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -55,7 +57,7 @@ public class EventDrivenGameMaster implements Listener {
         Battleground battleground = event.getBattleground();
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
-            playerManager.getPlayersInGame().add(battleground.connect(event.getPlayer()));
+            playerManager.getPlayersInGame().add(battleground.connectPlayer(event.getPlayer()));
             Component name = event.getPlayer().name().color(event.getTeam().getColor());
             event.getPlayer().playerListName(name);
             event.getPlayer().displayName(name);
@@ -111,6 +113,17 @@ public class EventDrivenGameMaster implements Listener {
                     Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getTeam()));
             }
         }
+    }
+
+    @EventHandler
+    private void onBattlegroundLoad(BattlegroundSuccessfulLoadEvent event) {
+        Battleground battleground = event.getBattleground();
+        // Если арена является частью мультиграунда, то вместо настоящего названия арены мы используем название мультиграунда
+        final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_6, 1F, 1F));
+        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(180, 63, 61)));
+        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(180, 63, 61))
+                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
     }
 
     @EventHandler

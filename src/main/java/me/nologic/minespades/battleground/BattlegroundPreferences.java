@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -31,12 +33,12 @@ public class BattlegroundPreferences implements Listener {
     private final Battleground battleground;
     private final HashMap<Preference, Boolean> preferences = new HashMap<>();
 
-    // init() применяется при инициализации, set() через команду конфиг
+    // init() применяется при инициализации, set() через команду /ms config
     @SneakyThrows
     public void set(Preference preference, boolean state) {
         this.preferences.put(preference, state);
         // Пишем изменение в дб
-        try (Connection connection = this.connect()) {
+        try (Connection connection = new BattlegroundDataDriver().connect(battleground).getConnection()) {
             Statement selectPreferencesStatement = connection.createStatement();
             ResultSet prefsSet = selectPreferencesStatement.executeQuery("SELECT parameters FROM preferences;"); prefsSet.next();
             JsonObject jsonPrefs = JsonParser.parseString(prefsSet.getString("parameters")).getAsJsonObject();
@@ -55,12 +57,46 @@ public class BattlegroundPreferences implements Listener {
         this.preferences.put(preference, state);
     }
 
-    private Connection connect() throws SQLException {
-        return DriverManager.getConnection("jdbc:sqlite:" + Minespades.getPlugin(Minespades.class).getDataFolder() + "/battlegrounds/" + battleground.getBattlegroundName() + ".db");
-    }
-
     public boolean get(Preference preference) {
         return this.preferences.get(preference);
+    }
+
+    /**
+     * Статический метод, с ним можно довольно легко инициализировать настройки любой арены.
+     * Автоматически добавляет в датабазу новые Preference, которые ранее отсутствовали.
+     *  */
+    @SneakyThrows
+    public static void setup(Battleground battleground) {
+        BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+        BattlegroundPreferences bp = new BattlegroundPreferences(battleground);
+        try (ResultSet result = driver.executeQuery("SELECT * FROM preferences;")) {
+            result.next();
+            battleground.setWorld(Bukkit.getWorld(result.getString("world")));
+            if (result.getString("parameters") != null) {
+                JsonObject values = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
+
+                // Preference является enumом булеанов. Если в загруженной json-строке не найдено искомое значение,
+                // то возьмётся дефолтное значение (preference.getDefaultValue()), так же оно добавится в датабазу.
+                for (Preference preference : Preference.values()) {
+                    if (values.get(preference.toString()) != null) {
+                        bp.init(preference, values.get(preference.toString()).getAsBoolean());
+                    } else {
+                        bp.init(preference, preference.getDefaultValue());
+                        values.addProperty(preference.toString(), preference.getDefaultValue());
+                    }
+                }
+                driver.executeUpdate("UPDATE preferences SET parameters = ?;", values.toString());
+            } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе TODO: имеет смысл перенести эту ленивую инициализацию на этап создания арены
+                JsonObject values = new JsonObject();
+                for (Preference preference : Preference.values()) {
+                    values.addProperty(preference.toString(), preference.getDefaultValue());
+                    bp.init(preference, preference.getDefaultValue());
+                }
+                driver.executeUpdate("UPDATE preferences SET parameters = ?;", values.toString());
+            }
+        }
+        battleground.setPreferences(bp);
+        driver.closeConnection();
     }
 
     @EventHandler

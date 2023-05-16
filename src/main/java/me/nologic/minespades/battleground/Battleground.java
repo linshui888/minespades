@@ -2,6 +2,7 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
@@ -15,8 +16,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
-
 @Getter
 public final class Battleground {
 
@@ -29,7 +28,7 @@ public final class Battleground {
     private final List<BattlegroundTeam> teams;
     private BattlegroundPreferences      preferences;
 
-    @Getter @Setter @Nullable
+    @Getter @Setter
     private Multiground multiground;
 
     @Getter @Setter
@@ -44,7 +43,7 @@ public final class Battleground {
     }
 
     @Nullable
-    public BattlegroundPlayer connect(Player player) {
+    public BattlegroundPlayer connectPlayer(Player player) {
         player.setScoreboard(scoreboard);
         return this.getSmallestTeam().join(player);
     }

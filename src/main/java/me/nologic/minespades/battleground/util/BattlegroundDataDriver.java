@@ -14,15 +14,15 @@ public class BattlegroundDataDriver {
     private final Minespades plugin = Minespades.getInstance();
 
     @SneakyThrows
-    public ResultSet executeQuerry(String sql) {
+    public ResultSet executeQuery(String sql) {
         return this.connection.createStatement().executeQuery(sql);
     }
 
     @SneakyThrows
     public BattlegroundDataDriver executeUpdate(String sql, Object... args) {
         PreparedStatement statement = this.connection.prepareStatement(sql);
-        for (int i = 0; i < args.length; i++) {
-            statement.setObject(i, args[i]);
+        for (int i = 1; i < args.length; i++) {
+            statement.setObject(i, args[i--]);
         }
         statement.executeUpdate();
         return this;
@@ -36,6 +36,15 @@ public class BattlegroundDataDriver {
 
     public BattlegroundDataDriver connect(Battleground battleground) {
         return this.connect(battleground.getBattlegroundName());
+    }
+
+    @SneakyThrows
+    public void closeConnection() {
+        this.connection.close();
+    }
+
+    public Connection getConnection() {
+        return this.connection;
     }
 
 }

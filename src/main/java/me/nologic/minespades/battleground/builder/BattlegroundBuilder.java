@@ -1,12 +1,27 @@
 package me.nologic.minespades.battleground.builder;
 
-/**
- * Очередная бессмысленная попытка в красивый и функциональный билдер.
- */
+import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.Battleground;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
+import me.nologic.minespades.battleground.Multiground;
+import org.jetbrains.annotations.Nullable;
+
 public class BattlegroundBuilder {
 
-    public void test() {
-        VolumeDeserializerThread t = new VolumeDeserializerThread();
+    private final Minespades plugin = Minespades.getInstance();
+
+    /* Создаём новый Battleground и загружаем настройки. */
+    @Nullable
+    public Battleground build(String battlegroundName, @Nullable Multiground multiground) {
+        Battleground battleground;
+        BattlegroundPreferences.setup(battleground = new Battleground(battlegroundName));
+
+        if (battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) && multiground == null) {
+            return null;
+        }
+
+        new LoadBattlegroundTask(battleground).runTaskAsynchronously(plugin);
+        return battleground;
     }
 
 }

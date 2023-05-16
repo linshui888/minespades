@@ -1,6 +1,7 @@
 package me.nologic.minespades;
 
 import me.nologic.minespades.battleground.*;
+import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import net.kyori.adventure.text.Component;
@@ -25,15 +26,15 @@ public class BattlegroundManager {
     private final HashMap<String, Battleground> enabledBattlegrounds;
     private final HashMap<String, Multiground>  enabledMultigrounds;
 
-    private final BattlegroundEditor editor;
-    private final BattlegroundLoader loader;
+    private final BattlegroundBuilder builder;
+    private final BattlegroundEditor  editor;
 
     private final Minespades plugin;
 
     public BattlegroundManager(Minespades plugin) {
         this.plugin = plugin;
         this.editor = new BattlegroundEditor();
-        this.loader = new BattlegroundLoader(plugin);
+        this.builder = new BattlegroundBuilder();
         this.enabledBattlegrounds = new HashMap<>();
         this.enabledMultigrounds = new HashMap<>();
     }
@@ -72,27 +73,23 @@ public class BattlegroundManager {
         return this.enable(name, null) != null;
     }
 
-    public Battleground enable(String name, Multiground multiground) {
-        Battleground battleground = this.load(name);
+    public Battleground enable(String name, @Nullable Multiground multiground) {
+        Battleground battleground = this.builder.build(name, multiground);
+
+        // Если BattlegroundBuilder вернул null, то это значит лишь одно: арена запускается
+        // вручную, а не через мультиграунд, при этом являясь его частью. (IS_MULTIGROUND)
+        if (battleground == null) return null;
+
         battleground.setEnabled(true);
         battleground.setMultiground(multiground);
 
-        // Если арена запускается через команду, но при этом настроена как часть мультиграунда, то возвращаем null
-        if (multiground == null && battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND)) return null;
-
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName());
         Bukkit.getServer().getPluginManager().registerEvents(battleground.getPreferences(), plugin);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);
         plugin.getConfig().set("Battlegrounds", name);
         plugin.saveConfig();
         return battleground;
-    }
-
-    /* Загрузка арены из датабазы. */
-    private Battleground load(String name) {
-        return loader.load(name);
     }
 
     public void disable(Battleground battleground) {
@@ -111,6 +108,7 @@ public class BattlegroundManager {
             Player p = player.getBukkitPlayer();
             p.displayName(p.name().color(NamedTextColor.WHITE));
             p.playerListName(p.name().color(NamedTextColor.WHITE));
+            p.customName(p.name().color(NamedTextColor.WHITE));
         }
 
         battleground.setEnabled(false);
@@ -132,16 +130,6 @@ public class BattlegroundManager {
                 }
             }
         }
-    }
-
-    /**
-     * Объявляет в чате о готовности арены, а так же отправляет звук.
-     * */
-    private void callToArms(String name) {
-        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_7, 1F, 1F));
-        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(172, 127, 67)));
-        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(172, 127, 67))
-                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(187, 151, 60)).decorate(TextDecoration.UNDERLINED)));
     }
 
     public boolean isBattlegroundExist(String battlegroundName) {

@@ -3,6 +3,7 @@ package me.nologic.minespades.battleground.util;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 
+import java.io.File;
 import java.sql.*;
 
 public class BattlegroundValidator {
@@ -30,6 +31,10 @@ public class BattlegroundValidator {
             }
         }
         return false;
+    }
+
+    public static boolean isExist(String battlegroundName) {
+        return new File(plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db").exists();
     }
 
     @SneakyThrows

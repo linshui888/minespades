@@ -61,7 +61,7 @@ public class BattlegroundFlag implements Listener {
             // Если энтитя == игрок, скорборды совпадают, но разные команды, то pickup
             @Override
             public void run() {
-                if (box != null) {
+                if (box != null && particle != null) {
                     particle.spawn();
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
@@ -264,11 +264,13 @@ public class BattlegroundFlag implements Listener {
      * Применяет к флагу сохранённый цвет и паттерны. Имеет смысл вызывать только после смены позиции.
      */
     private void validateBannerData() {
-        position.getBlock().setType(flag.getType());
-        BannerMeta meta = (BannerMeta) flag.getItemMeta();
-        Banner banner = (Banner) position.getBlock().getState();
-        banner.setPatterns(meta.getPatterns());
-        banner.update();
+        Bukkit.getScheduler().runTask(Minespades.getInstance(), () -> {
+            position.getBlock().setType(flag.getType());
+            BannerMeta meta = (BannerMeta) flag.getItemMeta();
+            Banner banner = (Banner) position.getBlock().getState();
+            banner.setPatterns(meta.getPatterns());
+            banner.update();
+        });
     }
 
     private void prepareFlagParticle() {

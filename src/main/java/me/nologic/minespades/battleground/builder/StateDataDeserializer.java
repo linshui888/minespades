@@ -27,12 +27,9 @@ public class StateDataDeserializer {
     /* Универсальная десериализация. */
     public void deserialize(BlockState state, String data) {
         this.data = data;
-        switch (state) {
-            case Container container -> deserialize(container);
-            case Sign      sign      -> deserialize(sign);
-            // TODO: Нужно добавить остальные тайл-энтити: головы, баннеры и т. п.
-            default -> { /* Ничего не делаем. */ }
-        }
+        if (state instanceof Sign sign)           deserialize(sign);
+        if (state instanceof Container container) deserialize(container);
+        // TODO: Добавить поддержку других тайл-энтитей.
     }
 
     /* Десериализация табличек. */

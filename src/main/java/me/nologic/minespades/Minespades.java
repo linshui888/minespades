@@ -15,7 +15,7 @@ import java.io.File;
 public final class Minespades extends JavaPlugin {
 
     @Getter
-    private static final Minespades instance = Minespades.getPlugin(Minespades.class);
+    private static Minespades instance;
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
@@ -23,6 +23,7 @@ public final class Minespades extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
         saveDefaultConfig();
         File maps = new File(super.getDataFolder() + "/battlegrounds");
         if (!maps.exists()) {
