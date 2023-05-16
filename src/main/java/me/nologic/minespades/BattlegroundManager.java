@@ -67,16 +67,21 @@ public class BattlegroundManager {
         multiground.launchRandomly();
     }
 
-    public void enable(String name) {
-        this.enable(name, null);
+    /* Returns true if not null */
+    public boolean enable(String name) {
+        return this.enable(name, null) != null;
     }
 
     public Battleground enable(String name, Multiground multiground) {
         Battleground battleground = this.load(name);
         battleground.setEnabled(true);
         battleground.setMultiground(multiground);
+
+        // Если арена запускается через команду, но при этом настроена как часть мультиграунда, то возвращаем null
+        if (multiground == null && battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND)) return null;
+
         this.enabledBattlegrounds.put(battleground.getBattlegroundName(), battleground);
-        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName());
+        this.callToArms(battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName());
         Bukkit.getServer().getPluginManager().registerEvents(battleground.getPreferences(), plugin);
         List<String> saved = plugin.getConfig().getStringList("Battlegrounds");
         saved.add(name);

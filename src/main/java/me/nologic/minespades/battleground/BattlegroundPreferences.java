@@ -224,7 +224,7 @@ public class BattlegroundPreferences implements Listener {
         PROTECT_RESPAWN(true),
         DENY_BED_SLEEP(true),
         PUNISH_COWARDS(true),
-        JOIN_ONLY_FROM_MULTIGROUND(false);
+        IS_MULTIGROUND(false);
 
         private final boolean defaultValue;
 

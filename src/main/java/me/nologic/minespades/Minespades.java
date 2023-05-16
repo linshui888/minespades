@@ -14,6 +14,9 @@ import java.io.File;
 @Getter
 public final class Minespades extends JavaPlugin {
 
+    @Getter
+    private static final Minespades instance = Minespades.getPlugin(Minespades.class);
+
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
     private PaperCommandManager   commandManager;

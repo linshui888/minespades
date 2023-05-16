@@ -51,7 +51,10 @@ public class MinespadesCommand extends BaseCommand {
     @CommandCompletion("@battlegrounds")
     @CommandPermission("minespades.editor")
     public void onLaunch(Player player, String name) {
-        battlegrounder.enable(name.toLowerCase());
+        if (!battlegrounder.enable(name.toLowerCase())) {
+            player.sendMessage("§4Ошибка. Арена настроена как часть мультиграунда. §7(или что-то сломалось)");
+        }
+
     }
 
     @Subcommand("config")
@@ -300,7 +303,7 @@ public class MinespadesCommand extends BaseCommand {
             }
 
             Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            if (battleground.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+            if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
                 player.sendMessage("§4Ошибка. К этой арене нельзя подключиться напрямую.");
                 return;
             }

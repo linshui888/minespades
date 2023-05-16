@@ -5,6 +5,8 @@ package me.nologic.minespades.battleground.builder;
  */
 public class BattlegroundBuilder {
 
-
+    public void test() {
+        VolumeDeserializerThread t = new VolumeDeserializerThread();
+    }
 
 }

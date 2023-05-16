@@ -35,6 +35,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 
@@ -52,6 +53,7 @@ public class BattlegroundLoader {
     private final Minespades plugin;
     private Battleground     battleground;
 
+    @SneakyThrows
     public Battleground load(String name) {
         this.battleground = new Battleground(name);
         this.battleground.setPreferences(this.loadPreferences());
@@ -150,63 +152,80 @@ public class BattlegroundLoader {
     }
 
     private void loadVolume() {
-        try (Connection connection = connect()) {
+        new Thread(() -> {
+            try (Connection c1 = connect()) {
 
-            // BoundingBox для удаления энитей
-            BoundingBox box = null;
+                // BoundingBox для удаления энитей
+                BoundingBox box = null;
 
-            // Clear
-            Statement clear = connection.createStatement();
-            ResultSet corners = clear.executeQuery(Table.CORNERS.getSelectStatement());
-            while(corners.next()) {
-                int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
-                Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
-                box = BoundingBox.of(corner1, corner2);
-                battleground.setInsideBox(box);
-                for (int x = minX; x <= maxX; x++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        for (int z = minZ; z <= maxZ; z++) {
-                            battleground.getWorld().getBlockAt(x, y, z).setType(Material.AIR);
+                // Clear
+                Statement clear = c1.createStatement();
+                ResultSet corners = clear.executeQuery(Table.CORNERS.getSelectStatement());
+                while(corners.next()) {
+                    int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
+                    Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
+                    box = BoundingBox.of(corner1, corner2);
+                    battleground.setInsideBox(box);
+                    Bukkit.getScheduler().getMainThreadExecutor(plugin).execute(() -> {
+                        for (int x = minX; x <= maxX; x++) {
+                            for (int y = minY; y <= maxY; y++) {
+                                for (int z = minZ; z <= maxZ; z++) {
+                                    battleground.getWorld().getBlockAt(x, y, z).setType(Material.AIR, false);
+                                }
+                            }
                         }
+                    });
+                }
+
+                // Blocks
+                BoundingBox finalBox = box;
+                Bukkit.getScheduler().getMainThreadExecutor(plugin).execute(() -> {
+                    try (Connection c = connect()) {
+                        Statement statement = c.createStatement();
+                        ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
+                        while(blocks.next()) {
+                            int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");
+                            Block b = battleground.getWorld().getBlockAt(x, y, z);
+                            Material material = Material.valueOf(blocks.getString("material"));
+                            b.setType(material, false);
+                            b.setBlockData(Bukkit.createBlockData(blocks.getString("data")), false);
+
+                            BlockState state = b.getState();
+
+                            try {
+                                if (state instanceof Container container) {
+                                    container.getInventory().setContents(this.readInventory(blocks.getString("content")).getContents());
+                                } else if (state instanceof Sign sign) {
+                                    JsonObject obj = JsonParser.parseString(blocks.getString("content")).getAsJsonObject();
+                                    sign.setGlowingText(obj.get("glow").getAsBoolean());
+                                    String[] lines = obj.get("content").getAsString().split("\n");
+                                    for (int i = 0; i < lines.length; i++)
+                                        sign.line(i, Component.text(lines[i]));
+                                    sign.setColor(DyeColor.valueOf(obj.get("color").getAsString()));
+                                    sign.update(true, false);
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+
+                        }
+
+                        if (finalBox != null) {
+                            battleground.getWorld().getNearbyEntities(finalBox).forEach(e -> {
+                                if (!(e instanceof Player)) e.remove();
+                            });
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
-                }
-            }
-
-            // Blocks
-            Statement statement = connection.createStatement();
-            ResultSet blocks = statement.executeQuery(Table.VOLUME.getSelectStatement());
-            while(blocks.next()) {
-                int x = blocks.getInt("x"), y = blocks.getInt("y"), z = blocks.getInt("z");
-                Block b = battleground.getWorld().getBlockAt(x, y, z);
-                Material material = Material.valueOf(blocks.getString("material"));
-                b.setType(material);
-                b.setBlockData(Bukkit.createBlockData(blocks.getString("data")));
-                BlockState state = b.getState();
-
-                // Tile entities
-                // TODO: Возможно, стоит перенести это в другое место.
-                if (state instanceof Container container) {
-                    container.getInventory().setContents(this.readInventory(blocks.getString("content")).getContents());
-                } else if (state instanceof Sign sign) {
-                    JsonObject obj = JsonParser.parseString(blocks.getString("content")).getAsJsonObject();
-                    sign.setGlowingText(obj.get("glow").getAsBoolean());
-                    String[] lines = obj.get("content").getAsString().split("\n");
-                    for (int i = 0; i < lines.length; i++)
-                        sign.line(i, Component.text(lines[i]));
-                    sign.setColor(DyeColor.valueOf(obj.get("color").getAsString()));
-                    sign.update(true, false);
-                }
-            }
-
-            if (box != null) {
-                battleground.getWorld().getNearbyEntities(box).forEach(e -> {
-                    if (!(e instanceof Player)) e.remove();
                 });
+
+
+
+            } catch (SQLException exception) {
+                exception.printStackTrace();
             }
-            
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
+        }).start();
     }
 
     private Location decodeLocation(String encoded) {

@@ -29,7 +29,7 @@ public class CommandCompletions {
     public List<String> getEnabledBattlegrounds() {
         List<String> battlegroundNames = new ArrayList<>();
         battlegrounder.getLoadedBattlegrounds().forEach(b -> {
-            if (!b.getPreferences().get(BattlegroundPreferences.Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+            if (!b.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
                 battlegroundNames.add(b.getBattlegroundName());
             } else if (b.getMultiground() != null) battlegroundNames.add(b.getMultiground().getName());
         });

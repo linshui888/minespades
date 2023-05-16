@@ -204,7 +204,7 @@ public class EventDrivenGameMaster implements Listener {
     @EventHandler
     private void onBattlegroundGameOver(BattlegroundGameOverEvent event) {
         final Battleground battleground = event.getBattleground();
-        if (battleground.getPreference(Preference.JOIN_ONLY_FROM_MULTIGROUND)) {
+        if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
             Minespades.getPlugin(Minespades.class).getBattlegrounder().disable(event.getBattleground());
             battleground.getMultiground().launchNextInOrder();
         }
