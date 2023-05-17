@@ -21,8 +21,8 @@ public class BattlegroundDataDriver {
     @SneakyThrows
     public BattlegroundDataDriver executeUpdate(String sql, Object... args) {
         PreparedStatement statement = this.connection.prepareStatement(sql);
-        for (int i = 1; i < args.length; i++) {
-            statement.setObject(i, args[i--]);
+        for (int i = 0; i < args.length; i++) {
+            statement.setObject(i + 1, args[i]);
         }
         statement.executeUpdate();
         return this;

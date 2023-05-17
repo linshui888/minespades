@@ -9,6 +9,7 @@ import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -22,6 +23,8 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
@@ -228,14 +231,22 @@ public class BattlegroundPreferences implements Listener {
 
     {
         BukkitRunnable cowardTracker = new BukkitRunnable() {
+
             @Override
             public void run() {
                 if (!preferences.get(Preference.PUNISH_COWARDS)) return;
                 for (BattlegroundPlayer player : battleground.getPlayers()) {
                     if (!battleground.getInsideBox().contains(player.getBukkitPlayer().getLocation().toVector())) {
                         if (!player.getBukkitPlayer().isOp() && player.getBukkitPlayer().getGameMode() == GameMode.SURVIVAL) {
-                            player.getBukkitPlayer().damage(4);
-                            player.getBukkitPlayer().setNoDamageTicks(0);
+
+                            // Существует странный эксплойт с телепортацией в транспорт, не знаю что это, но это легко пофиксить
+                            if (player.getBukkitPlayer().getVehicle() != null) {
+                                player.getBukkitPlayer().getVehicle().remove();
+                            }
+
+                            player.getBukkitPlayer().teleport(player.getTeam().getRandomRespawnLocation());
+                            player.getBukkitPlayer().addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 40, 1));
+                            player.getBukkitPlayer().playSound(player.getBukkitPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
                         }
                     }
                 }

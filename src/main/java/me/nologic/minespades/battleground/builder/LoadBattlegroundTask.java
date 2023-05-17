@@ -59,6 +59,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
     public void run() {
         BattlegroundDataDriver connector = new BattlegroundDataDriver().connect(battleground);
 
+        // FIXME: Применить BLOCKS_PER_TICK к отчистке блоков (возможно придётся использовать Callable, так как мне нужно убедиться, что все блоки были удалены)
         // Задаём BoundingBox и чистим блоки внутри TODO: не надо чистить слишком много блоков за раз, нужно применить тот же принцип что и с установкой
         this.clearCorners(connector.executeQuery("SELECT * FROM corners;"));
 
@@ -109,15 +110,28 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
             Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
             this.battleground.setInsideBox(BoundingBox.of(corner1, corner2));
-            Bukkit.getScheduler().getMainThreadExecutor(plugin).execute(() -> {
-                for (int x = minX; x <= maxX; x++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        for (int z = minZ; z <= maxZ; z++) {
-                            battleground.getWorld().getBlockAt(x, y, z).setType(Material.AIR, false);
+
+            List<Block> blocks = new ArrayList<>();
+            for (int x = minX; x <= maxX; x++) {
+                for (int y = minY; y <= maxY; y++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        blocks.add(battleground.getWorld().getBlockAt(x, y, z));
+
+                        if (blocks.size() >= BLOCKS_PER_TICK) {
+                            List<Block> clearable = List.copyOf(blocks);
+                            Bukkit.getScheduler().runTask(plugin, () -> {
+                                for (Block block : clearable) {
+                                    block.setType(Material.AIR, false);
+                                }
+                            });
+                            blocks = new ArrayList<>();
+                            Thread.sleep(25);
                         }
+
                     }
                 }
-            });
+            }
+
         }
     }
 

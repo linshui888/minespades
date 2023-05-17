@@ -59,6 +59,7 @@ public class MinespadesCommand extends BaseCommand {
 
     @Subcommand("config")
     @CommandCompletion("@battlegroundPreferences")
+    @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().getTargetBattleground(player));
         if (Preference.isValid(preference)) {
@@ -127,6 +128,7 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("multiground")
+    @CommandPermission("minespades.editor")
     public class MultigroundCommand extends BaseCommand {
 
         @Subcommand("create") @SneakyThrows
