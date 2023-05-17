@@ -6,12 +6,12 @@
 
     <groupId>me.nologic</groupId>
     <artifactId>minespades</artifactId>
-    <version>ALPHA</version>
+    <version>BETA</version>
     <packaging>jar</packaging>
 
     <name>Minespades</name>
 
-    <description>Modern battlegrounds plugin.</description>
+    <description>Minespades is a plugin that adds a new game mode: pvp arenas (or battlegrounds).</description>
     <properties>
         <java.version>16</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
