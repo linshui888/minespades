@@ -50,7 +50,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LoadBattlegroundTask extends BukkitRunnable {
 
-    private static final int BLOCKS_PER_TICK = 10 * 1000;
+    private static final int BLOCKS_PER_TICK = 20 * 1000;
     private final Minespades plugin = Minespades.getInstance();
 
     private final Battleground battleground;
@@ -59,8 +59,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
     public void run() {
         BattlegroundDataDriver connector = new BattlegroundDataDriver().connect(battleground);
 
-        // FIXME: Применить BLOCKS_PER_TICK к отчистке блоков (возможно придётся использовать Callable, так как мне нужно убедиться, что все блоки были удалены)
-        // Задаём BoundingBox и чистим блоки внутри TODO: не надо чистить слишком много блоков за раз, нужно применить тот же принцип что и с установкой
+        // Задаём BoundingBox и чистим блоки внутри
         this.clearCorners(connector.executeQuery("SELECT * FROM corners;"));
 
         List<Object[]> data = new ArrayList<>();
@@ -117,7 +116,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     for (int z = minZ; z <= maxZ; z++) {
                         blocks.add(battleground.getWorld().getBlockAt(x, y, z));
 
-                        if (blocks.size() >= BLOCKS_PER_TICK) {
+                        if (blocks.size() >= BLOCKS_PER_TICK * 2) {
                             List<Block> clearable = List.copyOf(blocks);
                             Bukkit.getScheduler().runTask(plugin, () -> {
                                 for (Block block : clearable) {
@@ -125,7 +124,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                                 }
                             });
                             blocks = new ArrayList<>();
-                            Thread.sleep(25);
+                            Thread.sleep(50);
                         }
 
                     }
