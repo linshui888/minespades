@@ -50,7 +50,11 @@ public class CommandCompletions {
         return battlegroundNames;
     }
 
-    // TODO: списки команд редактируемой арены
+    // TODO: списки команд редактируемой арены, список мультиграундов (напоминаю, что они хранятся в multigrounds.yml)
+    /*
+        TODO: getTargetBattlegroundTeams(из датабазы)
+              getMultigrounds()
+    * */
 
     // Возвращает список лоадаутов команды, редактируемой игроком в данный момент.
     public List<String> getTargetTeamLoadouts(Player player) {

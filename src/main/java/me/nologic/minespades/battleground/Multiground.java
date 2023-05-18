@@ -32,11 +32,10 @@ public class Multiground {
         this.battlegrounds.add(battlegroundName);
     }
 
-    // Нам нужен метод, который будет менять карту (по сути загружать другую, заранее подготовленную арену)
-    // На нулики можно не проверять, ведь невалидную арену нельзя добавить в список мультиграунда
+    // Запуск следующей арены. Если индекс текущей арены == размер - 1, то значит арена последняя в списке.
     public void launchNextInOrder() {
         int index = battlegrounds.indexOf(battleground.getBattlegroundName());
-        if (index < battlegrounds.size()) this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get(index + 1), this);
+        if (index < battlegrounds.size() - 1) this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get(index + 1), this);
         else this.battleground = plugin.getBattlegrounder().enable(battlegrounds.get(0), this);
     }
 

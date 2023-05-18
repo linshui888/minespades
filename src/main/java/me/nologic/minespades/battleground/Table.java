@@ -1,5 +1,6 @@
 package me.nologic.minespades.battleground;
 
+// TODO: Нужно перенести все строки в места где они используются и удалить этот класс. Не очень хороший подход.
 public enum Table {
 
     VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, content TEXT);",
