@@ -6,8 +6,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.editor.task.*;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,7 +31,7 @@ public class BattlegroundEditor implements Listener {
     private final Minespades plugin;
     private final HashMap<Player, Location[]> volumeCorners = new HashMap<>();
     private final HashMap<Player, String> teamEditSession = new HashMap<>();
-    private final HashMap<Player, String> loadoutEditSession = new HashMap<Player, String>();
+    private final HashMap<Player, String> loadoutEditSession = new HashMap<>();
     private final HashMap<Player, String> battlegroundEditSession  = new HashMap<>();
 
     {
@@ -38,30 +40,31 @@ public class BattlegroundEditor implements Listener {
     }
 
     /**
-     * Создание файла арены.
+     * Создание файла арены и первичная инициализация настроек.
      * */
     public void create(Player player, String battlegroundName) {
-        try (Connection connection = connect(battlegroundName); Statement statement = connection.createStatement()) {
+        BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
 
-            for (Table table : Table.values()) {
-                statement.executeUpdate(table.getCreateStatement());
-            }
-
-            PreparedStatement pst = connection.prepareStatement(Table.PREFERENCES.getInsertStatement());
-            pst.setString(1, player.getWorld().getName());
-            pst.executeUpdate();
-
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage("§4§l[!] §7Арена успешно создана, но теперь её нужно настроить. Минимальные требования для запуска арены: §cдве команды с настроенными точками возрождения и карта блоков§r.");
-            player.sendMessage("§7Чтобы обновить карту блоков, напишите §6/ms edit volume");
-            player.sendMessage("§7Чтобы создать команду, напишите §6/ms create team <название_команды>");
-            player.sendMessage("§7Для запуска арены используйте §6/ms launch <название_арены>");
-
-            battlegroundEditSession.put(player, battlegroundName);
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+        // Создание таблиц
+        for (Table table : Table.values()) {
+            driver.executeUpdate(table.getCreateStatement());
         }
+
+        // Инициализация параметров арены
+        JsonObject parameters = new JsonObject();
+        for (Preference preference : Preference.values()) parameters.addProperty(preference.toString(), preference.getDefaultValue());
+        driver.executeUpdate("INSERT INTO preferences (world, parameters) VALUES (?, ?);", player.getWorld().getName(), parameters.toString());
+
+        // TODO: Это вообще в другом месте должно быть.
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+        player.sendMessage("§4§l[!] §7Арена успешно создана, но теперь её нужно настроить. Минимальные требования для запуска арены: §cдве команды с настроенными точками возрождения и карта блоков§r.");
+        player.sendMessage("§7Чтобы обновить карту блоков, напишите §6/ms edit volume");
+        player.sendMessage("§7Чтобы создать команду, напишите §6/ms create team <название_команды>");
+        player.sendMessage("§7Для запуска арены используйте §6/ms launch <название_арены>");
+
+        // TODO: А это надо изменить. Сама идея хороша, но реализация хромает.
+        battlegroundEditSession.put(player, battlegroundName);
+        driver.closeConnection();
     }
 
     // Создание команды

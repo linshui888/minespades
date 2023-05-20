@@ -1,10 +1,7 @@
 package me.nologic.minespades.command;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.*;
 import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
@@ -44,7 +41,8 @@ public class MinespadesCommand extends BaseCommand {
         plugin.getCommandManager().getCommandCompletions().registerCompletion("enabledBattlegrounds", c -> completions.getEnabledBattlegrounds());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getBattlegroundFileList());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadouts(c.getPlayer()));
-        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferences", c -> completions.gatBattlegroundPreferences());
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferences", c -> completions.getBattlegroundPreferences());
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundTeamsOnJoin", c -> completions.getBattlegroundTeamsOnJoinCommand(c.getPlayer(), c.getContextValue(String.class, 1)));
     }
 
     @Subcommand("launch")
@@ -52,7 +50,7 @@ public class MinespadesCommand extends BaseCommand {
     @CommandPermission("minespades.editor")
     public void onLaunch(Player player, String name) {
         if (!battlegrounder.enable(name.toLowerCase())) {
-            player.sendMessage("§4Ошибка. Арена настроена как часть мультиграунда. §7(или что-то сломалось)");
+            player.sendMessage("§4Ошибка. Арена настроена как часть мультиграунда, её нельзя запустить напрямую.");
         }
 
     }
@@ -62,9 +60,17 @@ public class MinespadesCommand extends BaseCommand {
     @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().getTargetBattleground(player));
+
+        if (battleground == null) {
+            player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
+            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
+            return;
+        }
+
         if (Preference.isValid(preference)) {
             battleground.getPreferences().set(Preference.valueOf(preference), value);
-            player.sendMessage(String.format("§2Успех. Параметр %s теперь равняется %s.", preference, value));
+            player.sendMessage(String.format("§2Успех. §7Параметр §6%s §7теперь равняется §3%s§7.", preference, value));
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         }
     }
 
@@ -292,28 +298,36 @@ public class MinespadesCommand extends BaseCommand {
     }
 
     @Subcommand("join")
-    @CommandCompletion("@enabledBattlegrounds")
-    public void onJoin(Player player, String name) {
-        try {
-            name = name.toLowerCase();
+    @CommandCompletion("@enabledBattlegrounds @battlegroundTeamsOnJoin")
+    public void onJoin(Player player, String battlegroundName, @Optional String targetTeamName) {
+        battlegroundName = battlegroundName.toLowerCase();
 
-            // Проверка на мультиграунд
-            Multiground multiground = battlegrounder.getMultiground(name);
-            if (multiground != null) {
-                multiground.connect(player);
-                return;
-            }
-
-            Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
-                player.sendMessage("§4Ошибка. К этой арене нельзя подключиться напрямую.");
-                return;
-            }
-            BattlegroundTeam team = battleground.getSmallestTeam();
-            Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
-        } catch (NullPointerException ex) {
-            player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
+        // Проверка на мультиграунд
+        Multiground multiground = battlegrounder.getMultiground(battlegroundName);
+        if (multiground != null) {
+            BattlegroundTeam targetTeam = multiground.getBattleground().getTeamByName(targetTeamName);
+            Battleground battleground = multiground.getBattleground();
+            multiground.connect(player, targetTeam != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN) ? targetTeam : battleground.getSmallestTeam());
+            return;
         }
+
+        Battleground battleground = battlegrounder.getBattlegroundByName(battlegroundName);
+        if (battleground == null) {
+            player.sendMessage("§4Ошибка. Несуществующая арена: " + battlegroundName + ".");
+            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 1F);
+            return;
+        }
+
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
+            player.sendMessage("§4Ошибка. К этой арене нельзя подключиться напрямую.");
+            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 1F);
+            return;
+        }
+
+        // Если targetTeam != null, то подключаем плеера к указанной команде
+        // Если включено принудительное автораспределение, то кидаем игрока в команду с наименьшим кол-вом игроков
+        BattlegroundTeam team = targetTeamName != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN) ? battleground.getTeamByName(targetTeamName) : battleground.getSmallestTeam();
+        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
     }
 
     @Subcommand("quit|leave|q")
@@ -328,14 +342,23 @@ public class MinespadesCommand extends BaseCommand {
     @CommandCompletion("@battlegrounds")
     @CommandPermission("minespades.editor")
     public void onForceReset(Player player, String name) {
-        try {
-            Battleground battleground = battlegrounder.getBattlegroundByName(name);
-            battleground.broadcast(Component.text(String.format("Арена %s принудительно перезагружена игроком %s.", StringUtils.capitalise(name), player.getName())).color(TextColor.color(187, 166, 96)));
-            battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
-            battlegrounder.reset(battleground);
-        } catch (NullPointerException ex) {
+        Battleground battleground = battlegrounder.getBattlegroundByName(name);
+
+        if (battleground == null) {
             player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
+            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
+            return;
         }
+
+        if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
+            player.sendMessage("§4Ошибка. Арена управляется мультиграундом.");
+            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
+            return;
+        }
+
+        battleground.broadcast(String.format("§7Арена §6%s §7принудительно перезагружена игроком §73%s§7.", StringUtils.capitalise(name), player.getName()));
+        battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
+        battlegrounder.reset(battleground);
     }
 
 }

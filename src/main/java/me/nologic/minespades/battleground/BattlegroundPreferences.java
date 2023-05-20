@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -39,20 +40,16 @@ public class BattlegroundPreferences implements Listener {
     // init() применяется при инициализации, set() через команду /ms config
     @SneakyThrows
     public void set(Preference preference, boolean state) {
+        BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
         this.preferences.put(preference, state);
         // Пишем изменение в дб
-        try (Connection connection = new BattlegroundDataDriver().connect(battleground).getConnection()) {
-            Statement selectPreferencesStatement = connection.createStatement();
-            ResultSet prefsSet = selectPreferencesStatement.executeQuery("SELECT parameters FROM preferences;"); prefsSet.next();
-            JsonObject jsonPrefs = JsonParser.parseString(prefsSet.getString("parameters")).getAsJsonObject();
-            selectPreferencesStatement.close();
-            prefsSet.close();
-
-            jsonPrefs.remove(preference.toString());
-            jsonPrefs.addProperty(preference.toString(), state);
-            PreparedStatement updatePrefsStatement = connection.prepareStatement("UPDATE preferences SET parameters = ?;");
-            updatePrefsStatement.setString(1, jsonPrefs.toString());
-            updatePrefsStatement.executeUpdate();
+        try (ResultSet result = driver.executeQuery("SELECT parameters FROM preferences;")) {
+            result.next();
+            JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
+            parameters.remove(preference.toString());
+            parameters.addProperty(preference.toString(), state);
+            driver.executeUpdate("UPDATE preferences SET parameters = ?;", parameters.toString());
+            driver.closeConnection();
         }
     }
 
@@ -60,8 +57,10 @@ public class BattlegroundPreferences implements Listener {
         this.preferences.put(preference, state);
     }
 
-    public boolean get(Preference preference) {
-        return this.preferences.get(preference);
+    @NotNull /* Возвращает либо значение из карты preferences, либо дефолтное. */
+    public Boolean get(Preference preference) {
+        Boolean result = this.preferences.get(preference);
+        return result != null ? result : preference.getDefaultValue();
     }
 
     /**
@@ -69,37 +68,28 @@ public class BattlegroundPreferences implements Listener {
      * Автоматически добавляет в датабазу новые Preference, которые ранее отсутствовали.
      *  */
     @SneakyThrows
-    public static void setup(Battleground battleground) {
+    public static BattlegroundPreferences loadPreferences(Battleground battleground) {
         BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
         BattlegroundPreferences bp = new BattlegroundPreferences(battleground);
         try (ResultSet result = driver.executeQuery("SELECT * FROM preferences;")) {
             result.next();
             battleground.setWorld(Bukkit.getWorld(result.getString("world")));
-            if (result.getString("parameters") != null) {
-                JsonObject values = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
 
-                // Preference является enumом булеанов. Если в загруженной json-строке не найдено искомое значение,
-                // то возьмётся дефолтное значение (preference.getDefaultValue()), так же оно добавится в датабазу.
-                for (Preference preference : Preference.values()) {
-                    if (values.get(preference.toString()) != null) {
-                        bp.init(preference, values.get(preference.toString()).getAsBoolean());
-                    } else {
-                        bp.init(preference, preference.getDefaultValue());
-                        values.addProperty(preference.toString(), preference.getDefaultValue());
-                    }
-                }
-                driver.executeUpdate("UPDATE preferences SET parameters = ?;", values.toString());
-            } else { // Если values == null, то вытаскиваем дефолтные значения настроек, попутно инициализируя строку в датабазе TODO: имеет смысл перенести эту ленивую инициализацию на этап создания арены
-                JsonObject values = new JsonObject();
-                for (Preference preference : Preference.values()) {
-                    values.addProperty(preference.toString(), preference.getDefaultValue());
+            JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
+            // Preference является енумом буликов (лол). Если в загруженной json-строке не найдено искомое значение,
+            // то возьмётся дефолтное значение (preference.getDefaultValue()), так же оно добавится в датабазу.
+            for (Preference preference : Preference.values()) {
+                if (parameters.get(preference.toString()) != null) {
+                    bp.init(preference, parameters.get(preference.toString()).getAsBoolean());
+                } else {
                     bp.init(preference, preference.getDefaultValue());
+                    parameters.addProperty(preference.toString(), preference.getDefaultValue());
                 }
-                driver.executeUpdate("UPDATE preferences SET parameters = ?;", values.toString());
             }
+            driver.executeUpdate("UPDATE preferences SET parameters = ?;", parameters.toString());
         }
-        battleground.setPreferences(bp);
         driver.closeConnection();
+        return bp;
     }
 
     @EventHandler
@@ -258,7 +248,7 @@ public class BattlegroundPreferences implements Listener {
 
     public enum Preference {
 
-        AUTO_ASSIGN(true),
+        FORCE_AUTO_ASSIGN(true),
         FRIENDLY_FIRE(false),
         KEEP_INVENTORY(true),
         DELETE_EMPTY_BOTTLES(true),

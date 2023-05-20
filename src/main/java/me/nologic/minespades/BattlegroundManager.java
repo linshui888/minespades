@@ -4,15 +4,8 @@ import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.apache.commons.lang3.StringUtils;
+import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +50,7 @@ public class BattlegroundManager {
     }
 
     public void reset(Battleground battleground) {
-        disable(battleground.getBattlegroundName());
+        disable(battleground);
         enable(battleground.getBattlegroundName());
     }
 
@@ -93,26 +86,15 @@ public class BattlegroundManager {
     }
 
     public void disable(Battleground battleground) {
-        this.disable(battleground.getBattlegroundName());
-    }
-
-    public void disable(String battlegroundName) {
-        Battleground battleground = this.getBattlegroundByName(battlegroundName);
 
         // Кикаем всех игроков с арены
         for (BattlegroundPlayer player : battleground.getPlayers()) {
-            player.removeSidebar();
-            plugin.getGameMaster().getPlayerManager().getPlayersInGame().remove(player);
-            player.getBattleground().kick(player);
-            plugin.getGameMaster().getPlayerManager().load(player.getBukkitPlayer());
-            Player p = player.getBukkitPlayer();
-            p.displayName(p.name().color(NamedTextColor.WHITE));
-            p.playerListName(p.name().color(NamedTextColor.WHITE));
-            p.customName(p.name().color(NamedTextColor.WHITE));
+            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(battleground, player.getTeam(), player.getBukkitPlayer()));
         }
 
         battleground.setEnabled(false);
         HandlerList.unregisterAll(battleground.getPreferences());
+        this.enabledBattlegrounds.remove(battleground.getBattlegroundName());
 
         // Останавливаем все BukkitRunnable из правил автовыдачи
         for (BattlegroundTeam team : battleground.getTeams()) {
@@ -136,6 +118,7 @@ public class BattlegroundManager {
         return new File(plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db").exists();
     }
 
+    @Nullable
     public Battleground getBattlegroundByName(String name) {
         return this.enabledBattlegrounds.get(name);
     }

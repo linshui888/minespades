@@ -19,6 +19,8 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -43,6 +45,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -57,11 +60,12 @@ public class EventDrivenGameMaster implements Listener {
         Battleground battleground = event.getBattleground();
         if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
             playerManager.save(event.getPlayer());
-            playerManager.getPlayersInGame().add(battleground.connectPlayer(event.getPlayer()));
+            playerManager.getPlayersInGame().add(battleground.connectPlayer(event.getPlayer(), event.getTeam()));
             Component name = event.getPlayer().name().color(event.getTeam().getColor());
             event.getPlayer().playerListName(name);
             event.getPlayer().displayName(name);
             event.getPlayer().customName(name);
+            event.getPlayer().setCustomNameVisible(true);
             event.getPlayer().setHealth(20);
             event.getPlayer().setFoodLevel(20);
             event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
@@ -71,6 +75,14 @@ public class EventDrivenGameMaster implements Listener {
                     event.getPlayer().showBossBar(team.getFlag().getRecoveryBossBar());
                 }
             }
+
+            // Попробуем отправить сообщение об успешном подключении через тайтл..
+            Title title = Title.title(Component.text("Подключение успешно!").color(TextColor.color(162, 9, 78)),
+                    Component.text("Ваша команда: ").append(event.getTeam().getDisplayName().decorate(TextDecoration.BOLD)),
+                    Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(4000), Duration.ofMillis(500))
+            );
+            event.getPlayer().showTitle(title);
+
         } else {
             event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
         }
@@ -97,6 +109,7 @@ public class EventDrivenGameMaster implements Listener {
             event.getPlayer().displayName(event.getPlayer().name().color(NamedTextColor.WHITE));
             event.getPlayer().playerListName(event.getPlayer().name().color(NamedTextColor.WHITE));
             event.getPlayer().customName(event.getPlayer().name().color(NamedTextColor.WHITE));
+            event.getPlayer().setCustomNameVisible(false);
 
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
@@ -207,7 +220,6 @@ public class EventDrivenGameMaster implements Listener {
         event.getBattleground().broadcast(message);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
-        // Необходим новый ивент: BattlegroundGameOverEvent
         if (event.getBattleground().getTeams().stream().filter(t -> !t.isLose()).count() <= 1) {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
         }

@@ -10,11 +10,10 @@ public class BattlegroundBuilder {
 
     private final Minespades plugin = Minespades.getInstance();
 
-    /* Создаём новый Battleground и загружаем настройки. */
+    /* Создаём новый Battleground. */
     @Nullable
     public Battleground build(String battlegroundName, @Nullable Multiground multiground) {
-        Battleground battleground;
-        BattlegroundPreferences.setup(battleground = new Battleground(battlegroundName));
+        Battleground battleground = new Battleground(battlegroundName);
 
         if (battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) && multiground == null) {
             return null;

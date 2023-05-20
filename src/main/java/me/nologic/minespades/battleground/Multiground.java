@@ -6,6 +6,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,10 @@ public class Multiground {
     @Getter
     private final String name;
 
-    // Арена, на которой сейчас играют игроки
-    // Всё просто: нам нужно менять её всякий раз, когда заканчивается игра
+    @Getter
     private Battleground battleground;
 
-    public void connect(Player player) {
-        BattlegroundTeam team = battleground.getSmallestTeam();
+    public void connect(Player player, @NotNull BattlegroundTeam team) {
         Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
     }
 

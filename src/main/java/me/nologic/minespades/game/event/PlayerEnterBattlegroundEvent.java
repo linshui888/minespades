@@ -9,7 +9,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-@RequiredArgsConstructor @Getter
+@RequiredArgsConstructor @Getter @NotNull
 public class PlayerEnterBattlegroundEvent extends Event {
 
     private final Battleground battleground;

@@ -10,6 +10,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 import org.bukkit.util.BoundingBox;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,8 +26,9 @@ public final class Battleground {
     private final String     battlegroundName;
     private @Setter World    world;
 
-    private final List<BattlegroundTeam> teams;
-    private BattlegroundPreferences      preferences;
+    @NotNull
+    private final BattlegroundPreferences preferences;
+    private final List<BattlegroundTeam>  teams;
 
     @Getter @Setter
     private Multiground multiground;
@@ -38,14 +40,15 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective killCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, Component.text(0));
-        killCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
+        Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, Component.text(0));
+        tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
+        this.preferences = BattlegroundPreferences.loadPreferences(this);
     }
 
     @Nullable
-    public BattlegroundPlayer connectPlayer(Player player) {
+    public BattlegroundPlayer connectPlayer(Player player, @NotNull BattlegroundTeam team) {
         player.setScoreboard(scoreboard);
-        return this.getSmallestTeam().join(player);
+        return team.join(player);
     }
 
     public void kick(BattlegroundPlayer player) {
@@ -75,6 +78,11 @@ public final class Battleground {
         return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
     }
 
+
+    /**
+     * Поиск команды по названию.
+     * @return BattlegroundTeam или null, если команда не найдена
+     * */
     @Nullable
     public BattlegroundTeam getTeamByName(String name) {
         return this.teams.stream().filter(b -> b.getName().equals(name)).findFirst().orElse(null);
@@ -90,12 +98,12 @@ public final class Battleground {
         return players;
     }
 
-    public void broadcast(TextComponent message) {
+    public void broadcast(String message) {
         this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
-    public void setPreferences(BattlegroundPreferences preferences) {
-        this.preferences = preferences;
+    public void broadcast(TextComponent message) {
+        this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
     public boolean getPreference(Preference preference) {

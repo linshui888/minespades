@@ -74,8 +74,7 @@ public class BattlegroundTeam {
         this.players.add(player);
         BattlegroundPlayer bgPlayer = new BattlegroundPlayer(battleground, this, player);
         player.teleport(this.getRandomRespawnLocation());
-        bgPlayer.setRandomLoadout();
-        player.sendMessage("§eПодключение успешно! Ваша команда: " + bgPlayer.getTeam().name);
+        bgPlayer.setRandomLoadout(); // TODO: лоадаут выбирается тут
         return bgPlayer;
     }
 

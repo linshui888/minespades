@@ -7,7 +7,10 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+import me.nologic.minespades.battleground.Multiground;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -82,10 +85,26 @@ public class CommandCompletions {
         return loadoutNames;
     }
 
-    public List<String> gatBattlegroundPreferences() {
+    public List<String> getBattlegroundPreferences() {
         List<String> prefs = new ArrayList<>();
         Arrays.stream(BattlegroundPreferences.Preference.values()).forEach(p -> prefs.add(p.toString()));
         return prefs;
+    }
+
+    public List<String> getBattlegroundTeamsOnJoinCommand(Player sender, String battlegroundName) {
+        final List<String> teams = new ArrayList<>();
+
+        if (!sender.hasPermission("minespades.team.pick")) return teams;
+
+        Battleground battleground = battlegrounder.getBattlegroundByName(battlegroundName);
+        Multiground multiground = battlegrounder.getMultiground(battlegroundName);
+        if (battleground != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN)) {
+            battleground.getTeams().forEach(team -> teams.add(team.getName()));
+        } else if (multiground != null && !multiground.getBattleground().getPreference(Preference.FORCE_AUTO_ASSIGN)) {
+            multiground.getBattleground().getTeams().forEach(team -> teams.add(team.getName()));
+        }
+
+        return teams;
     }
 
     @SneakyThrows
