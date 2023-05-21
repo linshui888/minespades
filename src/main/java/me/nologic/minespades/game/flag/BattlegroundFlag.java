@@ -104,8 +104,13 @@ public class BattlegroundFlag implements Listener {
      */
     private void pickup(BattlegroundPlayer carrier) {
         this.carrier = carrier;
+
+        // TODO: Это шутка. Да? Нет?
+        carrier.getBukkitPlayer().sendMessage("§6[Подсказка] §7Ты взял вражеский флаг! Теперь принеси его на свою респу, чтобы получить очки!");
+
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
+        carrier.getBukkitPlayer().setGlowing(true);
         Player player = carrier.getBukkitPlayer();
         player.getInventory().setHelmet(flag);
 
@@ -149,6 +154,7 @@ public class BattlegroundFlag implements Listener {
             return;
         }
 
+        player.setGlowing(false);
         carrier.setFlag(null);
         carrier.setCarryingFlag(false);
 

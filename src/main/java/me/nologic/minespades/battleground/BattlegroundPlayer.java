@@ -58,4 +58,8 @@ public class BattlegroundPlayer {
         return Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
     }
 
+    public void disconnect() {
+        Minespades.getInstance().getGameMaster().getPlayerManager().disconnect(this);
+    }
+
 }

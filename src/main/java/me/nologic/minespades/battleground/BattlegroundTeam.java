@@ -29,7 +29,7 @@ public class BattlegroundTeam {
     private @Setter int          lifepool;
 
     // Количество очков, забираемое в случае потери флага
-    private final @Getter int flagLifepoolPenalty = 20;
+    private final @Getter int flagLifepoolPenalty = 15;
 
     @Getter
     private final List<TeamRespawnPoint>     respawnPoints = new ArrayList<>();

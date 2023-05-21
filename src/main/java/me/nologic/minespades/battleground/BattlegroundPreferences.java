@@ -2,10 +2,12 @@ package me.nologic.minespades.battleground;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import fr.xephi.authme.events.LoginEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -219,6 +221,29 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
+    @EventHandler
+    private void onPlayerJoin(PlayerJoinEvent event) {
+        Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
+            // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
+            if (preferences.get(Preference.AUTOJOIN) && !Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
+                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), event.getPlayer()));
+                event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+            }
+        }, 1);
+    }
+
+    // Подержка AuthMe
+    @EventHandler
+    private void onPlayerLogin(LoginEvent event) {
+        // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
+        Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
+            if (preferences.get(Preference.AUTOJOIN)) {
+                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), event.getPlayer()));
+                event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+            }
+        }, 1);
+    }
+
     {
         BukkitRunnable cowardTracker = new BukkitRunnable() {
 
@@ -261,7 +286,8 @@ public class BattlegroundPreferences implements Listener {
         PROTECT_RESPAWN(true),
         DENY_BED_SLEEP(true),
         PUNISH_COWARDS(true),
-        IS_MULTIGROUND(false);
+        IS_MULTIGROUND(false),
+        AUTOJOIN(false);
 
         private final boolean defaultValue;
 

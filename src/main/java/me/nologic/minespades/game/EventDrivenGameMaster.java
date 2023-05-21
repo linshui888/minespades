@@ -20,7 +20,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.TitlePart;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -92,47 +91,24 @@ public class EventDrivenGameMaster implements Listener {
     private void onPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
         BattlegroundPlayer battlegroundPlayer = playerManager.getBattlegroundPlayer(event.getPlayer());
         if (battlegroundPlayer != null) {
-            if (battlegroundPlayer.isCarryingFlag()) {
-                battlegroundPlayer.getFlag().drop();
-            }
-
-            battlegroundPlayer.removeSidebar();
-            for (BattlegroundTeam team : event.getBattleground().getTeams()) {
-                if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
-                    event.getPlayer().hideBossBar(team.getFlag().getRecoveryBossBar());
-                }
-            }
-
-            playerManager.getPlayersInGame().remove(battlegroundPlayer);
-            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
-            playerManager.load(event.getPlayer());
-            event.getPlayer().displayName(event.getPlayer().name().color(NamedTextColor.WHITE));
-            event.getPlayer().playerListName(event.getPlayer().name().color(NamedTextColor.WHITE));
-            event.getPlayer().customName(event.getPlayer().name().color(NamedTextColor.WHITE));
-            event.getPlayer().setCustomNameVisible(false);
-
-            // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
-            // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
-            // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
-            if (event.getTeam().getLifepool() == 0 && event.getTeam().getPlayers().size() > 1) {
-                boolean everyPlayerInTeamIsSpectator = true;
-                for (Player p : event.getTeam().getPlayers()) {
-                    if (p.getGameMode() == GameMode.SURVIVAL) {
-                        everyPlayerInTeamIsSpectator = false;
-                        break;
-                    }
-                }
-                if (everyPlayerInTeamIsSpectator)
-                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getTeam()));
-            }
+            this.playerManager.disconnect(battlegroundPlayer);
         }
     }
 
     @EventHandler
-    private void onBattlegroundLoad(BattlegroundSuccessfulLoadEvent event) {
+    private void onBattlegroundSuccessfulLoad(BattlegroundSuccessfulLoadEvent event) {
         Battleground battleground = event.getBattleground();
         // Если арена является частью мультиграунда, то вместо настоящего названия арены мы используем название мультиграунда
         final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
+
+        // TODO: Добавить игрокам возможность отказываться от авто-коннекта
+        if (battleground.getPreference(Preference.AUTOJOIN)) {
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                p.sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), p));
+            });
+        }
+
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_6, 1F, 1F));
         Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(180, 63, 61)));
         Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(180, 63, 61))
@@ -210,13 +186,13 @@ public class EventDrivenGameMaster implements Listener {
 
         event.getFlag().reset();
         team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
+        event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
+        event.getPlayer().getBukkitPlayer().setGlowing(false);
     }
 
     @EventHandler
     private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-        TextComponent message = Component.text("Команда ")
-                .append(event.getTeam().getDisplayName())
-                .append(Component.text(" проиграла!"));
+        TextComponent message = Component.text("Команда ").append(event.getTeam().getDisplayName()).append(Component.text(" проиграла!"));
         event.getBattleground().broadcast(message);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
@@ -232,6 +208,7 @@ public class EventDrivenGameMaster implements Listener {
         if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
             Minespades.getPlugin(Minespades.class).getBattlegrounder().disable(event.getBattleground());
             battleground.getMultiground().launchNextInOrder();
+            return;
         }
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
@@ -292,6 +269,48 @@ public class EventDrivenGameMaster implements Listener {
                 }
             }
             return null;
+        }
+
+        // TODO: УЛУЧШИ БЛЯДЬ ЭТО ГОВНО
+        /** Отключает игрока от баттлграунда. */
+        public void disconnect(@NotNull BattlegroundPlayer battlegroundPlayer) {
+
+            Player player = battlegroundPlayer.getBukkitPlayer();
+
+            if (battlegroundPlayer.isCarryingFlag()) {
+                battlegroundPlayer.getFlag().drop();
+            }
+
+            battlegroundPlayer.removeSidebar();
+            for (BattlegroundTeam team : battlegroundPlayer.getBattleground().getTeams()) {
+                if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
+                    player.hideBossBar(team.getFlag().getRecoveryBossBar());
+                }
+            }
+
+            this.getPlayersInGame().remove(battlegroundPlayer);
+            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
+            this.load(player);
+
+            player.displayName(player.name().color(NamedTextColor.WHITE));
+            player.playerListName(player.name().color(NamedTextColor.WHITE));
+            player.customName(player.name().color(NamedTextColor.WHITE));
+            player.setCustomNameVisible(false);
+
+            // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
+            // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
+            // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
+            if (battlegroundPlayer.getTeam().getLifepool() == 0 && battlegroundPlayer.getTeam().getPlayers().size() > 1) {
+                boolean everyPlayerInTeamIsSpectator = true;
+                for (Player p : battlegroundPlayer.getTeam().getPlayers()) {
+                    if (p.getGameMode() == GameMode.SURVIVAL) {
+                        everyPlayerInTeamIsSpectator = false;
+                        break;
+                    }
+                }
+                if (everyPlayerInTeamIsSpectator)
+                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(battlegroundPlayer.getBattleground(), battlegroundPlayer.getTeam()));
+            }
         }
 
         /**

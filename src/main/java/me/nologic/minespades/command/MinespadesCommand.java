@@ -8,6 +8,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
+import me.nologic.minespades.game.event.BattlegroundGameOverEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import net.kyori.adventure.text.Component;
@@ -52,7 +53,15 @@ public class MinespadesCommand extends BaseCommand {
         if (!battlegrounder.enable(name.toLowerCase())) {
             player.sendMessage("§4Ошибка. Арена настроена как часть мультиграунда, её нельзя запустить напрямую.");
         }
+    }
 
+    @Subcommand("forcegameover")
+    @CommandPermission("minespades.editor")
+    public void onForceGameOver(Player player) {
+        BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
+        if (bgPlayer != null) {
+            Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(bgPlayer.getBattleground()));
+        }
     }
 
     @Subcommand("config")

@@ -87,12 +87,13 @@ public class BattlegroundManager {
 
     public void disable(Battleground battleground) {
 
+        battleground.setEnabled(false);
+
         // Кикаем всех игроков с арены
         for (BattlegroundPlayer player : battleground.getPlayers()) {
-            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(battleground, player.getTeam(), player.getBukkitPlayer()));
+            player.disconnect();
         }
 
-        battleground.setEnabled(false);
         HandlerList.unregisterAll(battleground.getPreferences());
         this.enabledBattlegrounds.remove(battleground.getBattlegroundName());
 
