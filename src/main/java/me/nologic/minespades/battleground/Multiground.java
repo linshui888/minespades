@@ -3,8 +3,6 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.Minespades;
-import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +22,7 @@ public class Multiground {
     private Battleground battleground;
 
     public void connect(Player player, @NotNull BattlegroundTeam team) {
-        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
+        plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
     public void add(String battlegroundName) {

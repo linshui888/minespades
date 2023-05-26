@@ -55,39 +55,6 @@ public class EventDrivenGameMaster implements Listener {
     private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
 
     @EventHandler
-    private void onPlayerEnterBattleground(PlayerEnterBattlegroundEvent event) {
-        Battleground battleground = event.getBattleground();
-        if (battleground.isValid() && playerManager.getBattlegroundPlayer(event.getPlayer()) == null) {
-            playerManager.save(event.getPlayer());
-            playerManager.getPlayersInGame().add(battleground.connectPlayer(event.getPlayer(), event.getTeam()));
-            Component name = event.getPlayer().name().color(event.getTeam().getColor());
-            event.getPlayer().playerListName(name);
-            event.getPlayer().displayName(name);
-            event.getPlayer().customName(name);
-            event.getPlayer().setCustomNameVisible(true);
-            event.getPlayer().setHealth(20);
-            event.getPlayer().setFoodLevel(20);
-            event.getPlayer().getActivePotionEffects().forEach(potionEffect -> event.getPlayer().removePotionEffect(potionEffect.getType()));
-            BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer()).showSidebar();
-            for (BattlegroundTeam team : event.getBattleground().getTeams()) {
-                if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
-                    event.getPlayer().showBossBar(team.getFlag().getRecoveryBossBar());
-                }
-            }
-
-            // Попробуем отправить сообщение об успешном подключении через тайтл..
-            Title title = Title.title(Component.text("Подключение успешно!").color(TextColor.color(162, 9, 78)),
-                    Component.text("Ваша команда: ").append(event.getTeam().getDisplayName().decorate(TextDecoration.BOLD)),
-                    Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(4000), Duration.ofMillis(500))
-            );
-            event.getPlayer().showTitle(title);
-
-        } else {
-            event.getPlayer().sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
-        }
-    }
-
-    @EventHandler
     private void onPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
         BattlegroundPlayer battlegroundPlayer = playerManager.getBattlegroundPlayer(event.getPlayer());
         if (battlegroundPlayer != null) {
@@ -102,7 +69,7 @@ public class EventDrivenGameMaster implements Listener {
         final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
 
         // TODO: Добавить игрокам возможность отказываться от авто-коннекта
-        if (battleground.getPreference(Preference.AUTOJOIN)) {
+        if (battleground.getPreference(Preference.FORCE_AUTOJOIN)) {
             Bukkit.getOnlinePlayers().forEach(p -> {
                 p.sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), p));
@@ -269,6 +236,44 @@ public class EventDrivenGameMaster implements Listener {
                 }
             }
             return null;
+        }
+
+        /** Подключает игроков к баттлграунду. */
+        public BattlegroundPlayer connect(Player player, Battleground battleground, BattlegroundTeam team) {
+            if (battleground.isValid() && this.getBattlegroundPlayer(player) == null) {
+                this.save(player);
+                BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
+                this.getPlayersInGame().add(bgPlayer);
+                Component name = player.name().color(team.getColor());
+                player.playerListName(name);
+                player.displayName(name);
+                player.customName(name);
+                player.setCustomNameVisible(true);
+                player.setHealth(20);
+                player.setFoodLevel(20);
+                player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+                bgPlayer.showSidebar();
+
+                for (BattlegroundTeam t : battleground.getTeams()) {
+                    if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {
+                        player.showBossBar(t.getFlag().getRecoveryBossBar());
+                    }
+                }
+
+                // Попробуем отправить сообщение об успешном подключении через тайтл..
+                Title title = Title.title(Component.text("Подключение успешно!").color(TextColor.color(162, 9, 78)),
+                        Component.text("Ваша команда: ").append(team.getDisplayName().decorate(TextDecoration.BOLD)),
+                        Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(4000), Duration.ofMillis(500))
+                );
+                player.showTitle(title);
+
+                // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
+                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
+                return bgPlayer;
+            } else {
+                player.sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
+                return null;
+            }
         }
 
         // TODO: УЛУЧШИ БЛЯДЬ ЭТО ГОВНО

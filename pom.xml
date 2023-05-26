@@ -78,6 +78,10 @@
             <id>codemc-repo</id>
             <url>https://repo.codemc.org/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -96,6 +100,12 @@
             <groupId>fr.xephi</groupId>
             <artifactId>authme</artifactId>
             <version>5.6.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.MWHunter</groupId>
+            <artifactId>GrimAPI</artifactId>
+            <version>add576ba8b</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

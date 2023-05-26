@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -41,9 +42,11 @@ public class BattlegroundFlag implements Listener {
 
     @Getter @Setter
     private BukkitRunnable     tick;
-    private BattlegroundPlayer carrier;
 
     @Getter
+    private BattlegroundPlayer carrier;
+
+    @Getter @Nullable
     private Location           position;
     private BoundingBox        box;
 
@@ -270,13 +273,18 @@ public class BattlegroundFlag implements Listener {
      * Применяет к флагу сохранённый цвет и паттерны. Имеет смысл вызывать только после смены позиции.
      */
     private void validateBannerData() {
-        Bukkit.getScheduler().runTask(Minespades.getInstance(), () -> {
-            position.getBlock().setType(flag.getType());
-            BannerMeta meta = (BannerMeta) flag.getItemMeta();
-            Banner banner = (Banner) position.getBlock().getState();
-            banner.setPatterns(meta.getPatterns());
-            banner.update();
-        });
+        if (Minespades.getInstance().isEnabled()) {
+
+            if (position == null) return;
+
+            Bukkit.getScheduler().runTask(Minespades.getInstance(), () -> {
+                position.getBlock().setType(flag.getType());
+                BannerMeta meta = (BannerMeta) flag.getItemMeta();
+                Banner banner = (Banner) position.getBlock().getState();
+                banner.setPatterns(meta.getPatterns());
+                banner.update();
+            });
+        }
     }
 
     private void prepareFlagParticle() {

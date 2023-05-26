@@ -8,6 +8,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
+import me.nologic.minespades.bot.BattlegroundBot;
 import me.nologic.minespades.game.event.BattlegroundGameOverEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
@@ -55,6 +56,7 @@ public class MinespadesCommand extends BaseCommand {
         }
     }
 
+    // Test commands
     @Subcommand("forcegameover")
     @CommandPermission("minespades.editor")
     public void onForceGameOver(Player player) {
@@ -63,6 +65,16 @@ public class MinespadesCommand extends BaseCommand {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(bgPlayer.getBattleground()));
         }
     }
+
+    @Subcommand("bot")
+    @CommandPermission("minespader.editor")
+    public void onBot(Player player) {
+        BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
+        if (bgPlayer != null) {
+            BattlegroundBot bot = new BattlegroundBot(bgPlayer.getBattleground());
+        }
+    }
+
 
     @Subcommand("config")
     @CommandCompletion("@battlegroundPreferences")
@@ -336,7 +348,7 @@ public class MinespadesCommand extends BaseCommand {
         // Если targetTeam != null, то подключаем плеера к указанной команде
         // Если включено принудительное автораспределение, то кидаем игрока в команду с наименьшим кол-вом игроков
         BattlegroundTeam team = targetTeamName != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN) ? battleground.getTeamByName(targetTeamName) : battleground.getSmallestTeam();
-        Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
+        plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
     @Subcommand("quit|leave|q")

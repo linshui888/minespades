@@ -2,10 +2,12 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
@@ -34,8 +36,9 @@ public final class Battleground {
     private Multiground multiground;
 
     @Getter @Setter
-    private BoundingBox insideBox;
+    private BoundingBox boundingBox;
 
+    @SneakyThrows
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
@@ -45,7 +48,7 @@ public final class Battleground {
         this.preferences = BattlegroundPreferences.loadPreferences(this);
     }
 
-    @Nullable
+    @NotNull
     public BattlegroundPlayer connectPlayer(Player player, @NotNull BattlegroundTeam team) {
         player.setScoreboard(scoreboard);
         return team.join(player);
@@ -59,7 +62,7 @@ public final class Battleground {
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
-        bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
+        // bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS); FIXME: Возможно ломает ботов.
         team.setBukkitTeam(bukkitTeam);
 
         if (team.getFlag() != null)
@@ -78,6 +81,9 @@ public final class Battleground {
         return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
     }
 
+    public Location getCenter() {
+       return boundingBox.getCenter().toLocation(world);
+    }
 
     /**
      * Поиск команды по названию.

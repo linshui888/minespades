@@ -11,6 +11,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -69,6 +70,7 @@ public class BattlegroundTeam {
         }
     }
 
+    @NotNull
     public BattlegroundPlayer join(Player player) {
         this.bukkitTeam.addPlayer(player);
         this.players.add(player);

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
-import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -30,7 +29,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.*;
+import java.sql.ResultSet;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
@@ -225,8 +224,8 @@ public class BattlegroundPreferences implements Listener {
     private void onPlayerJoin(PlayerJoinEvent event) {
         Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
             // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
-            if (preferences.get(Preference.AUTOJOIN) && !Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
-                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), event.getPlayer()));
+            if (preferences.get(Preference.FORCE_AUTOJOIN) && !Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
+                Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
                 event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
             }
         }, 1);
@@ -237,8 +236,8 @@ public class BattlegroundPreferences implements Listener {
     private void onPlayerLogin(LoginEvent event) {
         // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
         Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
-            if (preferences.get(Preference.AUTOJOIN)) {
-                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), event.getPlayer()));
+            if (preferences.get(Preference.FORCE_AUTOJOIN)) {
+                Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
                 event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
             }
         }, 1);
@@ -251,7 +250,7 @@ public class BattlegroundPreferences implements Listener {
             public void run() {
                 if (!preferences.get(Preference.PUNISH_COWARDS)) return;
                 for (BattlegroundPlayer player : battleground.getPlayers()) {
-                    if (!battleground.getInsideBox().contains(player.getBukkitPlayer().getLocation().toVector())) {
+                    if (!battleground.getBoundingBox().contains(player.getBukkitPlayer().getLocation().toVector())) {
                         if (!player.getBukkitPlayer().isOp() && player.getBukkitPlayer().getGameMode() == GameMode.SURVIVAL) {
 
                             // Существует странный эксплойт с телепортацией в транспорт, не знаю что это, но это легко пофиксить
@@ -287,7 +286,8 @@ public class BattlegroundPreferences implements Listener {
         DENY_BED_SLEEP(true),
         PUNISH_COWARDS(true),
         IS_MULTIGROUND(false),
-        AUTOJOIN(false);
+        FORCE_AUTOJOIN(false),
+        BOTS(true); // По дефолту должно быть фолс, но пока просто тестируем
 
         private final boolean defaultValue;
 

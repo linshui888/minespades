@@ -97,7 +97,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
 
         // Синхронно удаляем всех энтитей внутри арены (выпавшие блоки, возможные монстры и пр.)
         Bukkit.getScheduler().runTask(plugin, () -> {
-            battleground.getWorld().getNearbyEntities(battleground.getInsideBox()).forEach(e -> { if (!(e instanceof Player)) e.remove(); });
+            battleground.getWorld().getNearbyEntities(battleground.getBoundingBox()).forEach(e -> { if (!(e instanceof Player)) e.remove(); });
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundSuccessfulLoadEvent(battleground));
         });
 
@@ -108,7 +108,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
         while(corners.next()) {
             int minX = corners.getInt("x1"), maxX = corners.getInt("x2"), minY = corners.getInt("y1"), maxY = corners.getInt("y2"), minZ = corners.getInt("z1"), maxZ = corners.getInt("z2");
             Block corner1 = battleground.getWorld().getBlockAt(minX, minY, minZ), corner2 = battleground.getWorld().getBlockAt(maxX, maxY, maxZ);
-            this.battleground.setInsideBox(BoundingBox.of(corner1, corner2));
+            this.battleground.setBoundingBox(BoundingBox.of(corner1, corner2));
 
             List<Block> blocks = new ArrayList<>();
             for (int x = minX; x <= maxX; x++) {
