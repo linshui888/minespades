@@ -1,6 +1,7 @@
 package me.nologic.minespades.bot;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import fr.xephi.authme.api.v3.AuthMeApi;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +11,7 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.bot.BattlegroundBot.Controller.ControllerCommand;
-import me.nologic.minespades.bot.behaviour.AbstractBehaviour;
+import me.nologic.minespades.bot.behaviour.Behaviour;
 import me.nologic.minespades.bot.data.AsyncInputHandler;
 import me.nologic.minespades.bot.data.BotAnswerEvent;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
@@ -33,11 +34,11 @@ public class BattlegroundBot implements Listener {
 
     private final Minespades plugin = Minespades.getInstance();
 
-    private final Battleground     battleground;
+    private       Battleground     battleground;
     private       BattlegroundTeam team;
 
     private final Controller        controller;
-    private final AbstractBehaviour behaviour;
+    private Behaviour               behaviour;
 
     private Player             bukkitPlayer;
     private BattlegroundPlayer battlegroundPlayer;
@@ -50,23 +51,26 @@ public class BattlegroundBot implements Listener {
     private Player target;
 
     @SneakyThrows
-    public BattlegroundBot(Battleground target) {
-        this.battleground = target;
-        this.behaviour = AbstractBehaviour.getRandomBehaviour(this);
-        this.controller = new Controller(this, new Socket("localhost", 40525));
+    public BattlegroundBot(Socket socket) {
+        this.controller = new Controller(this, socket);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler
     public void onBotAnswer(BotAnswerEvent event) {
 
-        final String[] data    = event.getAnswerData().split(" ");
-        final String   command = data[0];
+        if (!event.getBattlegroundBot().equals(this)) return;
+
+        final JsonObject json = JsonParser.parseString(event.getAnswerData()).getAsJsonObject();
+        final String     command = json.get("command").getAsString();
 
         switch (command) {
-            case "AUTH"  -> this.forceLogin(Bukkit.getPlayer(data[1]));
+            case "AUTH"  -> {
+                final Player player = Bukkit.getPlayer(json.get("username").getAsString());
+                this.battleground = plugin.getBattlegrounder().getBattlegroundByName(json.get("battleground").getAsString());
+                this.forceLogin(player, battleground);
+            }
             case "DONE"  ->  {
-                this.say("Я выполнил предыдущую задачу.");
                 this.busy = false;
                 this.target = null;
             }
@@ -92,7 +96,7 @@ public class BattlegroundBot implements Listener {
     }
 
     // Регистрация/логин, а так же инициализация поля.
-    private void forceLogin(final Player player) {
+    private void forceLogin(final Player player, final Battleground battleground) {
         this.bukkitPlayer = player;
         if (plugin.getServer().getPluginManager().isPluginEnabled("AuthMe")) {
 
@@ -105,23 +109,19 @@ public class BattlegroundBot implements Listener {
             }
 
             // TODO: У бота обязательно должен быть пермишен grim.exempt, иначе античит не даст даже дышать
-
-            this.say("Я не бот. Нет, правда.");
             this.join(battleground);
         }
     }
 
     public void join(Battleground battleground) {
+        this.battleground = battleground;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             this.battlegroundPlayer = Minespades.getInstance().getGameMaster().getPlayerManager().connect(bukkitPlayer, battleground, battleground.getSmallestTeam());
             this.team = battlegroundPlayer.getTeam();
+            this.behaviour = Behaviour.getRandomBehaviour(this);
             this.decideGenerator = new DecideGenerator(this);
             this.decideGenerator.runTaskTimer(plugin, 0, 20);
         }, 20);
-    }
-
-    public void say(String message) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> this.controller.sendCommand(ControllerCommand.CHAT, message), 5);
     }
 
     public void moveTo(@NotNull Location location) {
@@ -158,7 +158,6 @@ public class BattlegroundBot implements Listener {
             this.socket = socket;
             this.in  = new AsyncInputHandler(bot, socket); in.start();
             this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            this.sendCommand(ControllerCommand.CONNECT, "Ebalo");
         }
 
         @SneakyThrows /* [0] is always a command, [1] may be anything */
@@ -170,8 +169,7 @@ public class BattlegroundBot implements Listener {
             json.addProperty("command", commandType.toString());
             json.addProperty("data", builder.toString());
 
-            out.write(json.toString());
-            out.newLine();
+            out.write(json + "\r\n");
             out.flush();
         }
 
@@ -186,7 +184,7 @@ public class BattlegroundBot implements Listener {
 
         public enum ControllerCommand {
 
-            CONNECT,
+            JOIN,
             CHAT,
             DEATH,
             GOTO,

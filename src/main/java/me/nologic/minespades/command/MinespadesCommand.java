@@ -2,6 +2,7 @@ package me.nologic.minespades.command;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
+import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
@@ -9,6 +10,7 @@ import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.bot.BattlegroundBot;
+import me.nologic.minespades.bot.data.BotConnectionHandler;
 import me.nologic.minespades.game.event.BattlegroundGameOverEvent;
 import me.nologic.minespades.game.event.PlayerEnterBattlegroundEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
@@ -21,7 +23,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.StringUtils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.util.List;
 
 @CommandAlias("minespades|ms")
@@ -66,12 +71,22 @@ public class MinespadesCommand extends BaseCommand {
         }
     }
 
-    @Subcommand("bot")
+    @Subcommand("bot") @SneakyThrows
     @CommandPermission("minespader.editor")
-    public void onBot(Player player) {
+    public void onBot(Player player, String username) {
         BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
         if (bgPlayer != null) {
-            BattlegroundBot bot = new BattlegroundBot(bgPlayer.getBattleground());
+            try (Socket socket = new Socket("localhost", 40525); BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
+                final JsonObject json = new JsonObject();
+                json.addProperty("username", username);
+                json.addProperty("battleground", bgPlayer.getBattleground().getBattlegroundName());
+
+                out.write(json + "\r\n");
+                out.flush();
+                plugin.getLogger().info("Ботмастеру отправится " + json);
+            } catch (Exception ex) {
+                player.sendMessage("Во время выполнения команды произошла ошибка: " + ex);
+            }
         }
     }
 

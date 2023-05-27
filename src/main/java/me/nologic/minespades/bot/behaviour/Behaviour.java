@@ -1,18 +1,17 @@
 package me.nologic.minespades.bot.behaviour;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.bot.BattlegroundBot;
 import me.nologic.minespades.bot.SituationKnowledge;
 
-public abstract class AbstractBehaviour {
+public abstract class Behaviour {
 
     protected final BattlegroundBot bot;
     protected final Battleground    battleground;
 
-    public AbstractBehaviour(BattlegroundBot bot) {
+    public Behaviour(BattlegroundBot bot) {
         this.bot = bot;
         this.battleground = bot.getBattleground();
     }
@@ -20,7 +19,7 @@ public abstract class AbstractBehaviour {
     public abstract void behave(SituationKnowledge knowledge);
 
     @SneakyThrows
-    public static AbstractBehaviour getRandomBehaviour(BattlegroundBot bot) {
+    public static Behaviour getRandomBehaviour(BattlegroundBot bot) {
         return Type.AGGRESSIVE.getClazz().getConstructor(BattlegroundBot.class).newInstance(bot);
     }
 
@@ -29,9 +28,9 @@ public abstract class AbstractBehaviour {
         AGGRESSIVE(AggressiveBehaviour.class);
 
         @Getter
-        private final Class<? extends AbstractBehaviour> clazz;
+        private final Class<? extends Behaviour> clazz;
 
-        Type(Class<? extends AbstractBehaviour> clazz) {
+        Type(Class<? extends Behaviour> clazz) {
             this.clazz = clazz;
         }
     }
