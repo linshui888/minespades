@@ -14,8 +14,12 @@ import java.util.Objects;
  * */
 public class AggressiveBehaviour extends Behaviour {
 
+    private final boolean coward;
+    private boolean fleeing;
+
     public AggressiveBehaviour(BattlegroundBot bot) {
         super(bot);
+        this.coward = random.nextBoolean();
     }
 
     @Override
@@ -23,16 +27,40 @@ public class AggressiveBehaviour extends Behaviour {
 
         final BattlegroundFlag enemyFlag = knowledge.getEnemyFlag();
 
-        // [#0] : В первую очередь агрессивный бот ищет носителей флага среди врагов.
+        if (coward && fleeing && knowledge.getEnemiesNear().size() == 0) {
+            this.fleeing = false;
+        }
+
+        final int panicHealth = 12;
+        if (coward && knowledge.getHealth() <= panicHealth && (bot.getTarget() != null || !fleeing)) {
+            bot.moveTo(bot.getBukkitPlayer().getLocation().add(bot.getTeam().getRandomRespawnLocation()).toCenterLocation());
+            bot.getBukkitPlayer().sendMessage("Бот %s пытается убежать от врага!");
+            this.fleeing = true;
+            bot.setTarget(null);
+            return;
+        } else if (fleeing && knowledge.getHealth() > panicHealth) {
+            fleeing = false;
+        }
+
+        if (fleeing) return;
+
+        // [#0] : Всегда проверяем, имеет ли бот флаг чужой команды.
+        //        Если да, то приказываем ему идти на свою респу.
+        if (bot.getBattlegroundPlayer().isCarryingFlag()) {
+            bot.moveTo(bot.getTeam().getRandomRespawnLocation());
+            return;
+        }
+
+        // [#1] : В первую очередь агрессивный бот ищет носителей флага среди врагов.
         if (knowledge.getEnemiesNear().size() > 0 && knowledge.getEnemiesNear().size() < 3) {
             final Player enemyFlagCarrier = (Player) knowledge.getEnemiesNear().stream().filter(e -> e instanceof Player player && BattlegroundPlayer.getBattlegroundPlayer(player) != null && BattlegroundPlayer.getBattlegroundPlayer(player).isCarryingFlag()).findAny().orElse(null);
-            if (enemyFlagCarrier != null && !Objects.equals(bot.getTarget(), enemyFlagCarrier)) { // FIXME: сравнение нуликов даёт true
+            if (enemyFlagCarrier != null && !Objects.equals(bot.getTarget(), enemyFlagCarrier)) {
                 bot.fight(enemyFlagCarrier);
                 return;
             }
         }
 
-        // [#0] : Агрессивный бот всегда нападает на ближайшего игрока. При этом цель может меняться.
+        // [#2] : Агрессивный бот всегда нападает на ближайшего игрока. При этом цель может меняться.
         if (knowledge.getEnemiesNear().size() > 0) {
             final Player closestEnemy = (Player) knowledge.getEnemiesNear().stream().min(Comparator.comparingDouble(e -> e.getLocation().distance(bot.getBukkitPlayer().getLocation()))).orElse(knowledge.getEnemiesNear().get(0));
             if (!Objects.equals(closestEnemy, bot.getTarget())) {
@@ -43,13 +71,6 @@ public class AggressiveBehaviour extends Behaviour {
 
         // Если бот ничем не занят, то даём ему задание, связанное с передвижением
         if (!bot.isBusy()) {
-
-            // [#0] : Всегда проверяем, имеет ли бот флаг чужой команды.
-            //        Если да, то приказываем ему идти на свою респу.
-            if (bot.getBattlegroundPlayer().isCarryingFlag()) {
-                bot.moveTo(bot.getTeam().getRandomRespawnLocation());
-                return;
-            }
 
             // [#0] : Проверяем наличие флага неподалёку.
             if (enemyFlag != null && enemyFlag.getPosition() != null && bot.getBukkitPlayer().getLocation().distance(enemyFlag.getPosition()) < 20) {

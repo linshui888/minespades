@@ -12,12 +12,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.Random;
 
 @Getter
 public final class Minespades extends JavaPlugin {
 
     @Getter
     private static Minespades instance;
+
+    @Getter
+    private Random random;
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
@@ -28,6 +32,7 @@ public final class Minespades extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        random = new Random();
         this.bct = new BotConnectionHandler();
         saveDefaultConfig();
         File maps = new File(super.getDataFolder() + "/battlegrounds");
