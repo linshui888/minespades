@@ -120,7 +120,7 @@ public class BattlegroundBot implements Listener {
             this.team = battlegroundPlayer.getTeam();
             this.behaviour = Behaviour.getRandomBehaviour(this);
             this.decideGenerator = new DecideGenerator(this);
-            this.decideGenerator.runTaskTimer(plugin, 0, 20);
+            this.decideGenerator.runTaskTimer(plugin, 0, 40);
         }, 20);
     }
 

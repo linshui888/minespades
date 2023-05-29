@@ -3,6 +3,7 @@ package me.nologic.minespades.bot.data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.bot.BattlegroundBot;
 import org.bukkit.Bukkit;
@@ -20,10 +21,9 @@ public class AsyncInputHandler extends Thread {
     @Getter @Setter
     private boolean enabled = true;
 
-    @Override
+    @Override @SneakyThrows
     public void run() {
-        try {
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             String data;
             while (enabled && (data = input.readLine()) != null) {
                 Minespades.getInstance().getLogger().info("Принята дата от бот-сервера: " + data);
@@ -34,12 +34,10 @@ public class AsyncInputHandler extends Thread {
                                 new BotAnswerEvent(bot, finalData))
                 );
             }
-
-            Minespades.getInstance().getLogger().warning("Подключение к команд-серверу будет остановлено...");
-            input.close();
-            socket.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Minespades.getInstance().getLogger().info(String.format("Перестаём принимать дату от бота %s.", bot.getBukkitPlayer().getName()));
+        } finally {
+            socket.close();
         }
     }
 

@@ -36,8 +36,7 @@ public class BotConnectionHandler implements Listener {
                     Bukkit.getScheduler().runTask(plugin, () -> Bukkit.getServer().getPluginManager().callEvent(connectEvent));
                 }
             } catch (Exception ex) {
-                plugin.getLogger().severe("Ошибка во время обработки входящих подключений!");
-                ex.printStackTrace();
+                plugin.getLogger().info("Перестаём прослушивать входящие подключения.");
             }
         });
         this.listen();

@@ -155,7 +155,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
                 }
 
-                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
+                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), /* teams.getInt("lifepool") */ 999999999, flag);
 
                 JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {

@@ -32,10 +32,12 @@ public class AggressiveBehaviour extends Behaviour {
             }
         }
 
-        // [#0] : Агрессивный бот всегда нападает на вражеских игроков!
-        if (knowledge.getEnemiesNear().size() > 0 && bot.getTarget() == null) {
+        // [#0] : Агрессивный бот всегда нападает на ближайшего игрока. При этом цель может меняться.
+        if (knowledge.getEnemiesNear().size() > 0) {
             final Player closestEnemy = (Player) knowledge.getEnemiesNear().stream().min(Comparator.comparingDouble(e -> e.getLocation().distance(bot.getBukkitPlayer().getLocation()))).orElse(knowledge.getEnemiesNear().get(0));
-            bot.fight(closestEnemy);
+            if (!Objects.equals(closestEnemy, bot.getTarget())) {
+                bot.fight(closestEnemy);
+            }
             return;
         }
 
@@ -55,14 +57,8 @@ public class AggressiveBehaviour extends Behaviour {
                 return;
             }
 
-            // [#1] : Агрессивный бот почти всегда хочет занять центр.
-            if (knowledge.getDistanceToCenter() > 20) {
-                bot.moveTo(battleground.getCenter().toHighestLocation().add(0, 1, 0));
-                return;
-            } else if (knowledge.getAlliesNear().size() > 0 && enemyFlag != null && enemyFlag.getPosition() != null) {
-                // [#1.1] : Если бот в центре и рядом есть хотя бы один союзник, то бот идёт захватывать вражеский флаг
-                bot.moveTo(enemyFlag.getPosition());
-            }
+            // [#1] : Агрессивные боты просто идут на вражескую респу.
+            bot.moveTo(battleground.getTeams().get((int) (Math.random() * battleground.getTeams().size())).getRandomRespawnLocation());
 
         }
 

@@ -90,7 +90,7 @@ public class BattlegroundTeam {
     }
 
     public boolean isLose() {
-        return lifepool == 0 && players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR);
+        return lifepool <= 0 && players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR) || players.size() == 0;
     }
 
 }
