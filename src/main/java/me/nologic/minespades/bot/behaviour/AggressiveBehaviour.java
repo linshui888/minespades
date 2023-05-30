@@ -15,11 +15,13 @@ import java.util.Objects;
 public class AggressiveBehaviour extends Behaviour {
 
     private final boolean coward;
-    private boolean fleeing;
+
+    private final boolean sword;
 
     public AggressiveBehaviour(BattlegroundBot bot) {
         super(bot);
         this.coward = random.nextBoolean();
+        this.sword = random.nextBoolean();
     }
 
     @Override
@@ -27,22 +29,29 @@ public class AggressiveBehaviour extends Behaviour {
 
         final BattlegroundFlag enemyFlag = knowledge.getEnemyFlag();
 
-        if (coward && fleeing && knowledge.getEnemiesNear().size() == 0) {
-            this.fleeing = false;
+        if (knowledge.getEnemiesNear().size() <= 1) {
+            if (bot.isFleeing()) bot.setFleeing(false);
+            if (knowledge.getHealth() <= 13) {
+                final int slot = super.getSlotForHealingPotion();
+                if (slot != -1) {
+                    bot.consume(slot);
+                    return;
+                }
+            }
         }
 
-        final int panicHealth = 12;
-        if (coward && knowledge.getHealth() <= panicHealth && (bot.getTarget() != null || !fleeing)) {
-            bot.moveTo(bot.getBukkitPlayer().getLocation().add(bot.getTeam().getRandomRespawnLocation()).toCenterLocation());
-            bot.getBukkitPlayer().sendMessage("Бот %s пытается убежать от врага!");
-            this.fleeing = true;
+        // Если бот является трусом, то при падении хп он попытается сбежать из боя, чтобы восстановить хп.
+        if (coward && knowledge.getHealth() <= 10 && knowledge.getEnemiesNear().size() > 0 && (bot.getTarget() != null || !bot.isFleeing())) {
+            bot.moveTo(bot.getBukkitPlayer().getLocation().add(bot.getTeam().getRandomRespawnLocation()).toCenterLocation().add(Math.random() * 5, 0, Math.random() * 5));
+            battleground.broadcast(String.format("§3%s §rпытается убежать, чтобы выжить!", bot.getBukkitPlayer().getName()));
+            bot.setFleeing(true);
             bot.setTarget(null);
             return;
-        } else if (fleeing && knowledge.getHealth() > panicHealth) {
-            fleeing = false;
         }
 
-        if (fleeing) return;
+        if (bot.isFleeing()) return;
+        super.heldWeapon(sword);
+
 
         // [#0] : Всегда проверяем, имеет ли бот флаг чужой команды.
         //        Если да, то приказываем ему идти на свою респу.

@@ -26,7 +26,6 @@ public class AsyncInputHandler extends Thread {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             String data;
             while (enabled && (data = input.readLine()) != null) {
-                Minespades.getInstance().getLogger().info("Принята дата от бот-сервера: " + data);
 
                 String finalData = data;
                 Bukkit.getScheduler().runTask(Minespades.getInstance(),

@@ -18,10 +18,12 @@ import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,6 +48,9 @@ public class BattlegroundBot implements Listener {
     private DecideGenerator    decideGenerator;
 
     private boolean busy = false;
+
+    @Setter
+    private boolean fleeing = false;
 
     @Getter @Setter @Nullable
     private Player target;
@@ -120,8 +125,17 @@ public class BattlegroundBot implements Listener {
             this.team = battlegroundPlayer.getTeam();
             this.behaviour = Behaviour.getRandomBehaviour(this);
             this.decideGenerator = new DecideGenerator(this);
-            this.decideGenerator.runTaskTimer(plugin, 0, 40);
+            this.decideGenerator.runTaskTimer(plugin, 0, 20);
         }, 20);
+    }
+
+    public void held(int slot) {
+        this.controller.sendCommand(ControllerCommand.HELD, String.valueOf(slot));
+    }
+
+    public void consume(int slot) {
+        this.controller.sendCommand(ControllerCommand.CONSUME, String.valueOf(slot));
+        this.busy = true;
     }
 
     public void moveTo(@NotNull Location location) {
@@ -163,7 +177,10 @@ public class BattlegroundBot implements Listener {
         @SneakyThrows /* [0] is always a command, [1] may be anything */
         private void sendCommand(ControllerCommand commandType, String... args) {
             StringBuilder builder = new StringBuilder();
-            for (String string : args) builder.append(string).append(" ");
+            for (String string : args) {
+                builder.append(string);
+                if (args.length > 1) builder.append(" ");
+            }
 
             final JsonObject json = new JsonObject();
             json.addProperty("command", commandType.toString());
@@ -187,6 +204,8 @@ public class BattlegroundBot implements Listener {
             JOIN,
             CHAT,
             DEATH,
+            HELD,
+            CONSUME,
             GOTO,
             FIGHT,
             SHOT,
