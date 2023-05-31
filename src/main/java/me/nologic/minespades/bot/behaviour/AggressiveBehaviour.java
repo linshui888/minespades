@@ -4,6 +4,7 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.bot.BattlegroundBot;
 import me.nologic.minespades.bot.SituationKnowledge;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.Comparator;
@@ -29,11 +30,14 @@ public class AggressiveBehaviour extends Behaviour {
 
         final BattlegroundFlag enemyFlag = knowledge.getEnemyFlag();
 
-        if (knowledge.getEnemiesNear().size() <= 1) {
+        if (bot.isConsuming()) return;
+
+        if (knowledge.getEnemiesNear().size() == 0) {
             if (bot.isFleeing()) bot.setFleeing(false);
             if (knowledge.getHealth() <= 13) {
                 final int slot = super.getSlotForHealingPotion();
                 if (slot != -1) {
+                    battleground.broadcast(Component.text(String.format("%s пытается похилиться!", bot.getBukkitPlayer().getName())));
                     bot.consume(slot);
                     return;
                 }
@@ -41,7 +45,7 @@ public class AggressiveBehaviour extends Behaviour {
         }
 
         // Если бот является трусом, то при падении хп он попытается сбежать из боя, чтобы восстановить хп.
-        if (coward && knowledge.getHealth() <= 10 && knowledge.getEnemiesNear().size() > 0 && (bot.getTarget() != null || !bot.isFleeing())) {
+        if (coward && knowledge.getHealth() <= 11 && knowledge.getEnemiesNear().size() > 0 && (bot.getTarget() != null || !bot.isFleeing())) {
             bot.moveTo(bot.getBukkitPlayer().getLocation().add(bot.getTeam().getRandomRespawnLocation()).toCenterLocation().add(Math.random() * 5, 0, Math.random() * 5));
             battleground.broadcast(String.format("§3%s §rпытается убежать, чтобы выжить!", bot.getBukkitPlayer().getName()));
             bot.setFleeing(true);

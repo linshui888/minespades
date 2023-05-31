@@ -18,12 +18,10 @@ import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,6 +49,7 @@ public class BattlegroundBot implements Listener {
 
     @Setter
     private boolean fleeing = false;
+    private boolean consuming = false;
 
     @Getter @Setter @Nullable
     private Player target;
@@ -135,7 +134,8 @@ public class BattlegroundBot implements Listener {
 
     public void consume(int slot) {
         this.controller.sendCommand(ControllerCommand.CONSUME, String.valueOf(slot));
-        this.busy = true;
+        this.consuming = true;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> this.consuming = false, 40);
     }
 
     public void moveTo(@NotNull Location location) {

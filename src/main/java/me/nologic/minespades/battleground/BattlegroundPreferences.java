@@ -21,6 +21,8 @@ import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
@@ -243,6 +245,22 @@ public class BattlegroundPreferences implements Listener {
         }, 1);
     }
 
+    @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (preferences.get(Preference.NO_DAMAGE_COOLDOWN)) {
+            if (event.getEntity() instanceof Player player && BattlegroundPlayer.getBattlegroundPlayer(player) != null) {
+                player.setNoDamageTicks(0);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onShieldUsage(PlayerInteractEvent event) {
+        if (preferences.get(Preference.NO_SHIELD_DELAY) && event.getMaterial().equals(Material.SHIELD)) {
+            event.getPlayer().setShieldBlockingDelay(0);
+        }
+    }
+
     {
         BukkitRunnable cowardTracker = new BukkitRunnable() {
 
@@ -278,8 +296,10 @@ public class BattlegroundPreferences implements Listener {
         DELETE_EMPTY_BOTTLES(true),
         COLORFUL_ENDING(true),
         FLAG_PARTICLES(true),
-        FLAG_STEALER_TRAILS(true),
+        FLAG_STEALER_TRAILS(true), // TODO: не реализовано
         DISABLE_PORTALS(true),
+        NO_DAMAGE_COOLDOWN(false),
+        NO_SHIELD_DELAY(true),
         PREVENT_ITEM_DAMAGE(true),
         BLOCK_LAVA_USAGE(true),
         PROTECT_RESPAWN(true),
