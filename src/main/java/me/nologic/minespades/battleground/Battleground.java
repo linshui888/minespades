@@ -63,7 +63,7 @@ public final class Battleground {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
         bukkitTeam.setAllowFriendlyFire(false);
         bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
-        bukkitTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.ALWAYS);
+        bukkitTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
         team.setBukkitTeam(bukkitTeam);
 
         if (team.getFlag() != null)

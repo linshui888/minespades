@@ -298,7 +298,7 @@ public class BattlegroundPreferences implements Listener {
         FLAG_PARTICLES(true),
         FLAG_STEALER_TRAILS(true), // TODO: не реализовано
         DISABLE_PORTALS(true),
-        NO_DAMAGE_COOLDOWN(false),
+        NO_DAMAGE_COOLDOWN(true),
         NO_SHIELD_DELAY(true),
         PREVENT_ITEM_DAMAGE(true),
         BLOCK_LAVA_USAGE(true),

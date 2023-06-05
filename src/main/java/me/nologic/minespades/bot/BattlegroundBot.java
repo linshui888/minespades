@@ -1,5 +1,6 @@
 package me.nologic.minespades.bot;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import fr.xephi.authme.api.v3.AuthMeApi;
@@ -18,10 +19,13 @@ import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BlockIterator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +49,8 @@ public class BattlegroundBot implements Listener {
 
     private DecideGenerator    decideGenerator;
 
-    private boolean busy = false;
+    @Nullable @Getter @Setter
+    private Location destination;
 
     @Setter
     private boolean fleeing = false;
@@ -54,10 +59,25 @@ public class BattlegroundBot implements Listener {
     @Getter @Setter @Nullable
     private Player target;
 
+    private final BukkitRunnable drawer;
+
     @SneakyThrows
     public BattlegroundBot(Socket socket) {
         this.controller = new Controller(this, socket);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.drawer = new BukkitRunnable() {
+
+            @Override
+            public void run() {
+                if (battlegroundPlayer != null && destination != null) {
+                    if (bukkitPlayer.getLocation().distance(destination) <= 1)
+                        destination = null;
+                }
+            }
+
+        };
+
+        drawer.runTaskTimerAsynchronously(plugin, 0, 20);
     }
 
     @EventHandler
@@ -74,9 +94,9 @@ public class BattlegroundBot implements Listener {
                 this.battleground = plugin.getBattlegrounder().getBattlegroundByName(json.get("battleground").getAsString());
                 this.forceLogin(player, battleground);
             }
-            case "DONE"  ->  {
-                this.busy = false;
+            case "DONE" -> {
                 this.target = null;
+                this.fleeing = false;
             }
         }
 
@@ -85,18 +105,25 @@ public class BattlegroundBot implements Listener {
     @EventHandler
     public void onBotQuitBattleground(PlayerQuitBattlegroundEvent event) {
         if (event.getPlayer().equals(this.bukkitPlayer)) {
-            event.getPlayer().kick();
             this.controller.shutdown();
+            event.getPlayer().kick();
         }
     }
 
     @EventHandler
     public void onBotDeath(BattlegroundPlayerDeathEvent event) {
-        if (event.getVictim().equals(this.battlegroundPlayer)) {
-            this.controller.sendCommand(ControllerCommand.DEATH);
-            this.busy = false;
-            this.target = null;
-        }
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (event.getVictim().equals(this.battlegroundPlayer)) {
+                this.controller.sendCommand(ControllerCommand.DEATH);
+                this.consuming = false;
+                this.target = null;
+                this.destination = null;
+                this.fleeing = false;
+            } else if (event.getVictim().getBukkitPlayer().equals(this.target)) {
+                this.target = null;
+                this.destination = null;
+            }
+        }, 5);
     }
 
     // Регистрация/логин, а так же инициализация поля.
@@ -124,7 +151,7 @@ public class BattlegroundBot implements Listener {
             this.team = battlegroundPlayer.getTeam();
             this.behaviour = Behaviour.getRandomBehaviour(this);
             this.decideGenerator = new DecideGenerator(this);
-            this.decideGenerator.runTaskTimer(plugin, 0, 20);
+            this.decideGenerator.runTaskTimer(plugin, 0, 10);
         }, 20);
     }
 
@@ -138,17 +165,20 @@ public class BattlegroundBot implements Listener {
         Bukkit.getScheduler().runTaskLater(plugin, () -> this.consuming = false, 40);
     }
 
-    public void moveTo(@NotNull Location location) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            this.controller.sendCommand(ControllerCommand.GOTO, location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
-            this.busy = true;
-        }, 10);
+    public void moveTo(@NotNull Location location, int... range) {
+        if (destination != null && range.length != 0 && destination.distance(location) <= range[0]) return;
+        this.destination = location;
+        this.controller.sendCommand(ControllerCommand.GOTO, location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
     }
 
-    public void fight(Player player) {
-        this.busy = true;
+    /**
+     * Приказывает боту атаковать указанного игрока. Если игрок == target, то метод не выполнится.
+     * */
+    public void fight(@NotNull Player player) {
+        if (player.equals(target)) return;
+        this.destination = null;
         this.target = player;
-        Bukkit.getScheduler().runTaskLater(plugin, () -> this.controller.sendCommand(ControllerCommand.FIGHT, player.getName()), 5);
+        this.controller.sendCommand(ControllerCommand.FIGHT, player.getName());
     }
 
     public void shot(Player player) {
@@ -186,7 +216,8 @@ public class BattlegroundBot implements Listener {
             json.addProperty("command", commandType.toString());
             json.addProperty("data", builder.toString());
 
-            out.write(json + "\r\n");
+            out.write(json.toString());
+            out.newLine();
             out.flush();
         }
 

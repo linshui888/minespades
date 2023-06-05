@@ -6,9 +6,7 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.bot.BattlegroundBot;
 import me.nologic.minespades.bot.SituationKnowledge;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
@@ -65,12 +63,14 @@ public abstract class Behaviour {
 
     @SneakyThrows
     public static Behaviour getRandomBehaviour(BattlegroundBot bot) {
-        return Type.AGGRESSIVE.getClazz().getConstructor(BattlegroundBot.class).newInstance(bot);
+        final Random rnd = Minespades.getInstance().getRandom();
+        return Type.values()[rnd.nextInt(Type.values().length)].getClazz().getConstructor(BattlegroundBot.class).newInstance(bot);
     }
 
     private enum Type {
 
         AGGRESSIVE(AggressiveBehaviour.class);
+        // SNEAKY(WanderingBehaviour.class);
 
         @Getter
         private final Class<? extends Behaviour> clazz;
