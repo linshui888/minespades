@@ -1,7 +1,8 @@
 package me.nologic.minespades;
 
-import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
+import co.aikar.commands.PaperCommandManager;
+
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.Multiground;
 import me.nologic.minespades.command.MinespadesCommand;
@@ -11,7 +12,6 @@ import me.nologic.minority.MinorityExtension;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.util.Random;
