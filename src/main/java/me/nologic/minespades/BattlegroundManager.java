@@ -4,7 +4,6 @@ import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;

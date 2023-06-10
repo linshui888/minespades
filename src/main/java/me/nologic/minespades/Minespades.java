@@ -4,7 +4,6 @@ import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.Multiground;
-import me.nologic.minespades.bot.data.BotConnectionHandler;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.util.MinespadesPlaceholderExpansion;
@@ -27,20 +26,18 @@ public final class Minespades extends JavaPlugin {
     private BattlegroundManager   battlegrounder;
     private PaperCommandManager   commandManager;
 
-    private BotConnectionHandler bct;
-
     @Override
     public void onEnable() {
         instance = this;
         random = new Random();
-        this.bct = new BotConnectionHandler();
-        saveDefaultConfig();
+
         File maps = new File(super.getDataFolder() + "/battlegrounds");
         if (!maps.exists()) {
             if (maps.mkdir()) {
                 getLogger().info("Minespades хранит карты в виде одной датабазы, см. папку battlegrounds.");
             }
         }
+
         this.battlegrounder = new BattlegroundManager(this);
         this.gameMaster = new EventDrivenGameMaster();
         this.commandManager = new PaperCommandManager(this);
@@ -65,13 +62,6 @@ public final class Minespades extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
-        try {
-            bct.getAcceptor().interrupt();
-            bct.getServer().close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
 
         this.getLogger().info("Minespades отключается, все работающие арены будут остановлены.");
 
