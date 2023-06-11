@@ -30,12 +30,14 @@ import java.util.concurrent.Future;
 
 public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
+    private final String battlegroundName;
     private final Location[] corners;
     private final BossBar completeBar;
 
     public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
-        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.PURPLE, BossBar.Overlay.NOTCHED_20);
+        this.battlegroundName = battlegroundName;
+        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20);
         player.showBossBar(completeBar);
         this.corners = corners;
     }
@@ -54,6 +56,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
 
         int i = 0;
+        int b = 0;
         long startTime = System.currentTimeMillis();
         Connection connection = super.connect();
 
@@ -72,6 +75,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
         final int size = 5000;
         World world = player.getWorld();
+        this.completeBar.name(Component.text(String.format("§6%s§7: §esaving blocks", battlegroundName)));
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
@@ -80,6 +84,10 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     bSt.setInt(3, z);
 
                     Block block = world.getBlockAt(x, y, z);
+                    if (++b % size == 0) {
+                        final float progress = this.completeBar.progress() + step * size;
+                        this.completeBar.progress(Math.min(progress, 1.0f));
+                    }
 
                     if (block.getType().isAir()) continue;
 
@@ -91,8 +99,6 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
                     if (++i % size == 0) {
                         bSt.executeBatch();
-                        final float progress = this.completeBar.progress() + step * size;
-                        this.completeBar.progress(Math.min(progress, 1.0f));
                     }
                 }
             }

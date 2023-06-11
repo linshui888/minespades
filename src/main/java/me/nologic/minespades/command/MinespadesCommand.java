@@ -14,6 +14,7 @@ import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -38,10 +39,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     public MinespadesCommand(final Minespades plugin) {
         this.plugin = plugin;
         this.battlegrounder = plugin.getBattlegrounder();
-        this.completions = new CommandCompletions();
-        this.registerCompletions();
         plugin.getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), plugin);
+        this.completions = new CommandCompletions();
+        this.registerCompletions();
     }
 
     private void registerCompletions() {
@@ -263,6 +264,8 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         public void onEditBattlegroundVolume(Player player) {
             if (validated(player, Selection.BATTLEGROUND)) {
                 battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
+                player.playSound(player, Sound.ENTITY_EGG_THROW, 1, 1);
+                player.sendMessage("§7Возьмите в руки золотой меч и выделите два угла, после чего напишите §6/ms save§7.");
             }
         }
 
@@ -396,10 +399,35 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         final PlayerEditSession session = this.battlegrounder.getEditor().editSession(player);
         for (Selection selection : selections) {
             switch (selection) {
-                case SESSION -> { if (!session.isActive()) player.sendMessage(noActiveSessionMessage); return false; }
-                case BATTLEGROUND -> { if (!session.isBattlegroundSelected()) player.sendMessage(battlegroundNotSelectedMessage); return false; }
-                case TEAM -> { if (!session.isTeamSelected()) player.sendMessage(teamNotSelectedMessage); return false; }
-                case LOADOUT -> { if (!session.isLoadoutSelected()) player.sendMessage(loadoutNotSelectedMessage); return false; }
+
+                case SESSION -> {
+                    if (!session.isActive()) {
+                        player.sendMessage(noActiveSessionMessage);
+                        return false;
+                    }
+                }
+
+                case BATTLEGROUND -> {
+                    if (!session.isBattlegroundSelected()) {
+                        player.sendMessage(battlegroundNotSelectedMessage);
+                        return false;
+                    }
+                }
+
+                case TEAM -> {
+                    if (!session.isTeamSelected()) {
+                        player.sendMessage(teamNotSelectedMessage);
+                        return false;
+                    }
+                }
+
+                case LOADOUT -> {
+                    if (!session.isLoadoutSelected()) {
+                        player.sendMessage(loadoutNotSelectedMessage);
+                        return false;
+                    }
+                }
+
             }
         }
         return true;
