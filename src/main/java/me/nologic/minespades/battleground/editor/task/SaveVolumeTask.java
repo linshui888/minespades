@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Table;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
