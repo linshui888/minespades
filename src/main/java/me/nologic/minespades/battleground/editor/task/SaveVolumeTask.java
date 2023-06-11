@@ -4,6 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Table;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -16,6 +19,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.BoundingBox;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,9 +31,12 @@ import java.util.concurrent.Future;
 public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     private final Location[] corners;
+    private final BossBar completeBar;
 
-    public SaveVolumeTask(Player player, Location[] corners) {
+    public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
+        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.PURPLE, BossBar.Overlay.NOTCHED_20);
+        player.showBossBar(completeBar);
         this.corners = corners;
     }
 
@@ -40,6 +47,9 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
             player.sendMessage("§4Необходимо указать два угла кубоида.");
             return;
         }
+
+        final float volume = (float) BoundingBox.of(corners[0], corners[1]).getVolume();
+        final float step = 1.0f / volume;
 
         final int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX()), maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX()), minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY()), maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY()), minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ()), maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
 
@@ -60,7 +70,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
         connection.setAutoCommit(false);
 
-        // Сохранение блоков
+        final int size = 5000;
         World world = player.getWorld();
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
@@ -79,8 +89,10 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     bSt.setString(6, null);
                     bSt.addBatch();
 
-                    if (++i % 10000 == 0) {
+                    if (++i % size == 0) {
                         bSt.executeBatch();
+                        final float progress = this.completeBar.progress() + step * size;
+                        this.completeBar.progress(Math.min(progress, 1.0f));
                     }
                 }
             }
@@ -133,6 +145,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§33%dб.§8, §3%dс.§8)", i, totalTime / 1000));
+        player.hideBossBar(completeBar);
     }
 
     @SneakyThrows

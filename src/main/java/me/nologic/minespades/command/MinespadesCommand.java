@@ -35,9 +35,6 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     private final CommandCompletions  completions;
     private final BattlegroundManager battlegrounder;
 
-    @TranslationKey(section = "error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")
-    private String battlegroundNotSelectedMessage;
-
     public MinespadesCommand(final Minespades plugin) {
         this.plugin = plugin;
         this.battlegrounder = plugin.getBattlegrounder();
@@ -74,24 +71,22 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
     }
 
-
+    // FIXME: Проблема конфига заключается в том, что редактировать настройки можно только у загруженных (т. е. рабочих) арен.
     @Subcommand("config")
     @CommandCompletion("@battlegroundPreferences")
     @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().editSession(player).getTargetBattleground());
 
-        if (battleground == null) {
-            player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
-            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
-            return;
+        // TODO: Имеет смысл перенести изменение преференса прямо в класс BattlegroundPreferences.
+        if (validated(player, Selection.BATTLEGROUND)) {
+            if (Preference.isValid(preference)) {
+                battleground.getPreferences().set(Preference.valueOf(preference), value);
+                player.sendMessage(String.format("§2Успех. §7Параметр §6%s §7теперь равняется §3%s§7.", preference, value));
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+            }
         }
 
-        if (Preference.isValid(preference)) {
-            battleground.getPreferences().set(Preference.valueOf(preference), value);
-            player.sendMessage(String.format("§2Успех. §7Параметр §6%s §7теперь равняется §3%s§7.", preference, value));
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        }
     }
 
     @Subcommand("add")
@@ -100,41 +95,36 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         @Subcommand("respawn")
         public void onAddRespawn(Player player) {
-            if (battlegrounder.getEditor().editSession(player).isTeamSelected()) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
                 battlegrounder.getEditor().addRespawnPoint(player);
-            } else player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
+            }
         }
 
         @Subcommand("loadout")
         public void onAddLoadout(Player player, String name) {
-            if (battlegrounder.getEditor().editSession(player).isTeamSelected()) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
                 battlegrounder.getEditor().addLoadout(player, name);
-            } else player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
+            }
         }
 
         @Subcommand("supply")
         public void onAddSupply(Player player, String name, int interval, int amount, int maximum, String permission) {
-            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
-                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
-                return;
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM, Selection.LOADOUT)) {
+                battlegrounder.getEditor().addSupply(player, name, interval, amount, maximum, permission);
             }
-
-            if (!battlegrounder.getEditor().editSession(player).isLoadoutSelected()) {
-                player.sendMessage("§4Ошибка. Для редактирования не выбран набор экипировки.");
-                return;
-            }
-
-            battlegrounder.getEditor().addSupply(player, name, interval, amount, maximum, permission);
         }
 
         @Subcommand("flag")
         public void onAddFlag(Player player) {
-            if (!player.getInventory().getItemInMainHand().getType().toString().toLowerCase().contains("banner")) {
-                player.sendMessage("§4Ошибка. Возьмите в руки флаг.");
-                return;
-            }
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
 
-            battlegrounder.getEditor().addFlag(player);
+                if (!player.getInventory().getItemInMainHand().getType().toString().contains("BANNER")) {
+                    player.sendMessage("§4Ошибка. Возьмите в руки флаг.");
+                    return;
+                }
+
+                battlegrounder.getEditor().addFlag(player);
+            }
         }
 
     }
@@ -143,12 +133,12 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @CommandPermission("minespades.editor")
     public class Delete extends BaseCommand {
 
-
-        // TODO: добавить проверку на нуллики
         @Subcommand("loadout")
         @CommandCompletion("loadouts")
         public void onDeleteLoadout(Player player, String loadoutName) {
-            battlegrounder.getEditor().removeLoadout(player, loadoutName);
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
+                battlegrounder.getEditor().removeLoadout(player, loadoutName);
+            }
         }
 
     }
@@ -241,7 +231,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         @Subcommand("team")
         public void onCreateTeam(Player player, String teamName) {
-            battlegrounder.getEditor().createTeam(player, teamName);
+            if (validated(player, Selection.BATTLEGROUND)) {
+                battlegrounder.getEditor().createTeam(player, teamName);
+            }
         }
 
     }
@@ -269,52 +261,44 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         @Subcommand("volume")
         public void onEditBattlegroundVolume(Player player) {
-            battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
+            if (validated(player, Selection.BATTLEGROUND)) {
+                battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
+            }
         }
 
         @Subcommand("team")
         public void onEditTeam(Player player, String teamName) {
-            if (battlegrounder.getEditor().editSession(player).isBattlegroundSelected()) {
+            if (validated(player, Selection.BATTLEGROUND)) {
                 battlegrounder.getEditor().setTargetTeam(player, teamName);
-            } else player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
+            }
         }
 
         @Subcommand("color")
         public void onEditColor(Player player, String hexColor) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
+                battlegrounder.getEditor().setTeamColor(player, hexColor);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
 
-            if (!battlegrounder.getEditor().editSession(player).isBattlegroundSelected()) {
-                player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
-                return;
+                final String team = battlegrounder.getEditor().editSession(player).getTargetTeam();
+                player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", team))
+                        .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
             }
-
-            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
-                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
-                return;
-            }
-
-            battlegrounder.getEditor().setTeamColor(player, hexColor);
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", battlegrounder.getEditor().editSession(player).getTargetTeam()))
-                    .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
         }
 
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
         public void onEditLoadout(Player player, String loadoutName) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
 
-            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
-                player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
-                return;
+                if (!battlegrounder.getEditor().isLoadoutExist(player, loadoutName)) {
+                    player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", loadoutName, battlegrounder.getEditor().editSession(player).getTargetTeam()));
+                    return;
+                }
+
+                battlegrounder.getEditor().editSession(player).setTargetLoadout(loadoutName);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }
 
-            if (!battlegrounder.getEditor().isLoadoutExist(player, loadoutName)) {
-                player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", loadoutName, battlegrounder.getEditor().editSession(player).getTargetTeam()));
-                return;
-            }
-
-            battlegrounder.getEditor().editSession(player).setTargetLoadout(loadoutName);
-            player.sendMessage(String.format("§2Успех. Редактируемый набор экипировки: %s.", loadoutName));
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         }
 
     }
@@ -322,8 +306,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @Subcommand("save")
     @CommandPermission("minespades.editor")
     public void onSave(Player player) {
-        player.sendMessage("§7Сохранение карты займёт какое-то время.");
-        battlegrounder.getEditor().saveVolume(player);
+        if (validated(player, Selection.BATTLEGROUND)) {
+            player.sendMessage("§7Сохранение карты займёт какое-то время.");
+            battlegrounder.getEditor().saveVolume(player);
+        }
     }
 
     @Subcommand("join")
@@ -388,6 +374,39 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         battleground.broadcast(String.format("§7Арена §6%s §7принудительно перезагружена игроком §73%s§7.", StringUtils.capitalise(name), player.getName()));
         battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
         battlegrounder.reset(battleground);
+    }
+
+    @TranslationKey(section = "error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")
+    private String battlegroundNotSelectedMessage;
+
+    @TranslationKey(section = "error-messages", name = "team-not-selected", value = "Error. No team selected for editing.")
+    private String teamNotSelectedMessage;
+
+    @TranslationKey(section = "error-messages", name = "loadout-not-selected", value = "Error. No loadout selected for editing.")
+    private String loadoutNotSelectedMessage;
+
+    @TranslationKey(section = "error-messages", name = "no-active-session", value = "Error. Edit session is not started.")
+    private String noActiveSessionMessage;
+
+    /**
+     * Smart check for nulls.
+     * @param player the player whose session will be validated
+     */
+    protected boolean validated(final Player player, final Selection... selections) {
+        final PlayerEditSession session = this.battlegrounder.getEditor().editSession(player);
+        for (Selection selection : selections) {
+            switch (selection) {
+                case SESSION -> { if (!session.isActive()) player.sendMessage(noActiveSessionMessage); return false; }
+                case BATTLEGROUND -> { if (!session.isBattlegroundSelected()) player.sendMessage(battlegroundNotSelectedMessage); return false; }
+                case TEAM -> { if (!session.isTeamSelected()) player.sendMessage(teamNotSelectedMessage); return false; }
+                case LOADOUT -> { if (!session.isLoadoutSelected()) player.sendMessage(loadoutNotSelectedMessage); return false; }
+            }
+        }
+        return true;
+    }
+
+    private enum Selection {
+        SESSION, BATTLEGROUND, TEAM, LOADOUT
     }
 
 }

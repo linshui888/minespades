@@ -152,7 +152,7 @@ public class BattlegroundEditor implements Listener {
 
     @SneakyThrows
     public void saveVolume(Player player) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new SaveVolumeTask(player, this.editSession(player).getCorners()));
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new SaveVolumeTask(editSession(player).getTargetBattleground(), player, this.editSession(player).getCorners()));
     }
 
     @SneakyThrows
