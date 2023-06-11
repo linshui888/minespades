@@ -1,5 +1,5 @@
 # Minespades
-Minespades is a **Paper (Bukkit)** plugin that adds a new game mode to Minecraft: pvp arenas or **battlegrounds**. It has many customizable features and allows you to create an infinite number of **arenas**, **teams** with their own **flags** and spawn points, and much more. In addition, most of the plugin's features were implemented with a modern approach and with the idea that **everything should be customizable**.
+Minespades is a **Paper (Bukkit)** plugin that adds a new game mode to Minecraft: pvp arenas or **battlegrounds**. It has many customizable features and allows you to create an infinite number of **arenas**, **teams** with their own flags, respawn points and much more. In addition, most of the plugin's features were implemented with a modern approach and with the idea that **everything should be customizable**.
 
 ## Features and stuff
 - **Completely destructible battlegrounds** with teams, where players can fight with each other. When the game on battleground ends, it will be restored to its default state and everything will start over!
