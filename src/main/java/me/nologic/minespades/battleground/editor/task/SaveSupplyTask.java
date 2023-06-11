@@ -1,13 +1,15 @@
 package me.nologic.minespades.battleground.editor.task;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -39,7 +41,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
 
             // Считываем все наборы экипировок у команды, редактируемой в данный момент
             PreparedStatement loadoutStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;");
-            loadoutStatement.setString(1, editor.getTargetTeam(player));
+            loadoutStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet result = loadoutStatement.executeQuery(); result.next();
 
             // Проходимся по каждому набору, сравнивая названия
@@ -49,7 +51,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
 
                 // Если названия совпадают, добавляем правило автовыдачи в лоадаут
                 String name = loadout.get("name").getAsString();
-                if (Objects.equals(name, editor.getTargetLoadout(player))) {
+                if (Objects.equals(name, editor.editSession(player).getTargetLoadout())) {
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
                     JsonObject supplyRule = JsonParser.parseString(supplyRuleJSON).getAsJsonObject();
 
@@ -68,7 +70,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
             // Сохраняем модифицированную JSON-строку в датабазу
             PreparedStatement statement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
             statement.setString(1, loadouts.toString());
-            statement.setString(2, editor.getTargetTeam(player));
+            statement.setString(2, editor.editSession(player).getTargetTeam());
             statement.executeUpdate();
 
             // И выводим список правил автовыдачи
@@ -86,7 +88,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
             player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1F, 1.4F);
 
             PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
-            listStatement.setString(1, editor.getTargetTeam(player));
+            listStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet data = listStatement.executeQuery(); data.next();
 
             JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
@@ -96,8 +98,8 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                 JsonObject loadout = loadoutArrayElement.getAsJsonObject();
                 String loadoutName = loadout.get("name").getAsString();
 
-                if (Objects.equals(loadoutName, editor.getTargetLoadout(player))) {
-                    player.sendMessage(Component.text(String.format("Правила автовыдачи для экипировки %s у команды %s: ", loadoutName, editor.getTargetTeam(player))).color(TextColor.color(172, 127, 67)));
+                if (Objects.equals(loadoutName, editor.editSession(player).getTargetLoadout())) {
+                    player.sendMessage(Component.text(String.format("Правила автовыдачи для экипировки %s у команды %s: ", loadoutName, editor.editSession(player).getTargetTeam())).color(TextColor.color(172, 127, 67)));
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
                     for (JsonElement supplyArrayElement : supplies) {
                         JsonObject supplyRule = supplyArrayElement.getAsJsonObject();

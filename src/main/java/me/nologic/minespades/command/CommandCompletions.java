@@ -63,11 +63,11 @@ public class CommandCompletions {
     public List<String> getTargetTeamLoadouts(Player player) {
         List<String> loadoutNames = new ArrayList<>();
 
-        String targetTeamName = battlegrounder.getEditor().getTargetTeam(player);
+        String targetTeamName = battlegrounder.getEditor().editSession(player).getTargetTeam();
         if (targetTeamName == null) return loadoutNames;
 
         try (Connection connection = this.connect(player); PreparedStatement statement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;")) {
-            statement.setString(1, battlegrounder.getEditor().getTargetTeam(player));
+            statement.setString(1, battlegrounder.getEditor().editSession(player).getTargetTeam());
             ResultSet result = statement.executeQuery(); result.next();
 
             if (result.getString("loadouts") == null) return loadoutNames;
@@ -109,7 +109,7 @@ public class CommandCompletions {
 
     @SneakyThrows
     private Connection connect(Player player) {
-        return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegrounder.getEditor().getTargetBattleground(player) + ".db");
+        return DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegrounder.getEditor().editSession(player).getTargetBattleground() + ".db");
     }
 
 }

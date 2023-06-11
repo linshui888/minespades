@@ -16,7 +16,7 @@ public class AddFlagTask extends BaseEditorTask implements Runnable {
     public void run() {
         try (Connection connection = connect()) {
             PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
-            selectStatement.setString(1, editor.getTargetTeam(player));
+            selectStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet result = selectStatement.executeQuery(); result.next();
 
             if (result.getString("flag") != null) {
@@ -34,9 +34,9 @@ public class AddFlagTask extends BaseEditorTask implements Runnable {
 
             PreparedStatement insertStatement = connection.prepareStatement("UPDATE teams SET flag = ? WHERE name = ?;");
             insertStatement.setString(1, data);
-            insertStatement.setString(2, editor.getTargetTeam(player));
+            insertStatement.setString(2, editor.editSession(player).getTargetTeam());
             insertStatement.executeUpdate();
-            player.sendMessage(String.format("§2Теперь у команды %s есть флаг.", editor.getTargetTeam(player)));
+            player.sendMessage(String.format("§2Теперь у команды %s есть флаг.", editor.editSession(player).getTargetTeam()));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

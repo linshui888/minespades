@@ -7,9 +7,13 @@ import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.game.event.BattlegroundGameOverEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -22,19 +26,25 @@ import org.codehaus.plexus.util.StringUtils;
 import java.io.File;
 import java.util.List;
 
+@Translatable
 @CommandAlias("minespades|ms")
 @CommandPermission("minespades.player")
-public class MinespadesCommand extends BaseCommand {
+public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
     private final Minespades          plugin;
     private final CommandCompletions  completions;
     private final BattlegroundManager battlegrounder;
 
-    {
-        this.plugin = Minespades.getPlugin(Minespades.class);
+    @TranslationKey(section = "error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")
+    private String battlegroundNotSelectedMessage;
+
+    public MinespadesCommand(final Minespades plugin) {
+        this.plugin = plugin;
         this.battlegrounder = plugin.getBattlegrounder();
         this.completions = new CommandCompletions();
         this.registerCompletions();
+        plugin.getConfigurationWizard().generate(this.getClass());
+        this.init(this, this.getClass(), plugin);
     }
 
     private void registerCompletions() {
@@ -69,7 +79,7 @@ public class MinespadesCommand extends BaseCommand {
     @CommandCompletion("@battlegroundPreferences")
     @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
-        Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().getTargetBattleground(player));
+        Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().editSession(player).getTargetBattleground());
 
         if (battleground == null) {
             player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
@@ -90,26 +100,26 @@ public class MinespadesCommand extends BaseCommand {
 
         @Subcommand("respawn")
         public void onAddRespawn(Player player) {
-            if (battlegrounder.getEditor().isTeamSelected(player)) {
+            if (battlegrounder.getEditor().editSession(player).isTeamSelected()) {
                 battlegrounder.getEditor().addRespawnPoint(player);
             } else player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
         }
 
         @Subcommand("loadout")
         public void onAddLoadout(Player player, String name) {
-            if (battlegrounder.getEditor().isTeamSelected(player)) {
+            if (battlegrounder.getEditor().editSession(player).isTeamSelected()) {
                 battlegrounder.getEditor().addLoadout(player, name);
             } else player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
         }
 
         @Subcommand("supply")
         public void onAddSupply(Player player, String name, int interval, int amount, int maximum, String permission) {
-            if (!battlegrounder.getEditor().isTeamSelected(player)) {
+            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
                 player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
                 return;
             }
 
-            if (battlegrounder.getEditor().getTargetLoadout(player) == null) {
+            if (!battlegrounder.getEditor().editSession(player).isLoadoutSelected()) {
                 player.sendMessage("§4Ошибка. Для редактирования не выбран набор экипировки.");
                 return;
             }
@@ -238,63 +248,72 @@ public class MinespadesCommand extends BaseCommand {
 
     @Subcommand("edit")
     @CommandPermission("minespades.editor")
+    public void onEdit(final Player player) {
+        final PlayerEditSession session = battlegrounder.getEditor().editSession(player);
+        session.setActive(!session.isActive());
+    }
+
+    @Subcommand("edit")
+    @CommandPermission("minespades.editor")
     public class Edit extends BaseCommand {
 
         @Subcommand("battleground")
         public void onEditBattleground(Player player, String name) {
+            final PlayerEditSession session = battlegrounder.getEditor().editSession(player);
             name = name.toLowerCase();
             if (battlegrounder.isBattlegroundExist(name)) {
-                battlegrounder.getEditor().setTargetBattleground(player, name);
-                player.sendMessage(Component.text(String.format("Арена %s успешно выбрана для редактирования.", StringUtils.capitalise(name))).color(TextColor.color(197, 184, 41)));
-            } else player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
+                battlegrounder.getEditor().editSession(player).setTargetBattleground(name);
+                if (!session.isActive()) session.setActive(true);
+            } else player.sendMessage(String.format("§4Ошибка. Несуществующая арена: %s.", name));
         }
 
         @Subcommand("volume")
         public void onEditBattlegroundVolume(Player player) {
-            battlegrounder.getEditor().setAsVolumeEditor(player);
+            battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
         }
 
         @Subcommand("team")
         public void onEditTeam(Player player, String teamName) {
-            if (battlegrounder.getEditor().getTargetBattleground(player) == null) {
-                player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
-                return;
-            }
-            battlegrounder.getEditor().setTargetTeam(player, teamName);
+            if (battlegrounder.getEditor().editSession(player).isBattlegroundSelected()) {
+                battlegrounder.getEditor().setTargetTeam(player, teamName);
+            } else player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
         }
 
         @Subcommand("color")
         public void onEditColor(Player player, String hexColor) {
-            if (battlegrounder.getEditor().getTargetBattleground(player) == null) {
+
+            if (!battlegrounder.getEditor().editSession(player).isBattlegroundSelected()) {
                 player.sendMessage("§4Ошибка. Не выбрана арена для редактирования.");
                 return;
             }
-            if (battlegrounder.getEditor().getTargetTeam(player) == null) {
+
+            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
                 player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
                 return;
             }
+
             battlegrounder.getEditor().setTeamColor(player, hexColor);
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", battlegrounder.getEditor().getTargetTeam(player)))
+            player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", battlegrounder.getEditor().editSession(player).getTargetTeam()))
                     .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
         }
 
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
-        public void onEditLoadout(Player player, String name) {
+        public void onEditLoadout(Player player, String loadoutName) {
 
-            if (battlegrounder.getEditor().getTargetTeam(player) == null) {
+            if (!battlegrounder.getEditor().editSession(player).isTeamSelected()) {
                 player.sendMessage("§4Ошибка. Не выбрана команда для редактирования.");
                 return;
             }
 
-            if (!battlegrounder.getEditor().isLoadoutExist(player, name)) {
-                player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", name, battlegrounder.getEditor().getTargetTeam(player)));
+            if (!battlegrounder.getEditor().isLoadoutExist(player, loadoutName)) {
+                player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", loadoutName, battlegrounder.getEditor().editSession(player).getTargetTeam()));
                 return;
             }
 
-            battlegrounder.getEditor().setTargetLoadout(player, name);
-            player.sendMessage(String.format("§2Успех. Редактируемый набор экипировки: %s.", name));
+            battlegrounder.getEditor().editSession(player).setTargetLoadout(loadoutName);
+            player.sendMessage(String.format("§2Успех. Редактируемый набор экипировки: %s.", loadoutName));
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         }
 

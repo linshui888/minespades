@@ -55,7 +55,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         this.battlegrounder = new BattlegroundManager(this);
         this.gameMaster = new EventDrivenGameMaster();
         this.commandManager = new PaperCommandManager(this);
-        commandManager.registerCommand(new MinespadesCommand());
+        commandManager.registerCommand(new MinespadesCommand(this));
         getServer().getPluginManager().registerEvents(gameMaster, this);
         this.enableBattlegrounds();
 

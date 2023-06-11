@@ -33,7 +33,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
         try (Connection connection = this.connect()) {
 
             PreparedStatement selectStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;");
-            selectStatement.setString(1, editor.getTargetTeam(player));
+            selectStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet result = selectStatement.executeQuery(); result.next();
 
             // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
@@ -44,7 +44,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
             updateStatement.setString(1, array.toString());
-            updateStatement.setString(2, editor.getTargetTeam(player));
+            updateStatement.setString(2, editor.editSession(player).getTargetTeam());
             updateStatement.executeUpdate();
 
             this.listEntries();
@@ -60,7 +60,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             // Воспроизводим звук как показатель успешного выполнения команды и отображения листа
             player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1F, 1.4F);
 
-            listStatement.setString(1, editor.getTargetTeam(player));
+            listStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet data = listStatement.executeQuery();
 
             // Проходимся по всем элементам JSON-массива и отправляем игроку-редактору лист со всеми наборами экипировки редактируемой команды

@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Objects;
 
 public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
@@ -18,7 +17,7 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
     public RemoveLoadoutTask(Player player, String targetLoadoutName) {
         super(player);
         this.targetLoadoutName = targetLoadoutName;
-        this.targetTeamName = plugin.getBattlegrounder().getEditor().getTargetTeam(player);
+        this.targetTeamName = plugin.getBattlegrounder().getEditor().editSession(player).getTargetTeam();
     }
 
     @Override @SneakyThrows
