@@ -37,7 +37,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
     public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
         this.battlegroundName = battlegroundName;
-        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20);
+        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_20);
         player.showBossBar(completeBar);
         this.corners = corners;
     }
