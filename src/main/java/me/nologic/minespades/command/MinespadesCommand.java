@@ -14,7 +14,6 @@ import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -53,42 +52,53 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundTeamsOnJoin", c -> completions.getBattlegroundTeamsOnJoinCommand(c.getPlayer(), c.getContextValue(String.class, 1)));
     }
 
+    @TranslationKey(section = "editor-error-messages", name = "battleground-is-multiground", value = "Error. This battleground is configured as part of a multiground.")
+    private String isMultigroundMessage;
+
     @Subcommand("launch")
     @CommandCompletion("@battlegrounds")
     @CommandPermission("minespades.editor")
     public void onLaunch(Player player, String name) {
         if (!battlegrounder.enable(name.toLowerCase())) {
-            player.sendMessage("§4Ошибка. Арена настроена как часть мультиграунда, её нельзя запустить напрямую.");
+            player.sendMessage(isMultigroundMessage);
         }
     }
 
-    // Test commands
+    @TranslationKey(section = "regular-messages", name = "force-gameover-broadcast", value = "§7The game on battleground §3%s §7was forcibly ended by §6%s§7.")
+    private String forceGameoverBroadcastMessage;
+
     @Subcommand("forcegameover")
     @CommandPermission("minespades.editor")
     public void onForceGameOver(Player player) {
         BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
         if (bgPlayer != null) {
+            bgPlayer.getBattleground().broadcast(String.format(forceGameoverBroadcastMessage, StringUtils.capitalise(bgPlayer.getBattleground().getBattlegroundName()), player.getName()));
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(bgPlayer.getBattleground()));
         }
     }
+
+    @TranslationKey(section = "editor-success-messages", name = "preference-changed", value = "§2Success. §6%s §ris now equals §3%s§r.")
+    private String parameterChangedMessage;
 
     // FIXME: Проблема конфига заключается в том, что редактировать настройки можно только у загруженных (т. е. рабочих) арен.
     @Subcommand("config")
     @CommandCompletion("@battlegroundPreferences")
     @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
-        Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().editSession(player).getTargetBattleground());
-
         // TODO: Имеет смысл перенести изменение преференса прямо в класс BattlegroundPreferences.
         if (validated(player, Selection.BATTLEGROUND)) {
+            Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().editSession(player).getTargetBattleground());
             if (Preference.isValid(preference)) {
                 battleground.getPreferences().set(Preference.valueOf(preference), value);
-                player.sendMessage(String.format("§2Успех. §7Параметр §6%s §7теперь равняется §3%s§7.", preference, value));
+                player.sendMessage(String.format(parameterChangedMessage, preference, value));
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }
         }
 
     }
+
+    @TranslationKey(section = "editor-error-messages", name = "no-banner-in-hand", value = "Error. Hold the banner you want to be the flag.")
+    private String holdTheBannerMessage;
 
     @Subcommand("add")
     @CommandPermission("minespades.editor")
@@ -120,7 +130,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
 
                 if (!player.getInventory().getItemInMainHand().getType().toString().contains("BANNER")) {
-                    player.sendMessage("§4Ошибка. Возьмите в руки флаг.");
+                    player.sendMessage(holdTheBannerMessage);
                     return;
                 }
 
@@ -224,7 +234,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         public void onCreateBattleground(Player player, String name) {
             name = name.toLowerCase();
             if (battlegrounder.isBattlegroundExist(name))  {
-                player.sendMessage(String.format("§4Ошибка. Арена с названием %s уже существует.", name));
+                player.sendMessage(String.format(battlegroundNameIsTakenMessage, name));
                 return;
             }
             battlegrounder.getEditor().create(player, name);
@@ -257,7 +267,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             if (battlegrounder.isBattlegroundExist(name)) {
                 battlegrounder.getEditor().editSession(player).setTargetBattleground(name);
                 if (!session.isActive()) session.setActive(true);
-            } else player.sendMessage(String.format("§4Ошибка. Несуществующая арена: %s.", name));
+            } else player.sendMessage(String.format(battlegroundNotExistMessage, name));
         }
 
         @Subcommand("volume")
@@ -331,14 +341,12 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegroundName);
         if (battleground == null) {
-            player.sendMessage("§4Ошибка. Несуществующая арена: " + battlegroundName + ".");
-            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 1F);
+            player.sendMessage(String.format(battlegroundNotExistMessage, battlegroundName));
             return;
         }
 
         if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
-            player.sendMessage("§4Ошибка. К этой арене нельзя подключиться напрямую.");
-            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 1F);
+            player.sendMessage(isMultigroundMessage);
             return;
         }
 
@@ -356,6 +364,8 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         else player.sendMessage("§4Бананы из ушей вытащи!");
     }
 
+
+
     @Subcommand("reset")
     @CommandCompletion("@battlegrounds")
     @CommandPermission("minespades.editor")
@@ -363,14 +373,12 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         Battleground battleground = battlegrounder.getBattlegroundByName(name);
 
         if (battleground == null) {
-            player.sendMessage("§4Ошибка. Несуществующая арена: " + name + ".");
-            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
+            player.sendMessage(String.format(battlegroundNotExistMessage, name));
             return;
         }
 
         if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
-            player.sendMessage("§4Ошибка. Арена управляется мультиграундом.");
-            player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_HURT_CLOSED, 1F, 0F);
+            player.sendMessage(isMultigroundMessage);
             return;
         }
 
@@ -379,17 +387,23 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         battlegrounder.reset(battleground);
     }
 
-    @TranslationKey(section = "error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")
+    @TranslationKey(section = "editor-error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")
     private String battlegroundNotSelectedMessage;
 
-    @TranslationKey(section = "error-messages", name = "team-not-selected", value = "Error. No team selected for editing.")
+    @TranslationKey(section = "editor-error-messages", name = "team-not-selected", value = "Error. No team selected for editing.")
     private String teamNotSelectedMessage;
 
-    @TranslationKey(section = "error-messages", name = "loadout-not-selected", value = "Error. No loadout selected for editing.")
+    @TranslationKey(section = "editor-error-messages", name = "loadout-not-selected", value = "Error. No loadout selected for editing.")
     private String loadoutNotSelectedMessage;
 
-    @TranslationKey(section = "error-messages", name = "no-active-session", value = "Error. Edit session is not started.")
+    @TranslationKey(section = "editor-error-messages", name = "no-active-session", value = "Error. Edit session is not started.")
     private String noActiveSessionMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "battleground-name-is-taken", value = "Error. Battleground with name %s is already exist.")
+    private String battlegroundNameIsTakenMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "battleground-not-exist", value = "Error. Battleground with name %s doesn't exist.")
+    private String battlegroundNotExistMessage;
 
     /**
      * Smart check for nulls.
