@@ -22,7 +22,6 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
@@ -306,8 +305,7 @@ public class BattlegroundPreferences implements Listener {
         DENY_BED_SLEEP(true),
         PUNISH_COWARDS(true),
         IS_MULTIGROUND(false),
-        FORCE_AUTOJOIN(false),
-        BOTS(true); // По дефолту должно быть фолс, но пока просто тестируем
+        FORCE_AUTOJOIN(false);
 
         private final boolean defaultValue;
 

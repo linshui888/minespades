@@ -89,7 +89,12 @@ public class BattlegroundTeam {
         return bukkitTeam.getSize();
     }
 
-    public boolean isLose() {
+    /**
+     * Returns the defeated state of the team, team qualified as defeated if:
+     * 1. Lifepool of the team equals or less than zero.
+     * 2. All players in the team having a spectator mode OR there are just no players.
+     */
+    public boolean isDefeated() {
         return lifepool <= 0 && players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR) || players.size() == 0;
     }
 

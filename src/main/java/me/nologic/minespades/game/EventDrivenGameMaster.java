@@ -163,7 +163,7 @@ public class EventDrivenGameMaster implements Listener {
         event.getBattleground().broadcast(message);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
-        if (event.getBattleground().getTeams().stream().filter(t -> !t.isLose()).count() <= 1) {
+        if (event.getBattleground().getTeams().stream().filter(t -> !t.isDefeated()).count() <= 1) {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
         }
     }
