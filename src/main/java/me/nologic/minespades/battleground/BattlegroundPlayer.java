@@ -1,21 +1,20 @@
 package me.nologic.minespades.battleground;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-
 import me.catcoder.sidebar.ProtocolSidebar;
 import me.catcoder.sidebar.Sidebar;
-import me.catcoder.sidebar.text.TextIterators;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
-@RequiredArgsConstructor
-public class BattlegroundPlayer {
+@Translatable
+public class BattlegroundPlayer implements MinorityFeature {
 
     private @Getter final Battleground       battleground;
     private @Getter final BattlegroundTeam   team;
@@ -29,18 +28,40 @@ public class BattlegroundPlayer {
 
     private Sidebar<Component> sidebar;
 
+    public BattlegroundPlayer(final Battleground battleground, final BattlegroundTeam team, final Player player) {
+        this.battleground = battleground;
+        this.team         = team;
+        this.bukkitPlayer = player;
+        Minespades.getInstance().getConfigurationWizard().generate(this.getClass());
+        this.init(this, this.getClass(), Minespades.getInstance());
+    }
+
+    @TranslationKey(section = "battleground-sidebar", name = "label", value = "Minespades")
+    private String sidebarLabel;
+
+    @TranslationKey(section = "battleground-sidebar", name = "KDA", value = "K/D/A:")
+    private String sidebarKDALabel;
+
+    @TranslationKey(section = "battleground-sidebar", name = "team", value = "Team")
+    private String playerTeamLabel;
+
+    @TranslationKey(section = "battleground-sidebar", name = "lifepool", value = "Lifepool")
+    private String lifepoolLabel;
+
+    @TranslationKey(section = "battleground-sidebar", name = "map", value = "Map")
+    private String mapLabel;
+
     public void showSidebar() {
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text("Minespades"), Minespades.getPlugin(Minespades.class));
-        sidebar.addUpdatableLine(player -> Component.text("K/D/A: " + kills + "/" + deaths + "/" + assists));
+        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text(sidebarLabel), Minespades.getPlugin(Minespades.class));
+        sidebar.addUpdatableLine(player -> Component.text(sidebarKDALabel + " " + kills + "/" + deaths + "/" + assists));
         sidebar.addBlankLine();
-        // Команда и лайфпул
-        sidebar.addLine(Component.text("Команда ").append(team.getDisplayName()));
-        sidebar.addUpdatableLine(player -> Component.text("Лайфпул: " + team.getLifepool()));
-        // Пустая линия
+
+        sidebar.addLine(Component.text(playerTeamLabel + " ").append(team.getDisplayName()));
+        sidebar.addUpdatableLine(player -> Component.text(lifepoolLabel + " " + team.getLifepool()));
+
         sidebar.addBlankLine();
-        // Название карты
-        sidebar.addLine(Component.text("Карта " + battleground.getBattlegroundName()));
-        // Обновляем все линии каждые 10 тиков, то есть 2 раза в секунду
+        sidebar.addLine(Component.text(mapLabel + " " + battleground.getBattlegroundName()));
+
         sidebar.updateLinesPeriodically(0, 10);
         sidebar.addViewer(bukkitPlayer);
     }
