@@ -35,7 +35,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @TranslationKey(section = "log-info-messages", name = "battleground-load", value = "Minespades is trying to load battleground %s.")
     private String battlegroundLoadMessage;
 
-    @TranslationKey(section = "log-info-messages", name = "plugin-disable", value = "Minespades will be disabled. All running battlegrounds will be disabled.")
+    @TranslationKey(section = "log-info-messages", name = "plugin-disable", value = "Minespades will be disabled. All running battlegrounds will be stopped.")
     private String minespadesDisableMessage;
 
     @Override
