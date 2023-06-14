@@ -19,11 +19,6 @@ public class AddFlagTask extends BaseEditorTask implements Runnable {
             selectStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet result = selectStatement.executeQuery(); result.next();
 
-            if (result.getString("flag") != null) {
-                player.sendMessage("§4Ошибка. У команды %s уже есть флаг.");
-                return;
-            }
-
             ItemStack item = player.getInventory().getItemInMainHand();
             JsonObject jsonFlag = new JsonObject();
             jsonFlag.addProperty("x", player.getLocation().getBlockX());

@@ -20,11 +20,11 @@ import java.sql.ResultSet;
 
 public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
 
-    private final String addedLoadoutName;
+    private final String loadout;
 
     public SaveLoadoutTask(Player player, String name) {
         super(player);
-        this.addedLoadoutName = name;
+        this.loadout = name;
     }
 
     @Override
@@ -40,12 +40,14 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             String loadouts = result.getString("loadouts");
 
             JsonArray array = (loadouts != null) ? JsonParser.parseString(loadouts).getAsJsonArray() : new JsonArray();
-            array.add(this.inventoryToJSONString(addedLoadoutName, player.getInventory()));
+            array.add(this.inventoryToJSONString(loadout, player.getInventory()));
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
             updateStatement.setString(1, array.toString());
             updateStatement.setString(2, editor.editSession(player).getTargetTeam());
             updateStatement.executeUpdate();
+
+            editor.editSession(player).setTargetLoadout(loadout);
 
             this.listEntries();
         } catch (Exception ex) {

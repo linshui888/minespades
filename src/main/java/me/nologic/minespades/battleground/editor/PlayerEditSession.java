@@ -50,8 +50,6 @@ public class PlayerEditSession {
         sidebar.addConditionalLine(player -> Component.text("§7Loadout: §3" + targetLoadout), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 5);
-        sidebar.addViewer(player);
-
     }
 
 

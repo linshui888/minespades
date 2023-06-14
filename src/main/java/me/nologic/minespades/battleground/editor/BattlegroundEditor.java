@@ -10,6 +10,9 @@ import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.editor.task.*;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,15 +27,30 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import java.sql.*;
 import java.util.HashMap;
 
-public class BattlegroundEditor implements Listener {
+@Translatable
+public class BattlegroundEditor implements MinorityFeature, Listener {
 
     private final Minespades plugin;
     private final HashMap<Player, PlayerEditSession> sessions = new HashMap<>();
 
-    {
+    public BattlegroundEditor() {
         plugin = Minespades.getPlugin(Minespades.class);
+        plugin.getConfigurationWizard().generate(this.getClass());
+        this.init(this, this.getClass(), plugin);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
+
+    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §l%s §rhas been successfully created.")
+    private String battlegroundCreatedMessage;
+
+    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §l%s §rhas been successfully created.")
+    private String teamCreatedMessage;
+
+    @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "Respawn point for team §l%s §rhas been successfully created. §7(%f, %f, %f)")
+    private String respawnCreatedMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §l%s §ralready have a flag.")
+    private String teamFlagErrorMessage;
 
     public PlayerEditSession editSession(final Player player) {
         if (sessions.get(player) == null) this.sessions.put(player, new PlayerEditSession(player));
@@ -57,13 +75,10 @@ public class BattlegroundEditor implements Listener {
 
         // TODO: Это вообще в другом месте должно быть.
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage("§4§l[!] §7Арена успешно создана, но теперь её нужно настроить. Минимальные требования для запуска арены: §cдве команды с настроенными точками возрождения и карта блоков§r.");
-        player.sendMessage("§7Чтобы обновить карту блоков, напишите §6/ms edit volume");
-        player.sendMessage("§7Чтобы создать команду, напишите §6/ms create team <название_команды>");
-        player.sendMessage("§7Для запуска арены используйте §6/ms launch <название_арены>");
+        player.sendMessage(String.format(battlegroundCreatedMessage, battlegroundName));
 
-        // TODO: А это надо изменить. Сама идея хороша, но реализация хромает.
         this.editSession(player).setTargetBattleground(battlegroundName);
+        this.editSession(player).setActive(true);
         driver.closeConnection();
     }
 
@@ -75,9 +90,7 @@ public class BattlegroundEditor implements Listener {
             statement.executeUpdate();
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage("§7Команда §4" + teamName + " §7успешно создана! Для того, чтобы команда считалась рабочей, укажите хотя бы одну точку респавна.");
-            player.sendMessage("§7Используйте §6/ms add respawn §7для этого.");
-            player.sendMessage("§7Кроме того, рекомендуется указать базовое обмундирование с помощью §6/ms add loadout");
+            player.sendMessage(String.format(teamCreatedMessage, teamName));
 
             this.setTargetTeam(player, teamName);
         } catch (SQLException ex) {
@@ -101,7 +114,7 @@ public class BattlegroundEditor implements Listener {
             statement.executeUpdate();
 
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-            player.sendMessage(String.format("§7[§5%s§7] Добавлена точка возрождения: §2%f, %f, %f", this.editSession(player).getTargetTeam(), l.getX(), l.getY(), l.getZ()));
+            player.sendMessage(String.format(respawnCreatedMessage, this.editSession(player).getTargetTeam(), l.getX(), l.getY(), l.getZ()));
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -190,7 +203,7 @@ public class BattlegroundEditor implements Listener {
             ResultSet result = selectStatement.executeQuery(); result.next();
 
             if (result.getString("flag") != null) {
-                player.sendMessage(String.format("§4Ошибка. У команды %s уже есть флаг.", this.editSession(player).getTargetTeam()));
+                player.sendMessage(String.format(teamFlagErrorMessage, this.editSession(player).getTargetTeam()));
                 return;
             }
 
