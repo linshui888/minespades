@@ -40,10 +40,10 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §l%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §l§3%s §rhas been successfully created.")
     private String battlegroundCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §l%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §l§3%s §rhas been successfully created.")
     private String teamCreatedMessage;
 
     @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "Respawn point for team §l%s §rhas been successfully created. §7(%f, %f, %f)")

@@ -256,6 +256,12 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         session.setActive(!session.isActive());
     }
 
+    @TranslationKey(section = "editor-info-messages", name = "how-to-select-corners", value = "Hold a golden sword and use §lRMB/LMB §rto select two corners, then use §3/ms save §rto save the volume.")
+    private String howToSelectCornersMessage;
+
+    @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team §3%s §rnew color: ")
+    private String teamColorUpdatedMessage;
+
     @Subcommand("edit")
     @CommandPermission("minespades.editor")
     public class Edit extends BaseCommand {
@@ -275,7 +281,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             if (validated(player, Selection.BATTLEGROUND)) {
                 battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
                 player.playSound(player, Sound.ENTITY_EGG_THROW, 1, 1);
-                player.sendMessage("§7Возьмите в руки золотой меч и выделите два угла, после чего напишите §6/ms save§7.");
+                player.sendMessage(howToSelectCornersMessage);
             }
         }
 
@@ -293,7 +299,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
 
                 final String team = battlegrounder.getEditor().editSession(player).getTargetTeam();
-                player.sendMessage(Component.text(String.format("Новый цвет команды %s: ", team))
+                player.sendMessage(Component.text(String.format(teamColorUpdatedMessage, team))
                         .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
             }
         }
@@ -320,7 +326,6 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @CommandPermission("minespades.editor")
     public void onSave(Player player) {
         if (validated(player, Selection.BATTLEGROUND)) {
-            player.sendMessage("§7Сохранение карты займёт какое-то время.");
             battlegrounder.getEditor().saveVolume(player);
         }
     }
@@ -356,15 +361,19 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
+    @TranslationKey(section = "regular-messages", name = "not-in-the-game", value = "You're not in the game.")
+    private String notInTheGameMessage;
+
     @Subcommand("quit|leave|q")
     public void onQuit(Player player) {
         BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
         if (bgPlayer != null)
             Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player));
-        else player.sendMessage("§4Бананы из ушей вытащи!");
+        else player.sendMessage(notInTheGameMessage);
     }
 
-
+    @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground §l%s §rwas forcefully reseted by §3%s§r.")
+    private String battlegroundForceResetMessage;
 
     @Subcommand("reset")
     @CommandCompletion("@battlegrounds")
@@ -382,7 +391,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             return;
         }
 
-        battleground.broadcast(String.format("§7Арена §6%s §7принудительно перезагружена игроком §73%s§7.", StringUtils.capitalise(name), player.getName()));
+        battleground.broadcast(String.format(battlegroundForceResetMessage, StringUtils.capitalise(name), player.getName()));
         battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
         battlegrounder.reset(battleground);
     }
@@ -396,7 +405,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-error-messages", name = "loadout-not-selected", value = "Error. No loadout selected for editing.")
     private String loadoutNotSelectedMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "no-active-session", value = "Error. Edit session is not started.")
+    @TranslationKey(section = "editor-error-messages", name = "inactive-edit-session", value = "Error. Edit session is inactive. Select battleground first.")
     private String noActiveSessionMessage;
 
     @TranslationKey(section = "editor-error-messages", name = "battleground-name-is-taken", value = "Error. Battleground with name %s is already exist.")
