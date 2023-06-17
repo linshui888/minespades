@@ -64,19 +64,6 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
     }
 
-    @TranslationKey(section = "regular-messages", name = "force-gameover-broadcast", value = "§7The game on battleground §3%s §7was forcibly ended by §6%s§7.")
-    private String forceGameoverBroadcastMessage;
-
-    @Subcommand("forcegameover")
-    @CommandPermission("minespades.editor")
-    public void onForceGameOver(Player player) {
-        BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
-        if (bgPlayer != null) {
-            bgPlayer.getBattleground().broadcast(String.format(forceGameoverBroadcastMessage, StringUtils.capitalise(bgPlayer.getBattleground().getBattlegroundName()), player.getName()));
-            Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(bgPlayer.getBattleground()));
-        }
-    }
-
     @TranslationKey(section = "editor-success-messages", name = "preference-changed", value = "§2Success. §6%s §ris now equals §3%s§r.")
     private String parameterChangedMessage;
 
@@ -372,7 +359,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         else player.sendMessage(notInTheGameMessage);
     }
 
-    @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground §l%s §rwas forcefully reseted by §3%s§r.")
+    @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground §l%s §rwas forcefully reset by §3%s§r.")
     private String battlegroundForceResetMessage;
 
     @Subcommand("reset")

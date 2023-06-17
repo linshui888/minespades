@@ -295,7 +295,6 @@ public class BattlegroundPreferences implements Listener {
         DELETE_EMPTY_BOTTLES(true),
         COLORFUL_ENDING(true),
         FLAG_PARTICLES(true),
-        FLAG_STEALER_TRAILS(true), // TODO: не реализовано
         DISABLE_PORTALS(true),
         NO_DAMAGE_COOLDOWN(true),
         NO_SHIELD_DELAY(true),
