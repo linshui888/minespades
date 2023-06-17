@@ -9,7 +9,6 @@ import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
-import me.nologic.minespades.game.event.BattlegroundGameOverEvent;
 import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;

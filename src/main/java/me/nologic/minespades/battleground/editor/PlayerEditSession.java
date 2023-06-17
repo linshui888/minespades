@@ -6,13 +6,17 @@ import me.catcoder.sidebar.ProtocolSidebar;
 import me.catcoder.sidebar.Sidebar;
 import me.catcoder.sidebar.text.TextIterators;
 import me.nologic.minespades.Minespades;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-public class PlayerEditSession {
+@Translatable
+public class PlayerEditSession implements MinorityFeature {
 
     private final Player player;
 
@@ -30,24 +34,44 @@ public class PlayerEditSession {
 
     private final Sidebar<Component> sidebar;
 
+    @TranslationKey(section = "editor-sidebar", name = "label", value = "Battleground Editor")
+    private String editorSidebarLabel;
+
+    @TranslationKey(section = "editor-sidebar", name = "select-battleground", value = "§cSelect battleground to edit!")
+    private String selectBattlegroundMessage;
+
+    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §3%s")
+    private String battleground;
+
+    @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: §3%s")
+    private String team;
+
+    @TranslationKey(section = "editor-sidebar", name = "loadout", value = "§7Loadout: §3%s")
+    private String loadout;
+
+    @TranslationKey(section = "editor-sidebar", name = "corner", value = "§7Corner")
+    private String corner;
+
     public PlayerEditSession(Player p) {
+        Minespades.getInstance().getConfigurationWizard().generate(this.getClass());
+        this.init(this, this.getClass(), Minespades.getInstance());
+
         this.player = p;
+        this.sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel(editorSidebarLabel), Minespades.getInstance());
 
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel("Editor"), Minespades.getInstance());
-
-        sidebar.addConditionalLine(player -> Component.text("Выбери арену для редактирования!")
+        sidebar.addConditionalLine(player -> Component.text(selectBattlegroundMessage)
                 .color(NamedTextColor.WHITE), player -> targetBattleground == null);
 
-        sidebar.addConditionalLine(player -> Component.text("§7Battleground: §3%s".formatted(targetBattleground))
+        sidebar.addConditionalLine(player -> Component.text(battleground.formatted(targetBattleground))
                 .color(NamedTextColor.WHITE), player -> targetBattleground != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> corners[0] != null || corners[1] != null);
-        sidebar.addConditionalLine(player -> Component.text("§7Corner §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
-        sidebar.addConditionalLine(player -> Component.text("§7Corner §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
+        sidebar.addConditionalLine(player -> Component.text(corner + " §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
+        sidebar.addConditionalLine(player -> Component.text(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text("§7Team: §3" + targetTeam), player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text("§7Loadout: §3" + targetLoadout), player -> targetLoadout != null);
+        sidebar.addConditionalLine(player -> Component.text(String.format(team, targetTeam)), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 5);
     }
