@@ -172,6 +172,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 battlegrounds.add(battlegroundName);
                 section.set("battlegrounds", battlegrounds);
                 yaml.save(path);
+
+                // Имеет смысл автоматически менять значение IS_MULTIGROUND на true
+                BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName)).set(Preference.IS_MULTIGROUND, true);
+
                 player.sendMessage(String.format("Арена %s успешно добавлена в мультиграунд %s.", battlegroundName, multigroundName));
             } else player.sendMessage(String.format("Арена %s невалидна.", battlegroundName));
         }

@@ -88,7 +88,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     }
                 });
 
-                data = new ArrayList<>(); Thread.sleep(100);
+                data = new ArrayList<>(); Thread.sleep(50);
             }
         }
 
@@ -181,8 +181,8 @@ public class LoadBattlegroundTask extends BukkitRunnable {
         for (BattlegroundTeam team : list) battleground.addTeam(team);
     }
 
-    /** Десериализатор локации из base64-строки в Location. */
-    private Location decodeLocation(String base64) {
+    /** Десериализатор локации. Конвертирует Base64-строку в Location. */
+    private Location decodeLocation(final String base64) {
         String decoded = Base64Coder.decodeString(base64);
         String[] split = decoded.replace(',', '.').split("; ");
 
@@ -227,7 +227,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
         BlockData data     = Bukkit.createBlockData(result.getString("data"));
         String    content  = result.getString("content");
 
-        return new Object[]{ block, material, data, content };
+        return new Object[] { block, material, data, content };
     }
 
 }
