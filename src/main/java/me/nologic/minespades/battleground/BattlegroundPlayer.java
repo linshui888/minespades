@@ -52,7 +52,7 @@ public class BattlegroundPlayer implements MinorityFeature {
     private String mapLabel;
 
     public void showSidebar() {
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text(sidebarLabel), Minespades.getPlugin(Minespades.class));
+        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text(sidebarLabel == null ? "Minespades" : sidebarLabel), Minespades.getPlugin(Minespades.class));
         sidebar.addUpdatableLine(player -> Component.text(sidebarKDALabel + " " + kills + "/" + deaths + "/" + assists));
         sidebar.addBlankLine();
 

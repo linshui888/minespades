@@ -53,11 +53,12 @@ public class PlayerEditSession implements MinorityFeature {
     private String corner;
 
     public PlayerEditSession(Player p) {
+
         Minespades.getInstance().getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), Minespades.getInstance());
 
         this.player = p;
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel(editorSidebarLabel), Minespades.getInstance());
+        this.sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel(editorSidebarLabel == null ? "Editor" : editorSidebarLabel), Minespades.getInstance());
 
         sidebar.addConditionalLine(player -> Component.text(selectBattlegroundMessage)
                 .color(NamedTextColor.WHITE), player -> targetBattleground == null);
