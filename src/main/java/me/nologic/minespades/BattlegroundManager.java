@@ -1,9 +1,11 @@
 package me.nologic.minespades;
 
+import lombok.Getter;
 import me.nologic.minespades.battleground.*;
 import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
+import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -19,20 +21,18 @@ public class BattlegroundManager {
     private final HashMap<String, Multiground>  enabledMultigrounds;
 
     private final BattlegroundBuilder builder;
-    private final BattlegroundEditor  editor;
+    private final @Getter BattlegroundValidator validator;
+    private final @Getter BattlegroundEditor    editor;
 
     private final Minespades plugin;
 
     public BattlegroundManager(Minespades plugin) {
         this.plugin = plugin;
+        this.validator = new BattlegroundValidator();
         this.editor = new BattlegroundEditor();
         this.builder = new BattlegroundBuilder();
         this.enabledBattlegrounds = new HashMap<>();
         this.enabledMultigrounds = new HashMap<>();
-    }
-
-    public BattlegroundEditor getEditor() {
-        return editor;
     }
 
     public List<Battleground> getLoadedBattlegrounds() {
@@ -109,10 +109,6 @@ public class BattlegroundManager {
                 }
             }
         }
-    }
-
-    public boolean isBattlegroundExist(String battlegroundName) {
-        return new File(plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db").exists();
     }
 
     @Nullable

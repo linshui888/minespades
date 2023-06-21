@@ -2,6 +2,9 @@ package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
@@ -10,7 +13,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class AddFlagTask extends BaseEditorTask implements Runnable {
+@Translatable
+public class AddFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
+
+    @TranslationKey(section = "editor-info-messages", name = "team-flag-created", value = "§2Success§r. Now team §3%s §rhave a flag!")
+    private String flagCreatedMessage;
 
     @Override @SneakyThrows
     public void run() {
@@ -31,7 +38,7 @@ public class AddFlagTask extends BaseEditorTask implements Runnable {
             insertStatement.setString(1, data);
             insertStatement.setString(2, editor.editSession(player).getTargetTeam());
             insertStatement.executeUpdate();
-            player.sendMessage(String.format("§2Теперь у команды %s есть флаг.", editor.editSession(player).getTargetTeam()));
+            player.sendMessage(String.format(flagCreatedMessage, editor.editSession(player).getTargetTeam()));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -39,6 +46,8 @@ public class AddFlagTask extends BaseEditorTask implements Runnable {
 
     public AddFlagTask(Player player) {
         super(player);
+        plugin.getConfigurationWizard().generate(this.getClass());
+        this.init(this, this.getClass(), plugin);
     }
 
 }

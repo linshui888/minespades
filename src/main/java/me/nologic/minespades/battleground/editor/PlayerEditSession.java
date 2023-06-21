@@ -98,7 +98,16 @@ public class PlayerEditSession implements MinorityFeature {
         else {
             hideSidebar();
             this.volumeEditor = false;
+            this.targetBattleground = null;
+            this.targetTeam = null;
+            this.targetLoadout = null;
+            this.resetCorners();
         }
+    }
+
+    public void resetCorners() {
+        this.corners[0] = null;
+        this.corners[1] = null;
     }
 
     public boolean isBattlegroundSelected() {

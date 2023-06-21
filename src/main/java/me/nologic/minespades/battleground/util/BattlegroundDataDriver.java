@@ -4,10 +4,7 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 public class BattlegroundDataDriver {
 
@@ -16,6 +13,15 @@ public class BattlegroundDataDriver {
     @SneakyThrows
     public ResultSet executeQuery(String sql) {
         return this.connection.createStatement().executeQuery(sql);
+    }
+
+    @SneakyThrows
+    public ResultSet executeQuery(final String sql, final Object... args) {
+        final PreparedStatement statement = this.connection.prepareStatement(sql);
+        for (int i = 0; i < args.length; i++) {
+            statement.setObject(i + 1, args[i]);
+        }
+        return statement.executeQuery();
     }
 
     @SneakyThrows
@@ -29,7 +35,7 @@ public class BattlegroundDataDriver {
     }
 
     private Connection connection; @SneakyThrows
-    public BattlegroundDataDriver connect(String battlegroundName) {
+    public BattlegroundDataDriver connect(final String battlegroundName) {
         this.connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db");
         return this;
     }

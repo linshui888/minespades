@@ -5,6 +5,9 @@ import co.aikar.commands.PaperCommandManager;
 
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.Multiground;
+import me.nologic.minespades.battleground.editor.BattlegroundEditor;
+import me.nologic.minespades.battleground.editor.PlayerEditSession;
+import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.util.MinespadesPlaceholderExpansion;
@@ -39,10 +42,19 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     private String minespadesDisableMessage;
 
     @Override
+    public void onLoad() {
+        super.getConfigurationWizard().generate(this.getClass());
+        super.getConfigurationWizard().generate(MinespadesCommand.class);
+        super.getConfigurationWizard().generate(PlayerEditSession.class);
+        super.getConfigurationWizard().generate(BattlegroundEditor.class);
+        super.getConfigurationWizard().generate(BattlegroundValidator.class);
+    }
+
+    @Override
     public void onEnable() {
         instance = this;
         random = new Random();
-        super.getConfigurationWizard().generate(this.getClass());
+
         this.init(this, this.getClass(), this);
 
         File maps = new File(super.getDataFolder() + "/battlegrounds");
@@ -55,7 +67,9 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         this.battlegrounder = new BattlegroundManager(this);
         this.gameMaster = new EventDrivenGameMaster();
         this.commandManager = new PaperCommandManager(this);
+
         commandManager.registerCommand(new MinespadesCommand(this));
+
         getServer().getPluginManager().registerEvents(gameMaster, this);
         this.enableBattlegrounds();
 

@@ -35,19 +35,22 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
+
         this.battlegroundName = battlegroundName;
         this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_20);
-        player.showBossBar(completeBar);
         this.corners = corners;
-    }
-
-    @SneakyThrows
-    public void run() {
 
         if (corners[0] == null || corners[1] == null) {
             player.sendMessage("§4Необходимо указать два угла кубоида.");
             return;
         }
+
+        player.showBossBar(completeBar);
+        editor.editSession(player).resetCorners();
+    }
+
+    @SneakyThrows
+    public void run() {
 
         final float volume = (float) BoundingBox.of(corners[0], corners[1]).getVolume();
         final float step = 1.0f / volume;

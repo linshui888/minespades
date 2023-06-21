@@ -11,6 +11,7 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.Multiground;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -89,6 +90,27 @@ public class CommandCompletions {
         List<String> prefs = new ArrayList<>();
         Arrays.stream(BattlegroundPreferences.Preference.values()).forEach(p -> prefs.add(p.toString()));
         return prefs;
+    }
+
+    @SneakyThrows
+    public List<String> getTargetedBattlegroundTeams(final Player player) {
+
+        final List<String> teams = new ArrayList<>();
+
+        final String battleground = battlegrounder.getEditor().editSession(player).getTargetBattleground();
+        if (battleground == null) {
+            return teams;
+        }
+
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams;")) {
+            while (result.next()) {
+                teams.add(result.getString("name"));
+            }
+        }
+
+        driver.closeConnection();
+        return teams;
     }
 
     public List<String> getBattlegroundTeamsOnJoinCommand(Player sender, String battlegroundName) {

@@ -46,7 +46,7 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
             }
         }
         PreparedStatement updateLoadouts = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
-        updateLoadouts.setString(1, reformed.toString());
+        updateLoadouts.setString(1, reformed.toString().equals("\n") ? null : reformed.toString());
         updateLoadouts.setString(2, targetTeamName);
         updateLoadouts.executeUpdate();
 

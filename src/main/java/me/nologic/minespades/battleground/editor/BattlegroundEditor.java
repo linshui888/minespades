@@ -35,21 +35,20 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     public BattlegroundEditor() {
         plugin = Minespades.getPlugin(Minespades.class);
-        plugin.getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), plugin);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §l§3%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §3%s §rhas been successfully created.")
     private String battlegroundCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §l§3%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §3%s §rhas been successfully created.")
     private String teamCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "Respawn point for team §l%s §rhas been successfully created. §7(%f, %f, %f)")
+    @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
     private String respawnCreatedMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §l%s §ralready have a flag.")
+    @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §3%s §ralready have a flag.")
     private String teamFlagErrorMessage;
 
     public PlayerEditSession editSession(final Player player) {
@@ -175,23 +174,6 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
             statement.setString(1, hexColor);
             statement.setString(2, this.editSession(player).getTargetTeam());
             statement.executeUpdate();
-        }
-    }
-
-    @SneakyThrows
-    public boolean isLoadoutExist(Player player, String loadoutName) {
-        try (Connection connection = connect(this.editSession(player).getTargetBattleground())) {
-            PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
-            listStatement.setString(1, this.editSession(player).getTargetTeam());
-            ResultSet data = listStatement.executeQuery(); data.next();
-            JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
-
-            for (JsonElement loadoutElement : loadouts) {
-                JsonObject loadout = loadoutElement.getAsJsonObject();
-                if (loadoutName.equals(loadout.get("name").getAsString())) return true;
-            }
-
-            return false;
         }
     }
 
