@@ -251,7 +251,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         @CommandCompletion("@loadouts")
         public void onRemoveLoadout(final Player player, final String loadoutName) {
             if (validated(player, Selection.BATTLEGROUND, Selection.TEAM) && battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) {
-                battlegrounder.getEditor().removeLoadout(loadoutName);
+                battlegrounder.getEditor().removeLoadout(player, loadoutName);
             }
         }
 
