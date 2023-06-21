@@ -145,10 +145,6 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         plugin.getServer().getScheduler().runTask(plugin, new SaveLoadoutTask(player, name));
     }
 
-    public void removeLoadout(Player player, String name) {
-        plugin.getServer().getScheduler().runTask(plugin, new RemoveLoadoutTask(player, name));
-    }
-
     @SneakyThrows
     public void setTargetTeam(Player player, String teamName) {
         try (Connection connection = this.connect(this.editSession(player).getTargetBattleground())) {

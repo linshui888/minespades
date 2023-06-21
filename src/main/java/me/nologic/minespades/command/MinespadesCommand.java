@@ -131,20 +131,6 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
     }
 
-    @Subcommand("delete")
-    @CommandPermission("minespades.editor")
-    public class Delete extends BaseCommand {
-
-        @Subcommand("loadout")
-        @CommandCompletion("loadouts")
-        public void onDeleteLoadout(Player player, String loadoutName) {
-            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
-                battlegrounder.getEditor().removeLoadout(player, loadoutName);
-            }
-        }
-
-    }
-
     @Subcommand("multiground")
     @CommandPermission("minespades.editor")
     public class MultigroundCommand extends BaseCommand {
