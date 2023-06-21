@@ -1,9 +1,6 @@
 package me.nologic.minespades.battleground.editor;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
@@ -145,6 +142,10 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         plugin.getServer().getScheduler().runTask(plugin, new SaveLoadoutTask(player, name));
     }
 
+    public void removeLoadout(Player player, String name) {
+        plugin.getServer().getScheduler().runTask(plugin, new RemoveLoadoutTask(player, name));
+    }
+
     @SneakyThrows
     public void setTargetTeam(Player player, String teamName) {
         try (Connection connection = this.connect(this.editSession(player).getTargetBattleground())) {
@@ -189,4 +190,5 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
         }
     }
+
 }

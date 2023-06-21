@@ -23,8 +23,8 @@ public class BattlegroundValidator implements MinorityFeature {
     @TranslationKey(section = "validate-error-messages", name = "battleground-does-not-exist", value = "Error. Battleground with name §3%s §rdoesn't exist.")
     private String battlegroundNotExistMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "battleground-does-not-have-teams", value = "Error. Battleground §3%s §rhave no teams! Add a new one using §3/ms create team <name>§r!")
-    private String noTeamsMessage;
+    @TranslationKey(section = "validate-error-messages", name = "loadout-does-not-exist", value = "Error. Loadout with name §3%s §rdoesn't exist.")
+    private String nonExistingLoadoutMessage;
 
     @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground §3%s §rdoesn't have two teams (which is required minimum).")
     private String lessThanTwoTeamsMessage;
@@ -58,9 +58,6 @@ public class BattlegroundValidator implements MinorityFeature {
                     player.sendMessage(String.format(lessThanTwoTeamsMessage, battlegroundName));
                     return false;
                 }
-            } else {
-                player.sendMessage(String.format(noTeamsMessage, battlegroundName));
-                return false;
             }
         }
 
@@ -106,6 +103,7 @@ public class BattlegroundValidator implements MinorityFeature {
             ResultSet data = listStatement.executeQuery(); data.next();
 
             if (data.getString("loadouts") == null) {
+                player.sendMessage(String.format(nonExistingLoadoutMessage, loadoutName));
                 return false;
             }
 
@@ -116,6 +114,7 @@ public class BattlegroundValidator implements MinorityFeature {
                 if (loadoutName.equals(loadout.get("name").getAsString())) return true;
             }
 
+            player.sendMessage(String.format(nonExistingLoadoutMessage, loadoutName));
             return false;
         }
     }

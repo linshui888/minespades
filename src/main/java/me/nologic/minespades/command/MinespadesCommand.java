@@ -243,6 +243,20 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team §3%s §rnew color: ")
     private String teamColorUpdatedMessage;
 
+    @Subcommand("remove")
+    @CommandPermission("minespades.editor")
+    private class Remove extends BaseCommand {
+
+        @Subcommand("loadout")
+        @CommandCompletion("@loadouts")
+        public void onRemoveLoadout(final Player player, final String loadoutName) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM) && battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) {
+                battlegrounder.getEditor().removeLoadout(loadoutName);
+            }
+        }
+
+    }
+
     @Subcommand("edit")
     @CommandPermission("minespades.editor")
     public class Edit extends BaseCommand {

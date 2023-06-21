@@ -11,20 +11,18 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
+public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
 
-    private final String name;
+    private final String loadoutName;
 
-    public SaveLoadoutTask(Player player, String name) {
+    public RemoveLoadoutTask(final Player player, final String name) {
         super(player);
-        this.name = name;
+        this.loadoutName = name;
     }
 
     @Override
@@ -39,16 +37,24 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
             String loadouts = result.getString("loadouts");
 
-            JsonArray array = (loadouts != null) ? JsonParser.parseString(loadouts).getAsJsonArray() : new JsonArray();
-            array.add(this.inventoryToJSON(name, player.getInventory()));
+            JsonArray array = JsonParser.parseString(loadouts).getAsJsonArray();
+            for (JsonElement jsonElement : array) {
+                String name = jsonElement.getAsJsonObject().get("name").getAsString();
+                if (name.equals(this.loadoutName)) {
+                    array.remove(jsonElement);
+                }
+            }
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
             updateStatement.setString(1, array.toString());
             updateStatement.setString(2, editor.editSession(player).getTargetTeam());
             updateStatement.executeUpdate();
 
-            editor.editSession(player).setTargetLoadout(name);
+            if (editor.editSession(player).getTargetLoadout().equals(loadoutName)) {
+                editor.editSession(player).setTargetLoadout(null);
+            }
 
+            player.sendMessage(String.format("Loadout §3%s §rhas been deleted.", loadoutName));
             this.listEntries();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -84,33 +90,6 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
                 }
             }
         }
-    }
-
-    @SneakyThrows
-    public JsonObject inventoryToJSON(final String loadoutName, final PlayerInventory inventory) {
-        JsonObject obj = new JsonObject();
-
-        obj.addProperty("name", loadoutName);
-        obj.addProperty("type", inventory.getType().name());
-        obj.addProperty("size", inventory.getSize());
-
-        JsonArray items = new JsonArray();
-        for (int i = 0; i < inventory.getSize(); i++) {
-            ItemStack item = inventory.getItem(i);
-            if (item != null) {
-                JsonObject jitem = new JsonObject();
-                jitem.addProperty("slot", i);
-                String itemData = serializeItemStack(item);
-                jitem.addProperty("data", itemData);
-                items.add(jitem);
-            }
-        }
-        obj.add("items", items);
-
-        JsonArray supplies = new JsonArray();
-        obj.add("supplies", supplies);
-
-        return obj;
     }
 
 }
