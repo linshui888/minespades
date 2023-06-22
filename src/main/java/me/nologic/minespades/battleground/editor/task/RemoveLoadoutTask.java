@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
+import me.nologic.minespades.battleground.editor.PlayerEditSession;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -29,14 +31,14 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
     @Override
     @SneakyThrows
     public void run() {
-        try (Connection connection = this.connect()) {
+        final PlayerEditSession session = editor.editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
 
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT loadouts FROM teams WHERE name = ?;");
-            selectStatement.setString(1, editor.editSession(player).getTargetTeam());
-            ResultSet result = selectStatement.executeQuery(); result.next();
+        final String query = "SELECT loadouts FROM teams WHERE name = ?;";
+        try (final ResultSet result = driver.executeQuery(query, session.getTargetTeam())) {
 
             // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
-            String loadouts = result.getString("loadouts");
+            final String loadouts = result.getString("loadouts");
 
             JsonArray array = JsonParser.parseString(loadouts).getAsJsonArray();
             JsonElement target = null;
@@ -49,20 +51,14 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
             }
 
             array.remove(target);
+            driver.executeUpdate("UPDATE teams SET loadouts = ? WHERE name = ?;", array.toString(), session.getTargetTeam());
 
-            PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
-            updateStatement.setString(1, array.toString());
-            updateStatement.setString(2, editor.editSession(player).getTargetTeam());
-            updateStatement.executeUpdate();
-
-            if (Objects.equals(editor.editSession(player).getTargetLoadout(), loadoutName)) {
-                editor.editSession(player).setTargetLoadout(null);
+            if (Objects.equals(session.getTargetLoadout(), loadoutName)) {
+                session.setTargetLoadout(null);
             }
 
             player.sendMessage(String.format("Loadout §3%s §rhas been deleted.", loadoutName));
             this.listEntries();
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
