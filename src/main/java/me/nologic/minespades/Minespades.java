@@ -74,8 +74,10 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         getServer().getPluginManager().registerEvents(gameMaster, this);
         this.enableBattlegrounds();
 
-        if (super.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null)
-            new MinespadesPlaceholderExpansion().register();
+        if (super.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            final MinespadesPlaceholderExpansion mpe = new MinespadesPlaceholderExpansion();
+            if (!mpe.isRegistered()) mpe.register();
+        }
     }
 
     // TODO: Необходимо починить загрузку арен на старте.

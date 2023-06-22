@@ -40,7 +40,7 @@ public class PlayerEditSession implements MinorityFeature {
     @TranslationKey(section = "editor-sidebar", name = "select-battleground", value = "§cSelect battleground to edit!")
     private String selectBattlegroundMessage;
 
-    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §6§l%s §8(%s§8)")
+    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §6§l%s §8[%s§8]")
     private String battleground;
 
     @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: §3%s")
@@ -78,6 +78,7 @@ public class PlayerEditSession implements MinorityFeature {
     }
 
     private String validationMark() {
+        if (Minespades.getInstance().getBattlegrounder().getEditor().isSaving()) return "§e♻";
         final boolean valid = Minespades.getInstance().getBattlegrounder().getValidator().isValid(targetBattleground);
         if (valid) return "§2✔";
         else return "§4✘";

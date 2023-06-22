@@ -30,7 +30,7 @@ public class BattlegroundValidator implements MinorityFeature {
     @TranslationKey(section = "validate-error-messages", name = "team-does-not-exist", value = "Error. Team with name §3%s §rdoesn't exist.")
     private String nonExistingTeamMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground §3%s §rdoesn't have two teams (which is required minimum).")
+    @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground §3%s §rdoesn't have two teams §7(which is required minimum)§r.")
     private String lessThanTwoTeamsMessage;
 
     @TranslationKey(section = "validate-error-messages", name = "team-without-respawn-point", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any respawn points. Create a new one using §3/ms add respawn§r.")
