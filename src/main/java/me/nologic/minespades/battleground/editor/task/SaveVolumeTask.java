@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +40,10 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         this.battlegroundName = battlegroundName;
         this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_20);
         this.corners = corners;
+    }
+
+    @SneakyThrows
+    public void run() {
 
         if (corners[0] == null || corners[1] == null) {
             player.sendMessage("§4Необходимо указать два угла кубоида.");
@@ -47,10 +52,11 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
         player.showBossBar(completeBar);
         editor.editSession(player).resetCorners();
-    }
 
-    @SneakyThrows
-    public void run() {
+        // Удаляем старое содержимое (возможно имеет смысл сохранять это куда-нибудь, но это не такая уж и обязательная фича, да и лень мне)
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
+        driver.executeUpdate("DELETE FROM volume;");
+        driver.executeUpdate("DELETE FROM corners;");
 
         final float volume = (float) BoundingBox.of(corners[0], corners[1]).getVolume();
         final float step = 1.0f / volume;
@@ -96,6 +102,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     bSt.setString(4, block.getType().toString());
                     bSt.setString(5, block.getBlockData().getAsString());
 
+                    // Сохранение тайл-энтитей оставляем на потом
                     bSt.setString(6, null);
                     bSt.addBatch();
 
@@ -106,6 +113,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
             }
         }
 
+        // Сохраняем остатки и коммитим
         bSt.executeBatch();
         connection.commit();
 

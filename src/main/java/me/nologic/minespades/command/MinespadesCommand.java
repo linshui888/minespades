@@ -299,7 +299,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         @Subcommand("team")
         @CommandCompletion("@teams")
         public void onEditTeam(Player player, String teamName) {
-            if (validated(player, Selection.BATTLEGROUND)) {
+            if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamExist(player, teamName)) {
                 battlegrounder.getEditor().setTargetTeam(player, teamName);
             }
         }
@@ -320,10 +320,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
         public void onEditLoadout(Player player, String loadoutName) {
-            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
-
-                if (!battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) return;
-
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM) && battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) {
                 battlegrounder.getEditor().editSession(player).setTargetLoadout(loadoutName);
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }

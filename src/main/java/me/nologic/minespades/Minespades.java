@@ -27,7 +27,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     private static Minespades instance;
 
     @Getter
-    private Random random;
+    private final Random random = new Random();
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
@@ -55,7 +55,6 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Override
     public void onEnable() {
         instance = this;
-        random = new Random();
 
         this.init(this, this.getClass(), this);
 
