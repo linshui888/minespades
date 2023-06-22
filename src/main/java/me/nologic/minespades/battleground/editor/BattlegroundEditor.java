@@ -49,6 +49,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
     private String respawnCreatedMessage;
 
+    @TranslationKey(section = "editor-info-messages", name = "team-flag-removed", value = "Team §3%s §rflag has been successfully removed.")
+    private String teamFlagRemoved;
+
     @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §3%s §ralready have a flag.")
     private String teamFlagErrorMessage;
 
@@ -204,5 +207,11 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
             Bukkit.getScheduler().runTask(plugin, new AddFlagTask(player));
 
         }
+    }
+
+    public void removeFlag(Player player, String targetTeam) {
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
+        driver.executeUpdate("UPDATE teams SET flag = ? WHERE name = ?;", null, targetTeam).closeConnection();
+        player.sendMessage(String.format(teamFlagRemoved, targetTeam));
     }
 }

@@ -39,6 +39,9 @@ public class BattlegroundValidator implements MinorityFeature {
     @TranslationKey(section = "validate-error-messages", name = "team-without-loadout", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any loadouts. Create a new one using §3/ms add loadout <name>§r.")
     private String noLoadoutMessage;
 
+    @TranslationKey(section = "validate-error-messages", name = "team-without-flag", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any flag to delete.")
+    private String teamWithoutFlagMessage;
+
     public BattlegroundValidator() {
         plugin.getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), plugin);
@@ -111,6 +114,21 @@ public class BattlegroundValidator implements MinorityFeature {
         }
 
         player.sendMessage(String.format(nonExistingTeamMessage, teamName));
+        return false;
+    }
+
+    public boolean isTeamHaveFlag(Player player, String teamName) {
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?", teamName)) {
+            if (result.next() && result.getString("flag") != null) {
+                return true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        player.sendMessage(String.format(teamWithoutFlagMessage, teamName, session.getTargetBattleground()));
         return false;
     }
 

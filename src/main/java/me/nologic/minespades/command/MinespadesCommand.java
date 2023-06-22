@@ -249,8 +249,8 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         @Subcommand("flag")
         public void onRemoveFlag(final Player player) {
-            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
-
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM) && battlegrounder.getValidator().isTeamHaveFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam())) {
+                battlegrounder.getEditor().removeFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam());
             }
         }
 
