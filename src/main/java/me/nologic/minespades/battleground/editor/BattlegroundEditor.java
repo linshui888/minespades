@@ -42,6 +42,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §3%s §rhas been successfully created.")
     private String teamCreatedMessage;
 
+    @TranslationKey(section = "editor-info-messages", name = "team-removed", value = "Team §3%s §rhas been successfully removed.")
+    private String teamRemovedMessage;
+
     @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
     private String respawnCreatedMessage;
 
@@ -92,6 +95,13 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void removeTeam(Player player, String teamName) {
+        final PlayerEditSession session = this.editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        driver.executeUpdate("DELETE FROM teams WHERE name = ?;", teamName).closeConnection();
+        player.sendMessage(String.format(teamRemovedMessage, teamName));
     }
 
     @SneakyThrows
@@ -190,5 +200,4 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
         }
     }
-
 }

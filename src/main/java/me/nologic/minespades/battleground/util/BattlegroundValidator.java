@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
@@ -25,6 +26,9 @@ public class BattlegroundValidator implements MinorityFeature {
 
     @TranslationKey(section = "validate-error-messages", name = "loadout-does-not-exist", value = "Error. Loadout with name §3%s §rdoesn't exist.")
     private String nonExistingLoadoutMessage;
+
+    @TranslationKey(section = "validate-error-messages", name = "team-does-not-exist", value = "Error. Team with name §3%s §rdoesn't exist.")
+    private String nonExistingTeamMessage;
 
     @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground §3%s §rdoesn't have two teams (which is required minimum).")
     private String lessThanTwoTeamsMessage;
@@ -93,6 +97,21 @@ public class BattlegroundValidator implements MinorityFeature {
 
     public boolean isBattlegroundExist(final String battleground) {
         return new File(plugin.getDataFolder() + "/battlegrounds/" + battleground + ".db").exists();
+    }
+
+    public boolean isTeamExist(final Player player, final String teamName) {
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?", teamName)) {
+            if (result.next() && result.getString("name").equals(teamName)) {
+                return true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        player.sendMessage(String.format(nonExistingTeamMessage, teamName));
+        return false;
     }
 
     @SneakyThrows

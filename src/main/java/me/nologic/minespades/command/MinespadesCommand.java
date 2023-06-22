@@ -255,6 +255,14 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             }
         }
 
+        @Subcommand("team")
+        @CommandCompletion("@teams")
+        public void onRemoveTeam(final Player player, final String teamName) {
+            if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamExist(player, teamName)) {
+                battlegrounder.getEditor().removeTeam(player, teamName);
+            }
+        }
+
     }
 
     @Subcommand("edit")
