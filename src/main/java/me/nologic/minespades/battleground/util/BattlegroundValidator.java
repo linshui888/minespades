@@ -48,6 +48,53 @@ public class BattlegroundValidator implements MinorityFeature {
     }
 
     @SneakyThrows
+    public boolean isValid(final String battlegroundName) {
+
+        // Checking for existence
+        if (!this.isBattlegroundExist(battlegroundName)) {
+            return false;
+        }
+
+        // Counting teams, if 0 or less than 2 then return false.
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
+        try (final ResultSet result = driver.executeQuery("SELECT count(*) AS rows FROM teams;")) {
+            if (result.next()) {
+                final int teams = result.getInt("rows");
+                if (teams < 2) {
+                    return false;
+                }
+            }
+        }
+
+        try (final ResultSet teams = driver.executeQuery("SELECT * FROM teams;")) {
+
+            while (teams.next()) {
+                final String teamName = teams.getString("name");
+
+                // Team respawn point validation
+                try (final ResultSet result = driver.executeQuery("SELECT count(respawnPoints) AS respawns FROM teams WHERE name = ?;", teamName)) {
+                    if (result.next()) {
+                        final int respawns = result.getInt("respawns");
+                        if (respawns == 0) {
+                            return false;
+                        }
+                    }
+                }
+
+                // Loadout validation
+                try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", teamName)) {
+                    if (!result.next() || result.getString("loadouts") == null || Objects.equals(result.getString("loadouts"), "\n")) {
+                        return false;
+                    }
+                }
+
+            }
+        }
+
+        return true;
+    }
+
+    @SneakyThrows
     public boolean isValid(final Player player, final String battlegroundName) {
 
         // Checking for existence

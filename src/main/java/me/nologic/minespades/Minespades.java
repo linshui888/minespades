@@ -93,6 +93,10 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
 
         super.getLogger().info(minespadesDisableMessage);
 
+        for (final PlayerEditSession session : battlegrounder.getEditor().getEditSessionList()) {
+            session.setActive(false);
+        }
+
         for (Multiground multiground : battlegrounder.getMultigrounds()) {
             battlegrounder.disable(multiground.getBattleground());
         }

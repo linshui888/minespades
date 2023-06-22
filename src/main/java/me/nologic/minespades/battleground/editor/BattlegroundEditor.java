@@ -1,6 +1,8 @@
 package me.nologic.minespades.battleground.editor;
 
 import com.google.gson.JsonObject;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
@@ -23,6 +25,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 @Translatable
@@ -30,6 +33,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     private final Minespades plugin;
     private final HashMap<Player, PlayerEditSession> sessions = new HashMap<>();
+
+    @Getter @Setter
+    private boolean saving;
 
     public BattlegroundEditor() {
         plugin = Minespades.getPlugin(Minespades.class);
@@ -54,6 +60,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §3%s §ralready have a flag.")
     private String teamFlagErrorMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "saving-is-running", value = "Error. Wait for the volume to be saved.")
+    private String savingIsRunningMessage;
 
     public PlayerEditSession editSession(final Player player) {
         if (sessions.get(player) == null) this.sessions.put(player, new PlayerEditSession(player));
@@ -178,8 +187,11 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     }
 
     @SneakyThrows
-    public void saveVolume(Player player) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new SaveVolumeTask(editSession(player).getTargetBattleground(), player, this.editSession(player).getCorners()));
+    public void saveVolume(final Player player) {
+        if (!saving) {
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new SaveVolumeTask(editSession(player).getTargetBattleground(), player, this.editSession(player).getCorners()));
+            this.editSession(player).setVolumeEditor(false);
+        } else player.sendMessage(savingIsRunningMessage);
     }
 
     @SneakyThrows
@@ -214,4 +226,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         driver.executeUpdate("UPDATE teams SET flag = ? WHERE name = ?;", null, targetTeam).closeConnection();
         player.sendMessage(String.format(teamFlagRemoved, targetTeam));
     }
+
+    public List<PlayerEditSession> getEditSessionList() {
+        return this.sessions.values().stream().toList();
+    }
+
 }

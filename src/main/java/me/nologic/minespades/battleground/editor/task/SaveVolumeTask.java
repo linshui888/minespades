@@ -50,13 +50,14 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
             return;
         }
 
+        editor.setSaving(true);
         player.showBossBar(completeBar);
-        editor.editSession(player).resetCorners();
 
         // Удаляем старое содержимое (возможно имеет смысл сохранять это куда-нибудь, но это не такая уж и обязательная фича, да и лень мне)
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
         driver.executeUpdate("DELETE FROM volume;");
         driver.executeUpdate("DELETE FROM corners;");
+        driver.executeUpdate("VACUUM");
 
         final float volume = (float) BoundingBox.of(corners[0], corners[1]).getVolume();
         final float step = 1.0f / volume;
@@ -162,6 +163,8 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§33%dб.§8, §3%dс.§8)", i, totalTime / 1000));
         player.hideBossBar(completeBar);
+        editor.editSession(player).resetCorners();
+        editor.setSaving(false);
     }
 
     @SneakyThrows
