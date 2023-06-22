@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Objects;
 
 public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
 
@@ -38,19 +39,23 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
             String loadouts = result.getString("loadouts");
 
             JsonArray array = JsonParser.parseString(loadouts).getAsJsonArray();
+            JsonElement target = null;
+
             for (JsonElement jsonElement : array) {
                 String name = jsonElement.getAsJsonObject().get("name").getAsString();
                 if (name.equals(this.loadoutName)) {
-                    array.remove(jsonElement);
+                    target = jsonElement;
                 }
             }
+
+            array.remove(target);
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
             updateStatement.setString(1, array.toString());
             updateStatement.setString(2, editor.editSession(player).getTargetTeam());
             updateStatement.executeUpdate();
 
-            if (editor.editSession(player).getTargetLoadout().equals(loadoutName)) {
+            if (Objects.equals(editor.editSession(player).getTargetLoadout(), loadoutName)) {
                 editor.editSession(player).setTargetLoadout(null);
             }
 
