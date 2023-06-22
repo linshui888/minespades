@@ -222,6 +222,27 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         });
     }
 
+    public void setTargetTeamLifepool(final Player player, final int lifepool) {
+        final PlayerEditSession session = this.editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        driver.executeUpdate("UPDATE teams SET lifepool = ? WHERE name = ?;", lifepool, session.getTargetTeam());
+        lifepoolData.get(session.getTargetBattleground()).put(session.getTargetTeam(), lifepool);
+    }
+
+    private final HashMap<String, HashMap<String, Integer>> lifepoolData = new HashMap<>();
+    public int getTeamLifepool(final String battleground, final String team) {
+        return lifepoolData.computeIfAbsent(battleground, k -> new HashMap<>()).computeIfAbsent(team, lifepool -> {
+            final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+            try (final ResultSet result = driver.executeQuery("SELECT lifepool FROM teams WHERE name = ?;", team)) {
+                result.next();
+                return result.getInt("lifepool");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return 100;
+        });
+    }
+
     @SneakyThrows
     public void addFlag(Player player) {
         try (Connection connection = connect(this.editSession(player).getTargetBattleground())) {

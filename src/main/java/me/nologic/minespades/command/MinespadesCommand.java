@@ -317,6 +317,15 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             }
         }
 
+        @Subcommand("lifepool")
+        @CommandCompletion("100")
+        public void onEditLifepool(Player player, int lifepool) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
+                battlegrounder.getEditor().setTargetTeamLifepool(player, lifepool);
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
+            }
+        }
+
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
         public void onEditLoadout(Player player, String loadoutName) {

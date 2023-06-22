@@ -47,6 +47,9 @@ public class PlayerEditSession implements MinorityFeature {
     @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: ")
     private String team;
 
+    @TranslationKey(section = "editor-sidebar", name = "lifepool", value = "§8╚ §7Lifepool: §e%s")
+    private String lifepool;
+
     @TranslationKey(section = "editor-sidebar", name = "loadout", value = "§7Loadout: §3%s")
     private String loadout;
 
@@ -71,8 +74,10 @@ public class PlayerEditSession implements MinorityFeature {
         sidebar.addConditionalLine(player -> Component.text(corner + " §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
         sidebar.addConditionalLine(player -> Component.text(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
 
+        // Team
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> Component.text(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 5);
@@ -93,7 +98,7 @@ public class PlayerEditSession implements MinorityFeature {
 
     private String stringifyLocation(final @Nullable Location location) {
         if (location == null) return null;
-        return String.format("§7x§3%s§7, y§3%s§7, z§3%s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        return String.format("§7x§b%s§7, y§b%s§7, z§b%s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     public void displaySidebar() {
