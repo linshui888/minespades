@@ -76,11 +76,11 @@ public class PlayerEditSession implements MinorityFeature {
 
         // Team
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()).append(Component.text(" §7≡ " + this.flagState())), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
-        sidebar.updateLinesPeriodically(0, 5);
+        sidebar.updateLinesPeriodically(0, 10);
     }
 
     private String validationMark() {
@@ -88,6 +88,11 @@ public class PlayerEditSession implements MinorityFeature {
         final boolean valid = Minespades.getInstance().getBattlegrounder().getValidator().isValid(targetBattleground);
         if (valid) return "§2✔";
         else return "§4✘";
+    }
+
+    private String flagState() {
+        if (Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(player, targetTeam)) return "§2⚑";
+        else return "§4§m⚑";
     }
 
     private TextComponent getColoredTeam() {

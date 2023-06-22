@@ -65,7 +65,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "preference-changed", value = "§2Success§r. §6%s §ris §3%s§r now.")
+    @TranslationKey(section = "editor-info-messages", name = "preference-changed", value = "§2Success§r. §6%s §ris changed to §3%s§r.")
     private String parameterChangedMessage;
 
     // FIXME: Проблема конфига заключается в том, что редактировать настройки можно только у загруженных (т. е. рабочих) арен.
@@ -383,15 +383,15 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
-    @TranslationKey(section = "regular-messages", name = "not-in-the-game", value = "You're not in the game.")
-    private String notInTheGameMessage;
+    @TranslationKey(section = "regular-messages", name = "not-in-the-game", value = "You're not in game.")
+    private String notInGameMessage;
 
     @Subcommand("quit|leave|q")
     public void onQuit(Player player) {
         BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
         if (bgPlayer != null)
             Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player));
-        else player.sendMessage(notInTheGameMessage);
+        else player.sendMessage(notInGameMessage);
     }
 
     @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground §l%s §rwas forcefully reset by §3%s§r.")

@@ -167,6 +167,7 @@ public class BattlegroundValidator implements MinorityFeature {
     public boolean isTeamHaveFlag(Player player, String teamName) {
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?", teamName)) {
             if (result.next() && result.getString("flag") != null) {
                 return true;
@@ -175,6 +176,7 @@ public class BattlegroundValidator implements MinorityFeature {
             ex.printStackTrace();
         }
 
+        driver.closeConnection();
         player.sendMessage(String.format(teamWithoutFlagMessage, teamName, session.getTargetBattleground()));
         return false;
     }
