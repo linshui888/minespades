@@ -12,6 +12,7 @@ import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -201,7 +202,24 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
             statement.setString(1, hexColor);
             statement.setString(2, this.editSession(player).getTargetTeam());
             statement.executeUpdate();
+
+            // Изменяем цвет команды в карте цветов
+            colorPalette.get(this.editSession(player).getTargetBattleground()).put(this.editSession(player).getTargetTeam(), TextColor.fromHexString("#" + hexColor));
         }
+    }
+
+    private final HashMap<String, HashMap<String, TextColor>> colorPalette = new HashMap<>();
+    public TextColor getTeamColor(final String battleground, final String team) {
+        return colorPalette.computeIfAbsent(battleground, k -> new HashMap<>()).computeIfAbsent(team, color -> {
+            final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+            try (final ResultSet result = driver.executeQuery("SELECT color FROM teams WHERE name = ?;", team)) {
+                result.next();
+                return TextColor.fromHexString("#" + result.getString("color"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return TextColor.fromHexString("#FFFFFF");
+        });
     }
 
     @SneakyThrows

@@ -10,6 +10,7 @@ import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -43,7 +44,7 @@ public class PlayerEditSession implements MinorityFeature {
     @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §6§l%s §8[%s§8]")
     private String battleground;
 
-    @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: §3%s")
+    @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: ")
     private String team;
 
     @TranslationKey(section = "editor-sidebar", name = "loadout", value = "§7Loadout: §3%s")
@@ -71,7 +72,7 @@ public class PlayerEditSession implements MinorityFeature {
         sidebar.addConditionalLine(player -> Component.text(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text(String.format(team, targetTeam)), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 5);
@@ -82,6 +83,12 @@ public class PlayerEditSession implements MinorityFeature {
         final boolean valid = Minespades.getInstance().getBattlegrounder().getValidator().isValid(targetBattleground);
         if (valid) return "§2✔";
         else return "§4✘";
+    }
+
+    private TextComponent getColoredTeam() {
+        if (targetTeam == null) {
+            return Component.empty();
+        } else return Component.text(targetTeam).color(Minespades.getInstance().getBattlegrounder().getEditor().getTeamColor(targetBattleground, targetTeam));
     }
 
     private String stringifyLocation(final @Nullable Location location) {
