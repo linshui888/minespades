@@ -88,7 +88,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-error-messages", name = "no-banner-in-hand", value = "Error. Hold the banner you want to be the flag.")
     private String holdTheBannerMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "join-while-editing", value = "Error. You can not join to the game in editor mode. Use §3/ms edit §ragain to stop editing.")
+    @TranslationKey(section = "editor-error-messages", name = "join-while-editing", value = "Error. You can't join games while in editor mode. Use §3/ms edit §ragain to close editor.")
     private String joinWhileEditingMessage;
 
     @Subcommand("add")
@@ -307,10 +307,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         public void onEditLoadout(Player player, String loadoutName) {
             if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
 
-                if (!battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) {
-                    player.sendMessage(String.format("§4Ошибка. Набор экипировки с названием %s у команды %s не найден.", loadoutName, battlegrounder.getEditor().editSession(player).getTargetTeam()));
-                    return;
-                }
+                if (!battlegrounder.getValidator().isLoadoutExist(player, loadoutName)) return;
 
                 battlegrounder.getEditor().editSession(player).setTargetLoadout(loadoutName);
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
