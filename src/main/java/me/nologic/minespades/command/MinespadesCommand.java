@@ -247,6 +247,13 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @CommandPermission("minespades.editor")
     private class Remove extends BaseCommand {
 
+        @Subcommand("flag")
+        public void onRemoveFlag(final Player player) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
+
+            }
+        }
+
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
         public void onRemoveLoadout(final Player player, final String loadoutName) {

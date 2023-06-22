@@ -23,6 +23,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Objects;
 
 @Translatable
 public class BattlegroundEditor implements MinorityFeature, Listener {
@@ -101,6 +102,10 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         final PlayerEditSession session = this.editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         driver.executeUpdate("DELETE FROM teams WHERE name = ?;", teamName).closeConnection();
+        if (Objects.equals(session.getTargetTeam(), teamName)) {
+            session.setTargetLoadout(null);
+            session.setTargetTeam(null);
+        }
         player.sendMessage(String.format(teamRemovedMessage, teamName));
     }
 
