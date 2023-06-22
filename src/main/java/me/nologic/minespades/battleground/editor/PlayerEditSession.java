@@ -91,7 +91,7 @@ public class PlayerEditSession implements MinorityFeature {
     }
 
     private String flagState() {
-        if (Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(player, targetTeam)) return "§2⚑";
+        if (targetTeam != null && Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(player, targetTeam)) return "§2⚑";
         else return "§4§m⚑";
     }
 
