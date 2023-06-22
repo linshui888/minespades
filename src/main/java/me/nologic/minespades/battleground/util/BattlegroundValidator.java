@@ -181,6 +181,21 @@ public class BattlegroundValidator implements MinorityFeature {
         return false;
     }
 
+    public boolean isTeamHaveFlag(String battlegroundName, String teamName) {
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
+
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?", teamName)) {
+            if (result.next() && result.getString("flag") != null) {
+                return true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        driver.closeConnection();
+        return false;
+    }
+
     @SneakyThrows
     public boolean isLoadoutExist(Player player, String loadoutName) {
         try (Connection connection = connect(plugin.getBattlegrounder().getEditor().editSession(player).getTargetBattleground())) {

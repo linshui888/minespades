@@ -90,8 +90,9 @@ public class PlayerEditSession implements MinorityFeature {
         else return "§4✘";
     }
 
+    // TODO: Брать значение не из датабазы. Карта или просто переменная, что угодно. Но не из ДБ.
     private String flagState() {
-        if (targetTeam != null && Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(player, targetTeam)) return "§2⚑";
+        if (targetTeam != null && Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(targetBattleground, targetTeam)) return "§2⚑";
         else return "§4§m⚑";
     }
 
