@@ -282,6 +282,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             final PlayerEditSession session = battlegrounder.getEditor().editSession(player);
             name = name.toLowerCase();
             if (battlegrounder.getValidator().isBattlegroundExist(name)) {
+                battlegrounder.getEditor().editSession(player).setTargetLoadout(null);
+                battlegrounder.getEditor().editSession(player).setTargetTeam(null);
+                battlegrounder.getEditor().editSession(player).resetCorners();
                 battlegrounder.getEditor().editSession(player).setTargetBattleground(name);
                 if (!session.isActive()) session.setActive(true);
             } else player.sendMessage(String.format(battlegroundNotExistMessage, name));
@@ -300,6 +303,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         @CommandCompletion("@teams")
         public void onEditTeam(Player player, String teamName) {
             if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamExist(player, teamName)) {
+                battlegrounder.getEditor().editSession(player).setTargetLoadout(null);
                 battlegrounder.getEditor().setTargetTeam(player, teamName);
             }
         }

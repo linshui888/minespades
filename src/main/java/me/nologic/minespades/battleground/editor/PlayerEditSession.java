@@ -78,6 +78,8 @@ public class PlayerEditSession implements MinorityFeature {
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()).append(Component.text(" §7≡ " + this.flagState())), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
+
+        sidebar.addBlankLine().setDisplayCondition(player -> targetLoadout != null);
         sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 10);

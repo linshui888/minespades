@@ -235,10 +235,12 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
             final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
             try (final ResultSet result = driver.executeQuery("SELECT lifepool FROM teams WHERE name = ?;", team)) {
                 result.next();
-                return result.getInt("lifepool");
+                final int i = result.getInt("lifepool");
+                return i;
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+            driver.closeConnection();
             return 100;
         });
     }
