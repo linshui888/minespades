@@ -82,9 +82,9 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
         connection.setAutoCommit(false);
 
-        final int size = 5000;
+        final int size = 7000;
         World world = player.getWorld();
-        this.completeBar.name(Component.text(String.format("§6%s§7: §esaving blocks", battlegroundName)));
+        this.completeBar.name(Component.text(String.format("§6%s§7: §eSaving blocks...", battlegroundName)));
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {

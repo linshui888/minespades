@@ -131,6 +131,30 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
     }
 
+    @TranslationKey(section = "editor-info-messages", name = "multiground-created", value = "§2Success§r. Multiground §3%s §rhas been created.")
+    private String multigroundCreatedMessage;
+
+    @TranslationKey(section = "editor-info-messages", name = "battleground-deleted-from-multiground", value = "§2Success§r. Battleground §3%s §rhas been removed from multiground §3%s§r.")
+    private String battlegroundDeletedFromMultiground;
+
+    @TranslationKey(section = "editor-info-messages", name = "multiground-battleground-added", value = "§2Success§r. Battleground §3%s §rnow is part of §3%s §rmultiground.")
+    private String battlegroundAddedToMultigroundMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "battleground-is-part-of-multiground", value = "§4Error§r. Battleground §3%s §ris already part of some multiground.")
+    private String battlegroundIsPartOfMultigroundMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "multiground-already-launched", value = "§4Error§r. Multiground §3%s §ralready launched.")
+    private String multigroundAlreadyLaunchedMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "multiground-name-is-taken", value = "§4Error§r. Multiground with name §3%s §ralready exist.")
+    private String multigroundNameIsTakenMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-exist", value = "§4Error§r. Multiground with name §3%s §rdoesn't exist.")
+    private String notExistingMultigroundMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-have-battleground", value = "§4Error§r. Multiground §3%s §rdoesn't have battleground §3%s§r.")
+    private String battlegroundNotFoundMessage;
+
     @Subcommand("multiground")
     @CommandPermission("minespades.editor")
     public class MultigroundCommand extends BaseCommand {
@@ -144,8 +168,8 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             if (yaml.getConfigurationSection(multigroundName) == null) {
                 yaml.createSection(multigroundName);
                 yaml.save(path);
-                player.sendMessage(String.format("Мультиграунд %s успешно создан. Теперь нужно добавть в него арены. Используйте /ms multiground add <название>", multigroundName));
-            } else player.sendMessage("Мультиграунд с таким названием уже существует.");
+                player.sendMessage(String.format(multigroundCreatedMessage, multigroundName));
+            } else player.sendMessage(String.format(multigroundNameIsTakenMessage, multigroundName));
         }
 
         @Subcommand("add") @SneakyThrows
@@ -155,20 +179,27 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
             ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
             if (section == null) {
-                player.sendMessage("Несуществующий мультиграунд.");
+                player.sendMessage(String.format(notExistingMultigroundMessage, multigroundName));
                 return;
             }
             if (battlegrounder.getValidator().isValid(player, battlegroundName)) {
-                List<String> battlegrounds = section.getStringList("battlegrounds");
+                final BattlegroundPreferences preferences = BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName));
+
+                // Проверяем баттлграунд на мультиграундность
+                if (preferences.get(Preference.IS_MULTIGROUND)) {
+                    player.sendMessage(String.format(battlegroundIsPartOfMultigroundMessage, battlegroundName));
+                    return;
+                }
+
+                final List<String> battlegrounds = section.getStringList("battlegrounds");
                 battlegrounds.add(battlegroundName);
                 section.set("battlegrounds", battlegrounds);
                 yaml.save(path);
 
                 // Имеет смысл автоматически менять значение IS_MULTIGROUND на true
-                BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName)).set(Preference.IS_MULTIGROUND, true);
-
-                player.sendMessage(String.format("Арена %s успешно добавлена в мультиграунд %s.", battlegroundName, multigroundName));
-            } else player.sendMessage(String.format("Арена %s невалидна.", battlegroundName));
+                preferences.set(Preference.IS_MULTIGROUND, true);
+                player.sendMessage(String.format(battlegroundAddedToMultigroundMessage, battlegroundName, multigroundName));
+            }
         }
 
         @Subcommand("remove") @SneakyThrows
@@ -178,7 +209,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(path);
             ConfigurationSection section = yaml.getConfigurationSection(multigroundName);
             if (section == null) {
-                player.sendMessage("Несуществующий мультиграунд.");
+                player.sendMessage(String.format(notExistingMultigroundMessage, multigroundName));
                 return;
             }
             if (section.getStringList("battlegrounds").contains(battlegroundName)) {
@@ -186,8 +217,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 battlegrounds.remove(battlegroundName);
                 section.set("battlegrounds", battlegrounds);
                 yaml.save(path);
-                player.sendMessage(String.format("Арена %s успешно удалена из мультиграунда %s.", battlegroundName, multigroundName));
-            } else player.sendMessage("В мультиграунде нет такой арены.");
+                BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName)).set(Preference.IS_MULTIGROUND, false);
+                player.sendMessage(String.format(battlegroundDeletedFromMultiground, battlegroundName, multigroundName));
+            } else player.sendMessage(String.format(battlegroundNotFoundMessage, multigroundName, battlegroundName));
         }
 
         @Subcommand("launch") @SneakyThrows
@@ -199,11 +231,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             if (section != null) {
                 if (plugin.getBattlegrounder().getMultigrounds().stream().noneMatch(m -> m.getName().equals(multigroundName))) {
                     plugin.getBattlegrounder().launchMultiground(multigroundName, section.getStringList("battlegrounds"));
-                } else player.sendMessage(String.format("Ошибка. Мультиграунд %s уже запущен.", multigroundName));
-            } else player.sendMessage("Несуществующий мультиграунд.");
+                } else player.sendMessage(String.format(multigroundAlreadyLaunchedMessage, multigroundName));
+            } else player.sendMessage(String.format(notExistingMultigroundMessage, multigroundName));
         }
-
-        // TODO: launchOnStart
 
     }
 
