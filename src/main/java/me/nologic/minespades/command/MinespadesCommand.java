@@ -48,6 +48,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferences", c -> completions.getBattlegroundPreferences());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundTeamsOnJoin", c -> completions.getBattlegroundTeamsOnJoinCommand(c.getPlayer(), c.getContextValue(String.class, 1)));
         plugin.getCommandManager().getCommandCompletions().registerCompletion("teams", c -> completions.getTargetedBattlegroundTeams(c.getPlayer()));
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("supplies", c -> completions.getTargetTeamSupplies(c.getPlayer()));
     }
 
     @TranslationKey(section = "editor-error-messages", name = "battleground-is-multiground", value = "Error. This battleground is configured as part of a multiground.")

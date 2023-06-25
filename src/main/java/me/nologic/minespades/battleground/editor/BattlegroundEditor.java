@@ -195,7 +195,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
                         JsonObject supplyRule = supplyElement.getAsJsonObject();
                         String supplyName = supplyRule.get("name").getAsString();
                         if (supplyName.equals(targetSupply)) {
-                            loadoutElement.getAsJsonArray().remove(supplyElement);
+                            supplies.remove(supplyElement);
                             driver.executeUpdate("UPDATE teams SET loadouts = ? WHERE name = ?;", loadouts.toString(), session.getTargetTeam());
                         }
                     }

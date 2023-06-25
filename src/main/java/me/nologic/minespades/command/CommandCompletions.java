@@ -11,6 +11,7 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.Multiground;
+import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.entity.Player;
 
@@ -111,6 +112,30 @@ public class CommandCompletions {
 
         driver.closeConnection();
         return teams;
+    }
+
+    @SneakyThrows
+    public List<String> getTargetTeamSupplies(final Player player) {
+        final List<String> supplies = new ArrayList<>();
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
+            final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
+            for (JsonElement loadoutElement : loadouts) {
+                JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
+                String loadoutName = jsonLoadout.get("name").getAsString();
+                if (loadoutName.equals(session.getTargetLoadout())) {
+                    JsonArray suppliesArray = jsonLoadout.get("supplies").getAsJsonArray();
+                    for (JsonElement supplyElement : suppliesArray) {
+                        JsonObject supplyRule = supplyElement.getAsJsonObject();
+                        String supplyName = supplyRule.get("name").getAsString();
+                        suppliesArray.add(supplyName);
+                    }
+                }
+            }
+        }
+        driver.closeConnection();
+        return supplies;
     }
 
     public List<String> getBattlegroundTeamsOnJoinCommand(Player sender, String battlegroundName) {
