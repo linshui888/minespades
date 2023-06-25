@@ -13,7 +13,10 @@ import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Objects;
 
 @Translatable
@@ -26,6 +29,9 @@ public class BattlegroundValidator implements MinorityFeature {
 
     @TranslationKey(section = "validate-error-messages", name = "loadout-does-not-exist", value = "Error. Loadout with name §3%s §rdoesn't exist.")
     private String nonExistingLoadoutMessage;
+
+    @TranslationKey(section = "validate-error-messages", name = "supple-does-not-exist", value = "Error. Supply with name §3%s §rdoesn't exist.")
+    private String nonExistingSupplyMessage;
 
     @TranslationKey(section = "validate-error-messages", name = "team-does-not-exist", value = "Error. Team with name §3%s §rdoesn't exist.")
     private String nonExistingTeamMessage;
@@ -47,6 +53,7 @@ public class BattlegroundValidator implements MinorityFeature {
         this.init(this, this.getClass(), plugin);
     }
 
+    // TODO: Имеет смысл переписать валидацию. Дублирование кода меня как-то не очень радует.
     @SneakyThrows
     public boolean isValid(final String battlegroundName) {
 
@@ -164,6 +171,7 @@ public class BattlegroundValidator implements MinorityFeature {
         return false;
     }
 
+    // TODO: Та же история. Какого чёрта код дублируется?
     public boolean isTeamHaveFlag(Player player, String teamName) {
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
@@ -218,6 +226,32 @@ public class BattlegroundValidator implements MinorityFeature {
             player.sendMessage(String.format(nonExistingLoadoutMessage, loadoutName));
             return false;
         }
+    }
+
+    @SneakyThrows
+    public boolean isSupplyExist(final Player player, final String targetSupply) {
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
+            final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
+            for (JsonElement loadoutElement : loadouts) {
+                JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
+                String loadoutName = jsonLoadout.get("name").getAsString();
+                if (loadoutName.equals(session.getTargetLoadout())) {
+                    JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
+                    for (JsonElement supplyElement : supplies) {
+                        JsonObject supplyRule = supplyElement.getAsJsonObject();
+                        String supplyName = supplyRule.get("name").getAsString();
+                        if (supplyName.equals(targetSupply)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        driver.closeConnection();
+        player.sendMessage(String.format(nonExistingSupplyMessage, targetSupply));
+        return false;
     }
 
     @SneakyThrows

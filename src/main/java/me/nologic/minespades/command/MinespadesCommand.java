@@ -68,21 +68,18 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-info-messages", name = "preference-changed", value = "§2Success§r. §6%s §ris changed to §3%s§r.")
     private String parameterChangedMessage;
 
-    // FIXME: Проблема конфига заключается в том, что редактировать настройки можно только у загруженных (т. е. рабочих) арен.
     @Subcommand("config")
     @CommandCompletion("@battlegroundPreferences")
     @CommandPermission("minespades.editor")
     public void onConfig(Player player, String preference, boolean value) {
-        // TODO: Имеет смысл перенести изменение преференса прямо в класс BattlegroundPreferences.
         if (validated(player, Selection.BATTLEGROUND)) {
-            Battleground battleground = battlegrounder.getBattlegroundByName(battlegrounder.getEditor().editSession(player).getTargetBattleground());
+            var preferences = Battleground.getPreferences(battlegrounder.getEditor().editSession(player).getTargetBattleground());
             if (Preference.isValid(preference)) {
-                battleground.getPreferences().set(Preference.valueOf(preference), value);
+                preferences.set(Preference.valueOf(preference), value);
                 player.sendMessage(String.format(parameterChangedMessage, preference, value));
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }
         }
-
     }
 
     @TranslationKey(section = "editor-error-messages", name = "no-banner-in-hand", value = "Error. Hold the banner you want to be the flag.")
@@ -297,6 +294,14 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         public void onRemoveTeam(final Player player, final String teamName) {
             if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamExist(player, teamName)) {
                 battlegrounder.getEditor().removeTeam(player, teamName);
+            }
+        }
+
+        @Subcommand("supply")
+        @CommandCompletion("@supplies")
+        public void onRemoveSupply(final Player player, final String supplyName) {
+            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM, Selection.LOADOUT) && battlegrounder.getValidator().isSupplyExist(player, supplyName)) {
+                battlegrounder.getEditor().removeSupply(player, supplyName);
             }
         }
 

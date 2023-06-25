@@ -48,6 +48,10 @@ public final class Battleground {
         this.preferences = BattlegroundPreferences.loadPreferences(this);
     }
 
+    public static BattlegroundPreferences getPreferences(final String battlegroundName) {
+        return new Battleground(battlegroundName).getPreferences();
+    }
+
     @NotNull
     public BattlegroundPlayer connectPlayer(Player player, @NotNull BattlegroundTeam team) {
         player.setScoreboard(scoreboard);

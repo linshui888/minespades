@@ -1,6 +1,9 @@
 package me.nologic.minespades.battleground.editor;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -52,6 +55,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     @TranslationKey(section = "editor-info-messages", name = "team-removed", value = "Team §3%s §rhas been successfully removed.")
     private String teamRemovedMessage;
+
+    @TranslationKey(section = "editor-info-messages", name = "supply-removed", value = "Supply §3%s §rhas been successfully removed from loadout §3%s§r.")
+    private String supplyRemovedMessage;
 
     @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
     private String respawnCreatedMessage;
@@ -172,6 +178,33 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     public void removeLoadout(Player player, String name) {
         plugin.getServer().getScheduler().runTask(plugin, new RemoveLoadoutTask(player, name));
+    }
+
+    @SneakyThrows
+    public boolean removeSupply(final Player player, final String targetSupply) {
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
+            final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
+            for (JsonElement loadoutElement : loadouts) {
+                JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
+                String loadoutName = jsonLoadout.get("name").getAsString();
+                if (loadoutName.equals(session.getTargetLoadout())) {
+                    JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
+                    for (JsonElement supplyElement : supplies) {
+                        JsonObject supplyRule = supplyElement.getAsJsonObject();
+                        String supplyName = supplyRule.get("name").getAsString();
+                        if (supplyName.equals(targetSupply)) {
+                            loadoutElement.getAsJsonArray().remove(supplyElement);
+                            driver.executeUpdate("UPDATE teams SET loadouts = ? WHERE name = ?;", loadouts.toString(), session.getTargetTeam());
+                        }
+                    }
+                }
+            }
+        }
+        driver.closeConnection();
+        player.sendMessage(String.format(supplyRemovedMessage, targetSupply, session.getTargetTeam()));
+        return false;
     }
 
     @SneakyThrows
