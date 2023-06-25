@@ -185,19 +185,23 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
-            final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
+            result.next(); final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
             for (JsonElement loadoutElement : loadouts) {
                 JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                 String loadoutName = jsonLoadout.get("name").getAsString();
                 if (loadoutName.equals(session.getTargetLoadout())) {
                     JsonArray supplies = jsonLoadout.get("supplies").getAsJsonArray();
+                    JsonElement target = null;
                     for (JsonElement supplyElement : supplies) {
                         JsonObject supplyRule = supplyElement.getAsJsonObject();
                         String supplyName = supplyRule.get("name").getAsString();
                         if (supplyName.equals(targetSupply)) {
-                            supplies.remove(supplyElement);
-                            driver.executeUpdate("UPDATE teams SET loadouts = ? WHERE name = ?;", loadouts.toString(), session.getTargetTeam());
+                            target = supplyElement;
                         }
+                    }
+                    if (target != null) {
+                        supplies.remove(target);
+                        driver.executeUpdate("UPDATE teams SET loadouts = ? WHERE name = ?;", loadouts.toString(), session.getTargetTeam());
                     }
                 }
             }
@@ -267,9 +271,9 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         return lifepoolData.computeIfAbsent(battleground, k -> new HashMap<>()).computeIfAbsent(team, lifepool -> {
             final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
             try (final ResultSet result = driver.executeQuery("SELECT lifepool FROM teams WHERE name = ?;", team)) {
-                result.next();
-                final int i = result.getInt("lifepool");
-                return i;
+                if (result.next()) {
+                    return result.getInt("lifepool");
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

@@ -15,6 +15,7 @@ import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.entity.Player;
 
+import javax.crypto.NullCipher;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -116,11 +117,16 @@ public class CommandCompletions {
 
     @SneakyThrows
     public List<String> getTargetTeamSupplies(final Player player) {
+
         final List<String> supplies = new ArrayList<>();
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        if (!session.isBattlegroundSelected() || !session.isTeamSelected() || !session.isLoadoutSelected()) {
+            return supplies;
+        }
+
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
-            final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
+            result.next(); final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
             for (JsonElement loadoutElement : loadouts) {
                 JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                 String loadoutName = jsonLoadout.get("name").getAsString();
@@ -129,7 +135,7 @@ public class CommandCompletions {
                     for (JsonElement supplyElement : suppliesArray) {
                         JsonObject supplyRule = supplyElement.getAsJsonObject();
                         String supplyName = supplyRule.get("name").getAsString();
-                        suppliesArray.add(supplyName);
+                        supplies.add(supplyName);
                     }
                 }
             }

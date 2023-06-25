@@ -41,7 +41,7 @@ public class PlayerEditSession implements MinorityFeature {
     @TranslationKey(section = "editor-sidebar", name = "select-battleground", value = "§cSelect battleground to edit!")
     private String selectBattlegroundMessage;
 
-    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §6§l%s §8[%s§8]")
+    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §b§l%s §8[%s§8]")
     private String battleground;
 
     @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: ")
