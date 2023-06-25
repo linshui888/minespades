@@ -109,7 +109,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                                         .append(Component.text(" [x]")
                                                 .color(TextColor.color(187, 166, 96))
                                                 .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы удалить " + supplyName).color(TextColor.color(193, 186, 80))))
-                                                .clickEvent(ClickEvent.runCommand("/ms delete supply " + supplyName))
+                                                .clickEvent(ClickEvent.runCommand("/ms remove supply " + supplyName))
                                         )
                         );
                     }
