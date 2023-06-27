@@ -5,5 +5,9 @@ api-version: 1.19
 authors: [ NoLogic ]
 description: Modern battlegrounds plugin.
 
+depend:
+  - ProtocolLib
+
 softdepend:
   - PlaceholderAPI
+  - AuthMe
