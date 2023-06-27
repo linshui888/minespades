@@ -111,6 +111,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             player.sendMessage(String.format(teamCreatedMessage, teamName));
 
+            this.editSession(player).setTargetLoadout(null);
             this.setTargetTeam(player, teamName);
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -268,6 +269,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     private final HashMap<String, HashMap<String, Integer>> lifepoolData = new HashMap<>();
     public int getTeamLifepool(final String battleground, final String team) {
+        if (battleground == null) return 0;
         return lifepoolData.computeIfAbsent(battleground, k -> new HashMap<>()).computeIfAbsent(team, lifepool -> {
             final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
             try (final ResultSet result = driver.executeQuery("SELECT lifepool FROM teams WHERE name = ?;", team)) {

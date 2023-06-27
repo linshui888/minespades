@@ -4,6 +4,7 @@ import lombok.Getter;
 import co.aikar.commands.PaperCommandManager;
 
 import me.nologic.minespades.battleground.Battleground;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.Multiground;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
@@ -47,6 +48,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         super.getConfigurationWizard().generate(this.getClass());
         super.getConfigurationWizard().generate(MinespadesCommand.class);
         super.getConfigurationWizard().generate(PlayerEditSession.class);
+        super.getConfigurationWizard().generate(BattlegroundPlayer.class);
         super.getConfigurationWizard().generate(BattlegroundEditor.class);
         super.getConfigurationWizard().generate(BattlegroundValidator.class);
         super.getConfigurationWizard().generate(AddFlagTask.class);

@@ -78,7 +78,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
                                     .append(Component.text(" [x]")
                                             .color(TextColor.color(187, 166, 96))
                                             .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы удалить " + name).color(TextColor.color(193, 186, 80))))
-                                            .clickEvent(ClickEvent.runCommand("/ms delete loadout " + name))
+                                            .clickEvent(ClickEvent.runCommand("/ms remove loadout " + name))
                                     )
                     );
                 }

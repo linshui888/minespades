@@ -89,6 +89,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-error-messages", name = "join-while-editing", value = "Error. You can't join games while in editor mode. Use §3/ms edit §ragain to close editor.")
     private String joinWhileEditingMessage;
 
+    @TranslationKey(section = "editor-error-messages", name = "edit-while-playing", value = "Error. You can't edit battlegrounds while playing.")
+    private String editingWhilePlaying;
+
     @Subcommand("add")
     @CommandPermission("minespades.editor")
     public class Add extends BaseCommand {
@@ -261,6 +264,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @Subcommand("edit")
     @CommandPermission("minespades.editor")
     public void onEdit(final Player player) {
+        if (BattlegroundPlayer.getBattlegroundPlayer(player) != null) {
+            player.sendMessage(editingWhilePlaying);
+            return;
+        }
         final PlayerEditSession session = battlegrounder.getEditor().editSession(player);
         session.setActive(!session.isActive());
     }
@@ -315,6 +322,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         @Subcommand("battleground")
         @CommandCompletion("@battlegrounds")
         public void onEditBattleground(Player player, String name) {
+            if (BattlegroundPlayer.getBattlegroundPlayer(player) != null) {
+                player.sendMessage(editingWhilePlaying);
+                return;
+            }
             final PlayerEditSession session = battlegrounder.getEditor().editSession(player);
             name = name.toLowerCase();
             if (battlegrounder.getValidator().isBattlegroundExist(name)) {
