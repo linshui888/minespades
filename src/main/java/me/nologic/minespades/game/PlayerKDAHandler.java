@@ -1,8 +1,10 @@
 package me.nologic.minespades.game;
 
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -19,24 +21,25 @@ public class PlayerKDAHandler {
         if (event.getKiller() != null) killer = event.getKiller().getBukkitPlayer();
         event.getVictim().setDeaths(event.getVictim().getDeaths() + 1);
 
-        Component deathMessage;
+        String deathMessage;
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
-            deathMessage = killer.displayName().append(Component.text(" " + symbol + " ").color(NamedTextColor.WHITE)).append(victim.displayName());
+            deathMessage = String.format(event.getKiller().getColorizedName() + " §f%s " + event.getVictim().getColorizedName(), symbol);
             event.getKiller().setKills(event.getKiller().getKills() + 1);
 
             // Обновляем счётчик киллов для убийцы в таблисте
             Scoreboard scoreboard = event.getBattleground().getScoreboard();
             Objective objective = scoreboard.getObjective("kill_counter");
             if (objective != null) {
-                objective.getScoreFor(killer).setScore(event.getKiller().getKills());
+                objective.getScore(killer.getName()).setScore(event.getKiller().getKills());
             }
 
         } else {
-            deathMessage = Component.text("☠ ").append(victim.displayName()).append(Component.text(" ☠"));
+            deathMessage = String.format("§f☠ %s §f☠", event.getVictim().getColorizedName());
         }
 
-        event.getBattleground().getPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().sendActionBar(deathMessage));
+        // Sending message
+        event.getBattleground().getPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(deathMessage)));
     }
     
     private String getDeathSymbol(BattlegroundPlayerDeathEvent event) {

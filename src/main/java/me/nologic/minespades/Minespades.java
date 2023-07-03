@@ -17,6 +17,9 @@ import me.nologic.minority.MinorityExtension;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.Random;
@@ -26,6 +29,9 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
 
     @Getter
     private static Minespades instance;
+
+    @Getter
+    private BukkitAudiences adventureAPI;
 
     @Getter
     private final Random random = new Random();
@@ -57,6 +63,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Override
     public void onEnable() {
         instance = this;
+        this.adventureAPI = BukkitAudiences.create(this);
 
         this.init(this, this.getClass(), this);
 
@@ -109,6 +116,17 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
             battlegrounder.disable(battleground);
         }
 
+        if (this.adventureAPI != null) {
+            this.adventureAPI.close();
+            this.adventureAPI = null;
+        }
+
+    }
+
+    public void broadcast(final Component message) {
+        for (Player p : getServer().getOnlinePlayers()) {
+            adventureAPI.player(p).sendMessage(message);
+        }
     }
 
 }

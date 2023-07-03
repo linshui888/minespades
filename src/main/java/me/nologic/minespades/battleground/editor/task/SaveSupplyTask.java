@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -99,12 +100,12 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                 String loadoutName = loadout.get("name").getAsString();
 
                 if (Objects.equals(loadoutName, editor.editSession(player).getTargetLoadout())) {
-                    player.sendMessage(Component.text(String.format("Правила автовыдачи для экипировки %s у команды %s: ", loadoutName, editor.editSession(player).getTargetTeam())).color(TextColor.color(172, 127, 67)));
+                    Minespades.getInstance().getAdventureAPI().player(player).sendMessage(Component.text(String.format("Правила автовыдачи для экипировки %s у команды %s: ", loadoutName, editor.editSession(player).getTargetTeam())).color(TextColor.color(172, 127, 67)));
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
                     for (JsonElement supplyArrayElement : supplies) {
                         JsonObject supplyRule = supplyArrayElement.getAsJsonObject();
                         String supplyName = supplyRule.get("name").getAsString();
-                        player.sendMessage(
+                        Minespades.getInstance().getAdventureAPI().player(player).sendMessage(
                                 Component.text(" - " + supplyName, TextColor.color(172, 127, 67))
                                         .append(Component.text(" [x]")
                                                 .color(TextColor.color(187, 166, 96))

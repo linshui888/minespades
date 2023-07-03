@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.text.Component;
@@ -74,13 +75,13 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
 
             // Проходимся по всем элементам JSON-массива и отправляем игроку-редактору лист со всеми наборами экипировки редактируемой команды
             while (data.next()) {
-                player.sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
+                Minespades.getInstance().getAdventureAPI().player(player).sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
 
                 JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
                 for (JsonElement element : loadouts) {
                     JsonObject loadout = element.getAsJsonObject();
                     String name = loadout.get("name").getAsString();
-                    player.sendMessage(
+                    Minespades.getInstance().getAdventureAPI().player(player).sendMessage(
                             Component.text(" - " + name, TextColor.color(172, 127, 67))
                                     .append(Component.text(" [x]")
                                             .color(TextColor.color(187, 166, 96))

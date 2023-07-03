@@ -2,12 +2,13 @@ package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import org.apache.commons.lang3.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -51,7 +52,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         }
 
         editor.setSaving(true);
-        player.showBossBar(completeBar);
+        plugin.getAdventureAPI().player(player).showBossBar(completeBar);
 
         // Удаляем старое содержимое (возможно имеет смысл сохранять это куда-нибудь, но это не такая уж и обязательная фича, да и лень мне)
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
@@ -162,7 +163,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§33%dб.§8, §3%dс.§8)", i, totalTime / 1000));
-        player.hideBossBar(completeBar);
+        plugin.getAdventureAPI().player(player).hideBossBar(completeBar);
         editor.editSession(player).resetCorners();
         editor.setSaving(false);
     }
@@ -189,8 +190,12 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
     }
 
     private String save(Sign sign) {
-        JsonObject obj = new JsonObject(); // TODO: sign.lines() or sign.getLines()?
-        obj.addProperty("content", StringUtils.join(sign.getLines(), "\n"));
+
+        String lines = "";
+        for (String line : sign.getLines()) lines += line + "\n";
+
+        JsonObject obj = new JsonObject();
+        obj.addProperty("content", lines);
         obj.addProperty("glow", sign.isGlowingText());
         obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
         return obj.toString();

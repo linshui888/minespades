@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.block.BlockState;
@@ -38,7 +37,7 @@ public class StateDataDeserializer {
         sign.setGlowingText(obj.get("glow").getAsBoolean());
         String[] lines = obj.get("content").getAsString().split("\n");
         for (int i = 0; i < lines.length; i++)
-            sign.line(i, Component.text(lines[i]));
+            sign.setLine(i, lines[i]);
         sign.setColor(DyeColor.valueOf(obj.get("color").getAsString()));
         sign.update(true, false);
     }

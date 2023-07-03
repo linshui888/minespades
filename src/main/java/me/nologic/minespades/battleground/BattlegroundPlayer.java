@@ -7,6 +7,7 @@ import me.catcoder.sidebar.Sidebar;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import me.nologic.minespades.util.Colorizable;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
@@ -14,7 +15,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 @Translatable
-public class BattlegroundPlayer implements MinorityFeature {
+public class BattlegroundPlayer implements MinorityFeature, Colorizable {
 
     private @Getter final Battleground       battleground;
     private @Getter final BattlegroundTeam   team;
@@ -77,6 +78,10 @@ public class BattlegroundPlayer implements MinorityFeature {
 
     public static BattlegroundPlayer getBattlegroundPlayer(Player player) {
         return Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
+    }
+
+    public String getColorizedName() {
+        return this.translateColors(team.getColor().asHexString() + bukkitPlayer.getName());
     }
 
     public void disconnect() {

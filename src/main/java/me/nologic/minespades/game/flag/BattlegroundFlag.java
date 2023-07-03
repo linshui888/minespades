@@ -1,9 +1,9 @@
 package me.nologic.minespades.game.flag;
 
-import com.destroystokyo.paper.ParticleBuilder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
@@ -50,7 +50,7 @@ public class BattlegroundFlag implements Listener {
     private Location           position;
     private BoundingBox        box;
 
-    private ParticleBuilder particle;
+    private boolean particle = false;
     private BukkitRunnable flagRecoveryTimer;
 
     @Getter
@@ -58,14 +58,15 @@ public class BattlegroundFlag implements Listener {
 
     {
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
+        final Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 1);
         this.tick = new BukkitRunnable() {
 
             // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
             // Если энтитя == игрок, скорборды совпадают, но разные команды, то pickup
             @Override
             public void run() {
-                if (box != null && particle != null) {
-                    particle.spawn();
+                if (box != null && particle) {
+                    battleground.getWorld().spawnParticle(Particle.REDSTONE, position.add(0.5, 0.5, 0.5), 7, 0.5, 1, 0.5, options);
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
@@ -131,7 +132,7 @@ public class BattlegroundFlag implements Listener {
 
             // Не забываем скрывать таймер, если флаг был поднят
             Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> {
-                Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(recoveryBossBar));
+                Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(recoveryBossBar));
                 recoveryBossBar = null;
             });
             flagRecoveryTimer = null;
@@ -162,7 +163,6 @@ public class BattlegroundFlag implements Listener {
         carrier.setCarryingFlag(false);
 
         position = player.getLocation().getBlock().getLocation();
-        particle.location(position.toCenterLocation());
         this.updateBoundingBox();
 
         // FIXME: Необходимо сохранять предыдущий шлем игрока, дабы он не исчезал, как слёзы во время дождя. (што)
@@ -218,7 +218,7 @@ public class BattlegroundFlag implements Listener {
                                 // Скрываем боссбар через полторы секунды после заполнения
                                 bossBar.progress(1.0f);
                                 bossBar.color(BossBar.Color.GREEN);
-                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(bossBar)), 30);
+                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(bossBar)), 30);
                                 this.cancel();
                             }
                         }
@@ -231,7 +231,7 @@ public class BattlegroundFlag implements Listener {
 
                 for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
                     Player player = bgPlayer.getBukkitPlayer();
-                    player.showBossBar(bossBar);
+                    Minespades.getInstance().getAdventureAPI().player(player).showBossBar(bossBar);
                 }
             }
 
@@ -254,7 +254,7 @@ public class BattlegroundFlag implements Listener {
         }
         updateBoundingBox();
         validateBannerData();
-        prepareFlagParticle();
+        particle = true;
 
         if (flagRecoveryTimer != null) {
             flagRecoveryTimer.cancel();
@@ -285,12 +285,6 @@ public class BattlegroundFlag implements Listener {
                 banner.update();
             });
         }
-    }
-
-    private void prepareFlagParticle() {
-        particle = new ParticleBuilder(Particle.REDSTONE);
-        particle.color(team.getColor().red(), team.getColor().green(), team.getColor().blue());
-        particle.location(position.toCenterLocation()).allPlayers().offset(0.5, 1, 0.5).count(7);
     }
 
 }

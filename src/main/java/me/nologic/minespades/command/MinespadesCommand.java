@@ -19,7 +19,6 @@ import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
 import java.util.List;
@@ -363,7 +362,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
 
                 final String team = battlegrounder.getEditor().editSession(player).getTargetTeam();
-                player.sendMessage(Component.text(String.format(teamColorUpdatedMessage, team))
+                plugin.getAdventureAPI().player(player).sendMessage(Component.text(String.format(teamColorUpdatedMessage, team))
                         .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
             }
         }
@@ -404,7 +403,6 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         if (battlegrounder.getEditor().editSession(player).isActive()) {
             player.sendMessage(joinWhileEditingMessage);
-            player.playSound(net.kyori.adventure.sound.Sound.sound(Sound.ENTITY_VILLAGER_NO.getKey(), net.kyori.adventure.sound.Sound.Source.AMBIENT, 1, 1));
             return;
         }
 
@@ -464,7 +462,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             return;
         }
 
-        battleground.broadcast(String.format(battlegroundForceResetMessage, StringUtils.capitalise(name), player.getName()));
+        battleground.broadcast(String.format(battlegroundForceResetMessage, name, player.getName()));
         battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
         battlegrounder.reset(battleground);
     }

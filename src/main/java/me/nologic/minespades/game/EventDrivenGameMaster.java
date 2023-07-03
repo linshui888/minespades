@@ -13,20 +13,20 @@ import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
+import me.nologic.minespades.util.Colorizable;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -77,9 +77,10 @@ public class EventDrivenGameMaster implements Listener {
         }
 
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_6, 1F, 1F));
-        Bukkit.broadcast(Component.text("На арене " + StringUtils.capitalize(name) + " начинается новая битва!").color(TextColor.color(180, 63, 61)));
-        Bukkit.broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(180, 63, 61))
-                .append(Component.text("/ms join " + StringUtils.capitalize(name)).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
+
+        Minespades.getInstance().broadcast(Component.text("На арене " + name + " начинается новая битва!").color(TextColor.color(180, 63, 61)));
+        Minespades.getInstance().broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(180, 63, 61))
+                .append(Component.text("/ms join " + name).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
     }
 
     @EventHandler
@@ -140,7 +141,7 @@ public class EventDrivenGameMaster implements Listener {
 
         BattlegroundTeam team = event.getFlag().getTeam();
 
-        TextComponent flagCarriedMessage = Component.text("").append(event.getPlayer().getBukkitPlayer().displayName())
+        TextComponent flagCarriedMessage = Component.text("").append(Component.text(event.getPlayer().getBukkitPlayer().getDisplayName()))
                 .append(Component.text(" приносит флаг команды "))
                 .append(team.getDisplayName())
                 .append(Component.text(" на свою базу!"));
@@ -181,16 +182,31 @@ public class EventDrivenGameMaster implements Listener {
     }
 
     @EventHandler
-    private void onPlayerDeath(PlayerDeathEvent event) {
-        if (event.isCancelled() || playerManager.getBattlegroundPlayer(event.getPlayer()) == null) return;
+    private void onPlayerDamagePlayer(EntityDamageByEntityEvent event) {
+        if (!event.isCancelled() && event.getDamager() instanceof Player killer && event.getEntity() instanceof Player victim) {
+            if (BattlegroundPlayer.getBattlegroundPlayer(victim) != null) {
+                if (victim.getHealth() <= event.getFinalDamage()) {
+                    EntityDamageEvent.DamageCause cause = event.getCause();
+                    BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
+                    Bukkit.getServer().getPluginManager().callEvent(bpde);
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
 
-        final Player victim = event.getPlayer();
-        final Player killer = victim.getKiller();
-        final EntityDamageEvent.DamageCause cause = Objects.requireNonNull(victim.getLastDamageCause()).getCause();
-        event.setCancelled(true);
-        event.deathMessage(null);
-        BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
-        Bukkit.getServer().getPluginManager().callEvent(bpde);
+    @EventHandler
+    private void onPlayerDamage(EntityDamageEvent event) {
+        if (!event.isCancelled() && event.getEntity() instanceof Player player && player.getHealth() <= event.getFinalDamage() && player.getLastDamageCause() != null) {
+
+            switch (player.getLastDamageCause().getCause()) {
+                case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK, PROJECTILE, MAGIC, THORNS: return;
+            }
+
+            BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(player, null, event.getCause(),true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
+            Bukkit.getServer().getPluginManager().callEvent(bpde);
+            event.setCancelled(true);
+        }
     }
 
 
@@ -198,8 +214,8 @@ public class EventDrivenGameMaster implements Listener {
     private void onPlayerTeleport(PlayerTeleportEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE) {
             BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
-            if (bgPlayer != null) {
-                if (!event.getTo().getWorld().equals(bgPlayer.getBattleground().getWorld())) {
+            if (bgPlayer != null && event.getTo() != null) {
+                if (!Objects.equals(event.getTo().getWorld(), bgPlayer.getBattleground().getWorld())) {
                     event.setCancelled(true);
                 }
             }
@@ -219,7 +235,7 @@ public class EventDrivenGameMaster implements Listener {
      * свои вещи, необходимо сохранять старый инвентарь в датабазе и загружать его, когда игрок покидает арену.
      * И не только инвентарь! Кол-во хитпоинтов, голод, координаты, активные баффы и дебаффы и т. д.
      * */
-    public static class BattlegroundPlayerManager {
+    public static class BattlegroundPlayerManager implements Colorizable {
 
         @Getter
         private final List<BattlegroundPlayer> playersInGame = new ArrayList<>();
@@ -244,11 +260,11 @@ public class EventDrivenGameMaster implements Listener {
                 this.save(player);
                 BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
                 this.getPlayersInGame().add(bgPlayer);
-                Component name = player.name().color(team.getColor());
-                player.playerListName(name);
-                player.displayName(name);
-                player.customName(name);
-                player.setCustomNameVisible(true);
+
+                Audience audience = plugin.getAdventureAPI().player(player);
+                final String name = this.translateColors(team.getColor().asHexString() + player.getName());
+                player.setDisplayName(name);
+                player.setPlayerListName(name);
                 player.setHealth(20);
                 player.setFoodLevel(20);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
@@ -256,7 +272,7 @@ public class EventDrivenGameMaster implements Listener {
 
                 for (BattlegroundTeam t : battleground.getTeams()) {
                     if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {
-                        player.showBossBar(t.getFlag().getRecoveryBossBar());
+                        audience.showBossBar(t.getFlag().getRecoveryBossBar());
                     }
                 }
 
@@ -265,7 +281,7 @@ public class EventDrivenGameMaster implements Listener {
                         Component.text("Ваша команда: ").append(team.getDisplayName().decorate(TextDecoration.BOLD)),
                         Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(4000), Duration.ofMillis(500))
                 );
-                player.showTitle(title);
+                audience.showTitle(title);
 
                 // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
@@ -281,6 +297,7 @@ public class EventDrivenGameMaster implements Listener {
         public void disconnect(@NotNull BattlegroundPlayer battlegroundPlayer) {
 
             Player player = battlegroundPlayer.getBukkitPlayer();
+            Audience audience = plugin.getAdventureAPI().player(player);
 
             if (battlegroundPlayer.isCarryingFlag()) {
                 battlegroundPlayer.getFlag().drop();
@@ -289,7 +306,7 @@ public class EventDrivenGameMaster implements Listener {
             battlegroundPlayer.removeSidebar();
             for (BattlegroundTeam team : battlegroundPlayer.getBattleground().getTeams()) {
                 if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
-                    player.hideBossBar(team.getFlag().getRecoveryBossBar());
+                    audience.hideBossBar(team.getFlag().getRecoveryBossBar());
                 }
             }
 
@@ -297,10 +314,9 @@ public class EventDrivenGameMaster implements Listener {
             battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
             this.load(player);
 
-            player.displayName(player.name().color(NamedTextColor.WHITE));
-            player.playerListName(player.name().color(NamedTextColor.WHITE));
-            player.customName(player.name().color(NamedTextColor.WHITE));
-            player.setCustomNameVisible(false);
+            final String name = ChatColor.WHITE + player.getName();
+            player.setDisplayName(name);
+            player.setPlayerListName(name);
 
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем

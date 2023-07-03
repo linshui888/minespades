@@ -3,11 +3,10 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
@@ -43,7 +42,7 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, Component.text(0));
+        Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
         this.preferences = BattlegroundPreferences.loadPreferences(this);
     }
@@ -86,10 +85,6 @@ public final class Battleground {
         return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
     }
 
-    public Location getCenter() {
-       return boundingBox.getCenter().toLocation(world);
-    }
-
     /**
      * Поиск команды по названию.
      * @return BattlegroundTeam или null, если команда не найдена
@@ -114,7 +109,7 @@ public final class Battleground {
     }
 
     public void broadcast(TextComponent message) {
-        this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
+        this.getPlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p.getBukkitPlayer()).sendMessage(message));
     }
 
     public boolean getPreference(Preference preference) {

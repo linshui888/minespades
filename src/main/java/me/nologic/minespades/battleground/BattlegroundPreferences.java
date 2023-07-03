@@ -24,7 +24,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -98,7 +97,7 @@ public class BattlegroundPreferences implements Listener {
     private void onPotionConsume(PlayerItemConsumeEvent event) {
         if (preferences.get(Preference.DELETE_EMPTY_BOTTLES)) {
             if (event.getItem().getType() == Material.POTION) {
-                event.setReplacement(new ItemStack(Material.AIR));
+                event.getPlayer().getInventory().remove(Material.GLASS_BOTTLE);
             }
         }
     }
@@ -119,10 +118,10 @@ public class BattlegroundPreferences implements Listener {
                 for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
                     for (Block block : event.getBlocks()) {
                         if (respawnPoint.getBoundingBox().contains(block.getBoundingBox().getCenter())) {
-                            event.setCancelled(true);
-                            event.getBlock().getLocation().createExplosion(1, false, false);
+                            battleground.getWorld().createExplosion(event.getBlock().getLocation(), 1, false, false);
                             event.getBlock().breakNaturally();
                             event.getBlocks().forEach(Block::breakNaturally);
+                            event.setCancelled(true);
                         }
                     }
                 }
@@ -137,9 +136,9 @@ public class BattlegroundPreferences implements Listener {
                 for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
                     for (Block block : event.getBlocks()) {
                         if (respawnPoint.getBoundingBox().contains(block.getBoundingBox().getCenter())) {
-                            event.setCancelled(true);
-                            event.getBlock().getLocation().createExplosion(1, false, false);
+                            battleground.getWorld().createExplosion(event.getBlock().getLocation(), 1, false, false);
                             event.getBlock().breakNaturally();
+                            event.setCancelled(true);
                         }
                     }
                 }
@@ -253,13 +252,6 @@ public class BattlegroundPreferences implements Listener {
         }
     }
 
-    @EventHandler
-    public void onShieldUsage(PlayerInteractEvent event) {
-        if (preferences.get(Preference.NO_SHIELD_DELAY) && event.getMaterial().equals(Material.SHIELD)) {
-            event.getPlayer().setShieldBlockingDelay(0);
-        }
-    }
-
     {
         BukkitRunnable cowardTracker = new BukkitRunnable() {
 
@@ -297,7 +289,6 @@ public class BattlegroundPreferences implements Listener {
         FLAG_PARTICLES(true),
         DISABLE_PORTALS(true),
         NO_DAMAGE_COOLDOWN(true),
-        NO_SHIELD_DELAY(true),
         PREVENT_ITEM_DAMAGE(true),
         BLOCK_LAVA_USAGE(true),
         PROTECT_RESPAWN(true),
