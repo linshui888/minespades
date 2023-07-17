@@ -3,7 +3,6 @@ package me.nologic.minespades.battleground;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import fr.xephi.authme.events.LoginEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
@@ -32,11 +31,17 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.ResultSet;
 import java.util.HashMap;
 
-@RequiredArgsConstructor
 public class BattlegroundPreferences implements Listener {
 
     private final Battleground battleground;
     private final HashMap<Preference, Boolean> preferences = new HashMap<>();
+
+    public BattlegroundPreferences(final Battleground battleground) {
+        this.battleground = battleground;
+        if (Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
+            Bukkit.getServer().getPluginManager().registerEvents(new AuthMeLoginListener(), Minespades.getInstance());
+        }
+    }
 
     // init() применяется при инициализации, set() через команду /ms config
     @SneakyThrows
@@ -231,16 +236,20 @@ public class BattlegroundPreferences implements Listener {
         }, 1);
     }
 
-    // Подержка AuthMe
-    @EventHandler
-    private void onPlayerLogin(LoginEvent event) {
-        // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
-        Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
-            if (preferences.get(Preference.FORCE_AUTOJOIN)) {
-                Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
-                event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
-            }
-        }, 1);
+    private final class AuthMeLoginListener implements Listener {
+
+        // Подержка AuthMe
+        @EventHandler
+        private void onPlayerLogin(LoginEvent event) {
+            // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
+            Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
+                if (preferences.get(Preference.FORCE_AUTOJOIN)) {
+                    Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
+                    event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+                }
+            }, 1);
+        }
+
     }
 
     @EventHandler

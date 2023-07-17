@@ -67,20 +67,21 @@ public class LoadBattlegroundTask extends BukkitRunnable {
         try (ResultSet result = connector.executeQuery("SELECT * FROM volume;")) {
             while (result.next()) {
 
-                if (data.size() <= BLOCKS_PER_TICK) {
-                    data.add(this.readBlockData(result)); continue;
+                data.add(this.readBlockData(result));
+                if (data.size() < BLOCKS_PER_TICK) {
+                    continue;
                 }
 
-                List<Object[]> finalData = data;
+                final List<Object[]> finalData = List.copyOf(data);
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     try {
-                        for (Object[] array : List.copyOf(finalData)) {
+                        for (Object[] array : finalData) {
                             Block     block    = (Block)     array[0];
                             Material  material = (Material)  array[1];
                             BlockData bd       = (BlockData) array[2];
                             String    content  = (String)    array[3];
-                            block.setType(material, false);
-                            block.setBlockData(bd, false);
+                            block.setType(material);
+                            block.setBlockData(bd);
                             blockState.deserialize(block.getState(), content);
                         }
                     } catch (Exception ex) {
@@ -90,6 +91,25 @@ public class LoadBattlegroundTask extends BukkitRunnable {
 
                 data = new ArrayList<>(); Thread.sleep(50);
             }
+
+            // Last chance for blocks that might be skipped
+            final List<Object[]> finalData = List.copyOf(data);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                try {
+                    for (Object[] array : finalData) {
+                        Block     block    = (Block)     array[0];
+                        Material  material = (Material)  array[1];
+                        BlockData bd       = (BlockData) array[2];
+                        String    content  = (String)    array[3];
+                        block.setType(material);
+                        block.setBlockData(bd);
+                        blockState.deserialize(block.getState(), content);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+
         }
 
         // После размещения блоков и тайл-энтитей, приступаем к загрузке команд. На этом этапе размещаются флаги.
