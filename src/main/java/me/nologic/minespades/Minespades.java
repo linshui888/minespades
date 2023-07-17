@@ -12,6 +12,7 @@ import me.nologic.minespades.battleground.editor.task.AddFlagTask;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
+import me.nologic.minespades.game.PlayerKDAHandler;
 import me.nologic.minespades.util.MinespadesPlaceholderExpansion;
 import me.nologic.minority.MinorityExtension;
 import me.nologic.minority.MinorityFeature;
@@ -30,10 +31,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Getter
     private static Minespades instance;
 
-    @Getter
     private BukkitAudiences adventureAPI;
-
-    @Getter
     private final Random random = new Random();
 
     private EventDrivenGameMaster gameMaster;
@@ -58,6 +56,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         super.getConfigurationWizard().generate(BattlegroundEditor.class);
         super.getConfigurationWizard().generate(BattlegroundValidator.class);
         super.getConfigurationWizard().generate(AddFlagTask.class);
+        super.getConfigurationWizard().generate(PlayerKDAHandler.class);
     }
 
     @Override

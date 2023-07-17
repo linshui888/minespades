@@ -23,6 +23,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -181,10 +182,16 @@ public class EventDrivenGameMaster implements Listener {
         Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
     }
 
+    // TODO: Need some testing. It may not work..?
     @EventHandler
     private void onPlayerDamagePlayer(EntityDamageByEntityEvent event) {
-        if (!event.isCancelled() && event.getDamager() instanceof Player killer && event.getEntity() instanceof Player victim) {
-            if (BattlegroundPlayer.getBattlegroundPlayer(victim) != null) {
+        if (!event.isCancelled() && event.getEntity() instanceof Player victim) {
+
+            // If victim is not a battleground player, return
+            if (BattlegroundPlayer.getBattlegroundPlayer(victim) != null) return;
+
+            // Killer is a player
+            if (event.getDamager() instanceof Player killer) {
                 if (victim.getHealth() <= event.getFinalDamage()) {
                     EntityDamageEvent.DamageCause cause = event.getCause();
                     BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
@@ -192,6 +199,17 @@ public class EventDrivenGameMaster implements Listener {
                     event.setCancelled(true);
                 }
             }
+
+            // Killer is a projectile like arrow or etc.
+            if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player killer) {
+                if (victim.getHealth() <= event.getFinalDamage()) {
+                    EntityDamageEvent.DamageCause cause = event.getCause();
+                    BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
+                    Bukkit.getServer().getPluginManager().callEvent(bpde);
+                    event.setCancelled(true);
+                }
+            }
+
         }
     }
 
@@ -292,7 +310,6 @@ public class EventDrivenGameMaster implements Listener {
             }
         }
 
-        // TODO: УЛУЧШИ БЛЯДЬ ЭТО ГОВНО
         /** Отключает игрока от баттлграунда. */
         public void disconnect(@NotNull BattlegroundPlayer battlegroundPlayer) {
 

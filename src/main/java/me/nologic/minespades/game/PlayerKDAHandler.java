@@ -1,8 +1,9 @@
 package me.nologic.minespades.game;
 
-import me.nologic.minespades.Minespades;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
-import net.kyori.adventure.text.Component;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Configurable;
+import me.nologic.minority.annotations.ConfigurationKey;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
@@ -13,11 +14,27 @@ import org.bukkit.scoreboard.Scoreboard;
  * Специализированный класс, который крайне подробно обрабатывает событие смерти игрока.
  * Учёт KDA, киллфид (отправление сообщений об убийстве и пр.) — всё это происходит тут.
  */
-public class PlayerKDAHandler {
+@Configurable(file = "killfeed.yml", path = "killfeed-output", comment = { "Here you can change the killfeed settings and symbols.", "If you are playing on 1.20+ then you can use emoji." })
+public class PlayerKDAHandler implements MinorityFeature {
+
+    @ConfigurationKey(name = "DEFAULT", value = "⚔")
+    private String basic;
+
+    @ConfigurationKey(name = "PROJECTILE", value = "➸")
+    private String projectile;
+
+    @ConfigurationKey(name = "LAVA, FIRE, FIRE_TICK", value = "♨")
+    private String burning;
+
+    @ConfigurationKey(name = "MAGIC", value = "⚡")
+    private String magic;
+
+    @ConfigurationKey(name = "death-message", value = "§f☠ %s §f☠", comment = "This message will be displayed if the player died due to his own fault.")
+    private String deathMessage;
 
     public void handlePlayerDeath(BattlegroundPlayerDeathEvent event) {
 
-        Player victim = event.getVictim().getBukkitPlayer(), killer = null;
+        Player killer = null;
         if (event.getKiller() != null) killer = event.getKiller().getBukkitPlayer();
         event.getVictim().setDeaths(event.getVictim().getDeaths() + 1);
 
@@ -35,7 +52,7 @@ public class PlayerKDAHandler {
             }
 
         } else {
-            deathMessage = String.format("§f☠ %s §f☠", event.getVictim().getColorizedName());
+            deathMessage = String.format(this.deathMessage, event.getVictim().getColorizedName());
         }
 
         // Sending message
@@ -55,10 +72,10 @@ public class PlayerKDAHandler {
         }
 
         return switch (event.getDamageCause()) {
-            case PROJECTILE -> "➸";
-            case LAVA, FIRE, FIRE_TICK -> "♨";
-            case MAGIC -> "⚡";
-            default -> "⚔";
+            case PROJECTILE -> projectile;
+            case LAVA, FIRE, FIRE_TICK -> burning;
+            case MAGIC -> magic;
+            default -> basic;
         };
     }
 
