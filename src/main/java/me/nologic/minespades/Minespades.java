@@ -50,6 +50,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Override
     public void onLoad() {
         super.getConfigurationWizard().generate(this.getClass());
+        super.getConfigurationWizard().generate(EventDrivenGameMaster.class);
         super.getConfigurationWizard().generate(MinespadesCommand.class);
         super.getConfigurationWizard().generate(PlayerEditSession.class);
         super.getConfigurationWizard().generate(BattlegroundPlayer.class);

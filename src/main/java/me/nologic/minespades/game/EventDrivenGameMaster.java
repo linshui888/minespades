@@ -14,6 +14,9 @@ import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
 import me.nologic.minespades.util.Colorizable;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.*;
+import me.nologic.minority.annotations.Translatable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -50,10 +53,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class EventDrivenGameMaster implements Listener {
+@Translatable @Configurable(path = "game-master-settings")
+public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
     private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
+
+    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You're automatically connected to the battleground. Use §3/ms q§7 to quit.")
+    private String autoConnectedToBattlegroundMessage;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
+    private String battlegroundLaunchedBroadcastMessage;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-click-to-join", value = "Click to join: ")
+    private String clickToJoinMessage;
+
+    @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
+    private Sound broadcastSound;
+
+    public EventDrivenGameMaster() {
+        this.init(this, this.getClass(), Minespades.getInstance());
+    }
 
     @EventHandler
     private void onPlayerQuitBattleground(PlayerQuitBattlegroundEvent event) {
@@ -65,23 +85,25 @@ public class EventDrivenGameMaster implements Listener {
 
     @EventHandler
     private void onBattlegroundSuccessfulLoad(BattlegroundSuccessfulLoadEvent event) {
-        Battleground battleground = event.getBattleground();
+
+        final Battleground battleground = event.getBattleground();
+
         // Если арена является частью мультиграунда, то вместо настоящего названия арены мы используем название мультиграунда
         final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
 
         // TODO: Добавить игрокам возможность отказываться от авто-коннекта
         if (battleground.getPreference(Preference.FORCE_AUTOJOIN)) {
             Bukkit.getOnlinePlayers().forEach(p -> {
-                p.sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+                p.sendMessage(autoConnectedToBattlegroundMessage);
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), p));
             });
         }
 
-        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_6, 1F, 1F));
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), broadcastSound, 1F, 1F));
 
-        Minespades.getInstance().broadcast(Component.text("На арене " + name + " начинается новая битва!").color(TextColor.color(180, 63, 61)));
-        Minespades.getInstance().broadcast(Component.text("Кликни, чтобы подключиться: ").color(TextColor.color(180, 63, 61))
-                .append(Component.text("/ms join " + name).clickEvent(ClickEvent.suggestCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
+        Minespades.getInstance().broadcast(Component.text(String.format(battlegroundLaunchedBroadcastMessage, name)).color(TextColor.color(180, 63, 61)));
+        Minespades.getInstance().broadcast(Component.text(clickToJoinMessage).color(TextColor.color(180, 63, 61))
+                .append(Component.text("/ms join " + name).clickEvent(ClickEvent.runCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
     }
 
     @EventHandler
