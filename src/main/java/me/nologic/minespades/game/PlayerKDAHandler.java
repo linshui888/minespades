@@ -1,5 +1,6 @@
 package me.nologic.minespades.game;
 
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
@@ -31,6 +32,10 @@ public class PlayerKDAHandler implements MinorityFeature {
 
     @ConfigurationKey(name = "death-message", value = "§f☠ %s §f☠", comment = "This message will be displayed if the player died due to his own fault.")
     private String deathMessage;
+
+    public PlayerKDAHandler() {
+        this.init(this, this.getClass(), Minespades.getInstance());
+    }
 
     public void handlePlayerDeath(BattlegroundPlayerDeathEvent event) {
 
