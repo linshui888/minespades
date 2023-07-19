@@ -42,7 +42,7 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", Criteria.DUMMY, "0");
+        Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
         this.preferences = BattlegroundPreferences.loadPreferences(this);
     }

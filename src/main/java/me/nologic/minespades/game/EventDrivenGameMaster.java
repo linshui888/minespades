@@ -56,6 +56,8 @@ import java.util.Objects;
 @Translatable @Configurable(path = "game-master-settings")
 public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
+    private final Minespades plugin = Minespades.getInstance();
+
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
     private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
 
@@ -101,8 +103,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), broadcastSound, 1F, 1F));
 
-        Minespades.getInstance().broadcast(Component.text(String.format(battlegroundLaunchedBroadcastMessage, name)).color(TextColor.color(180, 63, 61)));
-        Minespades.getInstance().broadcast(Component.text(clickToJoinMessage).color(TextColor.color(180, 63, 61))
+        plugin.broadcast(Component.text(String.format(battlegroundLaunchedBroadcastMessage, name)).color(TextColor.color(180, 63, 61)));
+        plugin.broadcast(Component.text(clickToJoinMessage).color(TextColor.color(180, 63, 61))
                 .append(Component.text("/ms join " + name).clickEvent(ClickEvent.runCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
     }
 
@@ -187,21 +189,19 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         event.getBattleground().broadcast(message);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
-        if (event.getBattleground().getTeams().stream().filter(t -> !t.isDefeated()).count() <= 1) {
+        if (event.getBattleground().getTeams().stream().filter(team -> !team.isDefeated()).count() <= 1) {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
         }
     }
 
     /* Проигрыш команды. */
     @EventHandler
-    private void onBattlegroundGameOver(BattlegroundGameOverEvent event) {
+    private void onBattlegroundGameOver(final BattlegroundGameOverEvent event) {
         final Battleground battleground = event.getBattleground();
         if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
-            Minespades.getPlugin(Minespades.class).getBattlegrounder().disable(event.getBattleground());
+            plugin.getBattlegrounder().disable(event.getBattleground());
             battleground.getMultiground().launchNextInOrder();
-            return;
-        }
-        Minespades.getPlugin(Minespades.class).getBattlegrounder().reset(event.getBattleground());
+        } else plugin.getBattlegrounder().reset(event.getBattleground());
     }
 
     // TODO: Need some testing. It may not work..?

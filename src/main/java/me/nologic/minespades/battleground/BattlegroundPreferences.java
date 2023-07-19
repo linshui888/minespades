@@ -277,7 +277,6 @@ public class BattlegroundPreferences implements Listener {
                             }
 
                             player.getBukkitPlayer().teleport(player.getTeam().getRandomRespawnLocation());
-                            player.getBukkitPlayer().addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 40, 1));
                             player.getBukkitPlayer().playSound(player.getBukkitPlayer().getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1, 1);
                         }
                     }

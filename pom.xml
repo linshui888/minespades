@@ -6,12 +6,12 @@
 
     <groupId>me.nologic</groupId>
     <artifactId>minespades</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>Minespades</name>
 
-    <description>An exciting pvp-minigame with many unique features and a modern implementation.</description>
+    <description>TDM/CTF PvP minigame with some unique features and modern implementation.</description>
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.20.1-R0.1-SNAPSHOT</version>
+            <version>1.18.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
