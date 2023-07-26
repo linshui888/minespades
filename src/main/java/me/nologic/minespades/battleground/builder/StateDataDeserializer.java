@@ -34,7 +34,7 @@ public class StateDataDeserializer {
 
     /* Десериализация табличек. */
     private void deserialize(Sign sign) {
-        JsonObject obj = Minespades.getInstance().getJsonParser().parse(data).getAsJsonObject();
+        JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
         sign.setGlowingText(obj.get("glow").getAsBoolean());
         String[] lines = obj.get("content").getAsString().split("\n");
         for (int i = 0; i < lines.length; i++)
@@ -49,7 +49,7 @@ public class StateDataDeserializer {
     }
 
     private Inventory readInventory(String inventoryJson) {
-        JsonObject json = Minespades.getInstance().getJsonParser().parse(inventoryJson).getAsJsonObject();
+        JsonObject json = JsonParser.parseString(inventoryJson).getAsJsonObject();
         Inventory inventory = Bukkit.createInventory(null, InventoryType.valueOf(json.get("type").getAsString()));
 
         JsonArray items = json.get("items").getAsJsonArray();

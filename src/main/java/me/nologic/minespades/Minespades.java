@@ -34,9 +34,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     private static Minespades instance;
 
     private BukkitAudiences adventureAPI;
-
-    private final Random     random     = new Random();
-    private final JsonParser jsonParser = new JsonParser();
+    private final Random random = new Random();
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;

@@ -1,6 +1,7 @@
 package me.nologic.minespades.battleground;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import fr.xephi.authme.events.LoginEvent;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
@@ -48,7 +49,7 @@ public class BattlegroundPreferences implements Listener {
         // Пишем изменение в дб
         try (ResultSet result = driver.executeQuery("SELECT parameters FROM preferences;")) {
             result.next();
-            JsonObject parameters = Minespades.getInstance().getJsonParser().parse(result.getString("parameters")).getAsJsonObject();
+            JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
             parameters.remove(preference.toString());
             parameters.addProperty(preference.toString(), state);
             driver.executeUpdate("UPDATE preferences SET parameters = ?;", parameters.toString());
@@ -78,7 +79,7 @@ public class BattlegroundPreferences implements Listener {
             result.next();
             battleground.setWorld(Bukkit.getWorld(result.getString("world")));
 
-            JsonObject parameters = Minespades.getInstance().getJsonParser().parse(result.getString("parameters")).getAsJsonObject();
+            JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
             // Preference является енумом буликов (лол). Если в загруженной json-строке не найдено искомое значение,
             // то возьмётся дефолтное значение (preference.getDefaultValue()), так же оно добавится в датабазу.
             for (Preference preference : Preference.values()) {

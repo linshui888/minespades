@@ -186,7 +186,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
-            result.next(); final JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(result.getString("loadouts")).getAsJsonArray();
+            result.next(); final JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
             for (JsonElement loadoutElement : loadouts) {
                 JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                 String loadoutName = jsonLoadout.get("name").getAsString();

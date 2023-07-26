@@ -40,7 +40,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
             String loadouts = result.getString("loadouts");
 
-            JsonArray array = (loadouts != null) ? Minespades.getInstance().getJsonParser().parse(loadouts).getAsJsonArray() : new JsonArray();
+            JsonArray array = (loadouts != null) ? JsonParser.parseString(loadouts).getAsJsonArray() : new JsonArray();
             array.add(this.inventoryToJSON(name, player.getInventory()));
 
             PreparedStatement updateStatement = connection.prepareStatement("UPDATE teams SET loadouts = ? WHERE name = ?;");
@@ -70,7 +70,7 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             while (data.next()) {
                 Minespades.getInstance().getAdventureAPI().player(player).sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
 
-                JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(data.getString("loadouts")).getAsJsonArray();
+                JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
                 for (JsonElement element : loadouts) {
                     JsonObject loadout = element.getAsJsonObject();
                     String name = loadout.get("name").getAsString();

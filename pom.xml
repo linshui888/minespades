@@ -34,17 +34,7 @@
                 <version>3.3.0</version>
                 <configuration>
                     <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
-                    <!-- replace shaded version with main artifact -->
                     <shadedArtifactAttached>false</shadedArtifactAttached>
-
-                    <!-- relocate API classes to avoid same-classpath-conflicts -->
-                    <!-- with other plugins using this core API -->
-                    <relocations>
-                        <relocation>
-                            <pattern>com.github.fierioziy.particlenativeapi</pattern>
-                            <shadedPattern>me.nologic.particleapi</shadedPattern>
-                        </relocation>
-                    </relocations>
                 </configuration>
                 <executions>
                     <execution>
@@ -121,7 +111,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.17.1-R0.1-SNAPSHOT</version>
+            <version>1.18.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

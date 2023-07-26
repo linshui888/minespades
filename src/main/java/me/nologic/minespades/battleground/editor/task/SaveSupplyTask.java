@@ -46,7 +46,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
             ResultSet result = loadoutStatement.executeQuery(); result.next();
 
             // Проходимся по каждому набору, сравнивая названия
-            JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(result.getString("loadouts")).getAsJsonArray();
+            JsonArray loadouts = JsonParser.parseString(result.getString("loadouts")).getAsJsonArray();
             for (JsonElement element : loadouts) {
                 JsonObject loadout = element.getAsJsonObject();
 
@@ -54,7 +54,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
                 String name = loadout.get("name").getAsString();
                 if (Objects.equals(name, editor.editSession(player).getTargetLoadout())) {
                     JsonArray supplies = loadout.get("supplies").getAsJsonArray();
-                    JsonObject supplyRule = Minespades.getInstance().getJsonParser().parse(supplyRuleJSON).getAsJsonObject();
+                    JsonObject supplyRule = JsonParser.parseString(supplyRuleJSON).getAsJsonObject();
 
                     for (JsonElement supplyElement : supplies) {
                         if (Objects.equals(supplyElement.getAsJsonObject().get("name").getAsString(), supplyRule.get("name").getAsString())) {
@@ -92,7 +92,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
             listStatement.setString(1, editor.editSession(player).getTargetTeam());
             ResultSet data = listStatement.executeQuery(); data.next();
 
-            JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(data.getString("loadouts")).getAsJsonArray();
+            JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
 
             // Проходимся по всем элементам JSON-массива и отправляем игроку-редактору лист со всеми наборами экипировки редактируемой команды
             for (JsonElement loadoutArrayElement : loadouts) {
