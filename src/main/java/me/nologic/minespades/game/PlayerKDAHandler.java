@@ -30,8 +30,8 @@ public class PlayerKDAHandler implements MinorityFeature {
     @ConfigurationKey(name = "MAGIC", value = "⚡")
     private String magic;
 
-    @ConfigurationKey(name = "death-message", value = "§f☠ %s §f☠", comment = "This message will be displayed if the player died due to his own fault.")
-    private String deathMessage;
+    @ConfigurationKey(name = "death-without-killer-message", value = "§f☠ %s §f☠", comment = "This message will be displayed if the player died due to his own fault.")
+    private String deathWithoutKiller;
 
     public PlayerKDAHandler() {
         this.init(this, this.getClass(), Minespades.getInstance());
@@ -57,7 +57,7 @@ public class PlayerKDAHandler implements MinorityFeature {
             }
 
         } else {
-            deathMessage = String.format(this.deathMessage, event.getVictim().getColorizedName());
+            deathMessage = String.format(this.deathWithoutKiller, event.getVictim().getColorizedName());
         }
 
         // Sending message

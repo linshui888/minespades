@@ -2,8 +2,13 @@ package me.nologic.minespades.battleground;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.flag.BattlegroundFlag;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Configurable;
+import me.nologic.minority.annotations.ConfigurationKey;
+import me.nologic.minority.annotations.Type;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
@@ -19,8 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Getter
-public class BattlegroundTeam {
+@Configurable(path = "game-settings") @Getter
+public class BattlegroundTeam implements MinorityFeature {
 
     private final Battleground   battleground;
     private @Setter Team         bukkitTeam;
@@ -30,7 +35,8 @@ public class BattlegroundTeam {
     private @Setter int          lifepool;
 
     // Количество очков, забираемое в случае потери флага
-    private final @Getter int flagLifepoolPenalty = 15;
+    @ConfigurationKey(name = "flag-lifepool-penalty", type = Type.INTEGER, value = "15", comment = "How many lifepoints will the team lose if their flag is stolen?")
+    private @Getter int flagLifepoolPenalty;
 
     @Getter
     private final List<TeamRespawnPoint>     respawnPoints = new ArrayList<>();
@@ -46,6 +52,7 @@ public class BattlegroundTeam {
         this.color = TextColor.fromHexString("#" + color);
         this.lifepool = lifepool;
         this.flag = flag;
+        this.init(this, this.getClass(), Minespades.getInstance());
     }
 
     public TextComponent getDisplayName() {

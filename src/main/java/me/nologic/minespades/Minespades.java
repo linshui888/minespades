@@ -1,10 +1,12 @@
 package me.nologic.minespades;
 
+import com.google.gson.JsonParser;
 import lombok.Getter;
 import co.aikar.commands.PaperCommandManager;
 
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.battleground.Multiground;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
@@ -32,7 +34,9 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     private static Minespades instance;
 
     private BukkitAudiences adventureAPI;
-    private final Random random = new Random();
+
+    private final Random     random     = new Random();
+    private final JsonParser jsonParser = new JsonParser();
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
@@ -58,6 +62,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         super.getConfigurationWizard().generate(BattlegroundValidator.class);
         super.getConfigurationWizard().generate(AddFlagTask.class);
         super.getConfigurationWizard().generate(PlayerKDAHandler.class);
+        super.getConfigurationWizard().generate(BattlegroundTeam.class);
     }
 
     @Override

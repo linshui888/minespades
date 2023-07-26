@@ -3,7 +3,6 @@ package me.nologic.minespades.game;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
@@ -16,7 +15,6 @@ import me.nologic.minespades.game.event.*;
 import me.nologic.minespades.util.Colorizable;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.*;
-import me.nologic.minority.annotations.Translatable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -446,8 +444,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         @NotNull
         private Inventory parseJsonToInventory(String string) {
-            JsonObject obj = JsonParser.parseString(string).getAsJsonObject();
-
+            JsonObject obj = Minespades.getInstance().getJsonParser().parse(string).getAsJsonObject();
 
             Inventory inv = Bukkit.createInventory(null, InventoryType.valueOf(obj.get("type").getAsString()));
 

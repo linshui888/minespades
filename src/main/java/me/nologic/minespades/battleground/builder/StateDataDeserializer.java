@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
+import me.nologic.minespades.Minespades;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.block.BlockState;
@@ -33,7 +34,7 @@ public class StateDataDeserializer {
 
     /* Десериализация табличек. */
     private void deserialize(Sign sign) {
-        JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
+        JsonObject obj = Minespades.getInstance().getJsonParser().parse(data).getAsJsonObject();
         sign.setGlowingText(obj.get("glow").getAsBoolean());
         String[] lines = obj.get("content").getAsString().split("\n");
         for (int i = 0; i < lines.length; i++)
@@ -48,7 +49,7 @@ public class StateDataDeserializer {
     }
 
     private Inventory readInventory(String inventoryJson) {
-        JsonObject json = JsonParser.parseString(inventoryJson).getAsJsonObject();
+        JsonObject json = Minespades.getInstance().getJsonParser().parse(inventoryJson).getAsJsonObject();
         Inventory inventory = Bukkit.createInventory(null, InventoryType.valueOf(json.get("type").getAsString()));
 
         JsonArray items = json.get("items").getAsJsonArray();

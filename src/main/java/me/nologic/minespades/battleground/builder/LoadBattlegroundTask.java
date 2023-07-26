@@ -164,7 +164,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                 @Nullable BattlegroundFlag flag = null;
 
                 if (teams.getString("flag") != null) {
-                    JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
+                    JsonObject jsonFlag = Minespades.getInstance().getJsonParser().parse(teams.getString("flag")).getAsJsonObject();
                     int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
                     ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
                     ItemMeta meta = itemFlag.getItemMeta();
@@ -177,7 +177,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
 
                 BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
 
-                final JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
+                final JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {
                     JsonObject jsonLoadout = loadoutElement.getAsJsonObject();
                     String loadoutName = jsonLoadout.get("name").getAsString();
@@ -213,7 +213,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
     }
 
     private Inventory readInventory(String inventoryJson) {
-        JsonObject obj = JsonParser.parseString(inventoryJson).getAsJsonObject();
+        JsonObject obj = Minespades.getInstance().getJsonParser().parse(inventoryJson).getAsJsonObject();
         Inventory inv = Bukkit.createInventory(null, InventoryType.valueOf(obj.get("type").getAsString()));
         JsonArray items = obj.get("items").getAsJsonArray();
         for (JsonElement element: items) {

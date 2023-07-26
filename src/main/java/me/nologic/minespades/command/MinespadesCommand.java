@@ -340,7 +340,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         public void onEditBattlegroundVolume(Player player) {
             if (validated(player, Selection.BATTLEGROUND)) {
                 battlegrounder.getEditor().editSession(player).setVolumeEditor(true);
-                player.playSound(player, Sound.ENTITY_EGG_THROW, 1, 1);
+                player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1, 1);
                 player.sendMessage(howToSelectCornersMessage);
             }
         }

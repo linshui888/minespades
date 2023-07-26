@@ -41,7 +41,7 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
             // Сериализованный JsonArray, хранящий в себе все наборы экипировки редактируемой команды
             final String loadouts = result.getString("loadouts");
 
-            JsonArray array = JsonParser.parseString(loadouts).getAsJsonArray();
+            JsonArray array = Minespades.getInstance().getJsonParser().parse(loadouts).getAsJsonArray();
             JsonElement target = null;
 
             for (JsonElement jsonElement : array) {
@@ -77,7 +77,7 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
             while (data.next()) {
                 Minespades.getInstance().getAdventureAPI().player(player).sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
 
-                JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
+                JsonArray loadouts = Minespades.getInstance().getJsonParser().parse(data.getString("loadouts")).getAsJsonArray();
                 for (JsonElement element : loadouts) {
                     JsonObject loadout = element.getAsJsonObject();
                     String name = loadout.get("name").getAsString();

@@ -1,9 +1,9 @@
 name: Minespades
 version: '${project.version}'
 main: me.nologic.minespades.Minespades
-api-version: 1.18
+api-version: 1.17
 authors: [ NoLogic ]
-description: "TDM/CTF PvP-minigame with a bunch of modern and unique features."
+description: "TDM/CTF PvP minigame with some unique features and modern implementation."
 
 depend:
   - ProtocolLib
