@@ -134,22 +134,30 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     for (int z = minZ; z <= maxZ; z++) {
-                        blocks.add(battleground.getWorld().getBlockAt(x, y, z));
 
-                        if (blocks.size() >= BLOCKS_PER_TICK * 2) {
-                            List<Block> clearable = List.copyOf(blocks);
-                            Bukkit.getScheduler().runTask(plugin, () -> {
-                                for (Block block : clearable) {
-                                    block.setType(Material.AIR, false);
-                                }
-                            });
-                            blocks = new ArrayList<>();
-                            Thread.sleep(50);
-                        }
+                        blocks.add(battleground.getWorld().getBlockAt(x, y, z));
+                        if (blocks.size() < BLOCKS_PER_TICK * 2) continue;
+
+                        final List<Block> clearable = List.copyOf(blocks);
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            for (Block block : clearable) {
+                                block.setType(Material.AIR, false);
+                            }
+                        });
+                        blocks = new ArrayList<>();
+                        Thread.sleep(50);
 
                     }
                 }
             }
+
+            // Last chance for blocks that might be skipped
+            final List<Block> clearable = List.copyOf(blocks);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                for (Block block : clearable) {
+                    block.setType(Material.AIR, false);
+                }
+            });
 
         }
     }
