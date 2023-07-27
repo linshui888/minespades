@@ -5,19 +5,22 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
-import me.nologic.minespades.Minespades;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
+import org.bukkit.block.Skull;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
+import java.net.URL;
+import java.util.UUID;
 
 // TODO: Возможно, стоит придумать более подходящее название этому классу.
 public class StateDataDeserializer {
@@ -29,7 +32,23 @@ public class StateDataDeserializer {
         this.data = data;
         if (state instanceof Sign sign)           deserialize(sign);
         if (state instanceof Container container) deserialize(container);
+        if (state instanceof Skull skull)         deserialize(skull);
         // TODO: Добавить поддержку других тайл-энтитей.
+    }
+
+    /* Десериализация голов. Возможно, не рабочая. */
+    @SneakyThrows
+    private void deserialize(Skull skull) {
+        JsonObject obj = JsonParser.parseString(data).getAsJsonObject();
+
+        final String texture = obj.get("texture").getAsString();
+        if (texture.equals("none")) return;
+
+        final PlayerProfile profile = Bukkit.getServer().createPlayerProfile(UUID.randomUUID());
+            profile.getTextures().setSkin(new URL(obj.get("texture").getAsString()));
+
+        skull.setOwnerProfile(profile);
+        skull.update(true, false);
     }
 
     /* Десериализация табличек. */

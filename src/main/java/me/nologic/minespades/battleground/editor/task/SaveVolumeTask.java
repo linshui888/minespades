@@ -2,24 +2,20 @@ package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
-import org.bukkit.block.Sign;
+import org.bukkit.block.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.util.BoundingBox;
 
 import java.sql.Connection;
@@ -31,9 +27,9 @@ import java.util.concurrent.Future;
 
 public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
-    private final String battlegroundName;
+    private final BossBar    completeBar;
+    private final String     battlegroundName;
     private final Location[] corners;
-    private final BossBar completeBar;
 
     public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
@@ -83,7 +79,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         PreparedStatement bSt = connection.prepareStatement("INSERT INTO volume(x, y, z, material, data, content) VALUES(?,?,?,?,?,?);");
         connection.setAutoCommit(false);
 
-        final int size = 7000;
+        final int size = 10000;
         World world = player.getWorld();
         this.completeBar.name(Component.text(String.format("§6%s§7: §eSaving blocks...", battlegroundName)));
         for (int x = minX; x <= maxX; x++) {
@@ -128,7 +124,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     for (int z = minZ; z <= maxZ; z++) {
                         Block block = world.getBlockAt(x, y, z);
                         if (block.getType().isAir()) continue;
-                        if (block.getState() instanceof Container || block.getState() instanceof Sign) {
+                        if (block.getState() instanceof Container || block.getState() instanceof Sign || block.getState() instanceof Skull) {
                             tiles.add(block.getState());
                         }
                     }
@@ -153,6 +149,12 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                 tSt.setInt(3, sign.getY());
                 tSt.setInt(4, sign.getZ());
                 tSt.addBatch();
+            } else if (state instanceof Skull skull) {
+                tSt.setString(1, this.save(skull));
+                tSt.setInt(2, skull.getX());
+                tSt.setInt(3, skull.getY());
+                tSt.setInt(4, skull.getZ());
+                tSt.addBatch();
             }
 
         }
@@ -162,7 +164,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         connection.close();
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage(String.format("§4§l[!] §7Карта успешно сохранена. §8(§33%dб.§8, §3%dс.§8)", i, totalTime / 1000));
+        player.sendMessage(String.format("§7Successfully saved the volume. §8(§33%db.§8, §3%ds.§8)", i, totalTime / 1000));
         plugin.getAdventureAPI().player(player).hideBossBar(completeBar);
         editor.editSession(player).resetCorners();
         editor.setSaving(false);
@@ -191,13 +193,30 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     private String save(Sign sign) {
 
-        String lines = "";
-        for (String line : sign.getLines()) lines += line + "\n";
+        StringBuilder lines = new StringBuilder();
+        for (String line : sign.getLines()) lines.append(line).append("\n");
 
         JsonObject obj = new JsonObject();
-        obj.addProperty("content", lines);
-        obj.addProperty("glow", sign.isGlowingText());
-        obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
+            obj.addProperty("content", lines.toString());
+            obj.addProperty("glow", sign.isGlowingText());
+            obj.addProperty("color", Objects.requireNonNull(sign.getColor()).name());
+
+        return obj.toString();
+    }
+
+    private String save(final Skull skull) {
+
+        final PlayerProfile profile = skull.getOwnerProfile();
+
+        String texture = "none";
+
+        if (profile != null && profile.getTextures().getSkin() != null) {
+            texture = profile.getTextures().getSkin().toString();
+        }
+
+        JsonObject obj = new JsonObject();
+            obj.addProperty("texture", texture);
+
         return obj.toString();
     }
 
