@@ -432,7 +432,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
-    @TranslationKey(section = "regular-messages", name = "not-in-the-game", value = "You're not in game.")
+    @TranslationKey(section = "regular-messages", name = "not-in-the-game", value = "You're not in the game.")
     private String notInGameMessage;
 
     @Subcommand("quit|leave|q")
@@ -464,7 +464,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         battleground.broadcast(String.format(battlegroundForceResetMessage, name, player.getName()));
         battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
-        battlegrounder.reset(battleground);
+        battlegrounder.resetBattleground(battleground);
     }
 
     @TranslationKey(section = "editor-error-messages", name = "battleground-not-selected", value = "Error. No battleground selected for editing.")

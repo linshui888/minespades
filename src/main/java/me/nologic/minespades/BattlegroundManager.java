@@ -6,6 +6,8 @@ import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
+import me.nologic.minespades.util.VaultEconomyProvider;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -23,6 +25,8 @@ public class BattlegroundManager {
     private final @Getter BattlegroundValidator validator;
     private final @Getter BattlegroundEditor    editor;
 
+    private final VaultEconomyProvider vault;
+
     private final Minespades plugin;
 
     public BattlegroundManager(Minespades plugin) {
@@ -32,6 +36,7 @@ public class BattlegroundManager {
         this.builder = new BattlegroundBuilder();
         this.enabledBattlegrounds = new HashMap<>();
         this.enabledMultigrounds = new HashMap<>();
+        this.vault = new VaultEconomyProvider();
     }
 
     public List<Battleground> getLoadedBattlegrounds() {
@@ -47,7 +52,7 @@ public class BattlegroundManager {
         return this.enabledMultigrounds.get(name);
     }
 
-    public void reset(Battleground battleground) {
+    public void resetBattleground(Battleground battleground) {
         disable(battleground);
         enable(battleground.getBattlegroundName());
     }
@@ -108,6 +113,11 @@ public class BattlegroundManager {
                 }
             }
         }
+    }
+
+    @Nullable
+    public Economy getEconomy() {
+        return this.vault.getEconomy();
     }
 
     @Nullable

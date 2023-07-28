@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import me.nologic.minespades.BattlegroundManager;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
@@ -55,12 +56,13 @@ import java.util.Objects;
 @Translatable @Configurable(path = "game-master-settings")
 public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
-    private final Minespades plugin = Minespades.getInstance();
+    private final Minespades          plugin         = Minespades.getInstance();
+    private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
-    private final @Getter PlayerKDAHandler          playerKDA = new PlayerKDAHandler();
+    private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler();
 
-    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You're automatically connected to the battleground. Use §3/ms q§7 to quit.")
+    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use §3/ms q§r to quit.")
     private String autoConnectedToBattlegroundMessage;
 
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
@@ -69,8 +71,20 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-click-to-join", value = "Click to join: ")
     private String clickToJoinMessage;
 
+    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
+    private String moneyRewardForWinningMessage;
+
     @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
     private Sound broadcastSound;
+
+    @ConfigurationKey(name = "show-reward-message", value = "true", type = Type.BOOLEAN)
+    private boolean rewardMessageEnabled;
+
+    @ConfigurationKey(name = "win-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for winning the game. Will work only if Vault is installed.")
+    private double rewardForWinning;
+
+    @ConfigurationKey(name = "blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
+    private double rewardPerKill;
 
     public EventDrivenGameMaster() {
         this.init(this, this.getClass(), Minespades.getInstance());
@@ -93,10 +107,11 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
 
         // TODO: Добавить игрокам возможность отказываться от авто-коннекта
+        // Автоматическое подключение после запуска арены
         if (battleground.getPreference(Preference.FORCE_AUTOJOIN)) {
             Bukkit.getOnlinePlayers().forEach(p -> {
                 p.sendMessage(autoConnectedToBattlegroundMessage);
-                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, battleground.getSmallestTeam(), p));
+                Minespades.getInstance().getGameMaster().getPlayerManager().connect(p, battleground, battleground.getSmallestTeam());
             });
         }
 
@@ -193,14 +208,32 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         }
     }
 
-    /* Проигрыш команды. */
+    /* Конец игры. На этом этапе игроки-победители награждаются деньгами и происходит перезагрузка арены. */
     @EventHandler
     private void onBattlegroundGameOver(final BattlegroundGameOverEvent event) {
         final Battleground battleground = event.getBattleground();
+
+        // Денежная награда за завершение игры и её вычисление
+        if (battlegrounder.getEconomy() != null) {
+            for (BattlegroundPlayer player : battleground.getPlayers()) {
+                final boolean isWinner   = !player.getTeam().isDefeated();
+                final double  killReward = player.getKills() * rewardPerKill;
+
+                double reward = 0.0;
+                if (isWinner) reward += rewardForWinning;
+
+                reward += killReward;
+                battlegrounder.getEconomy().depositPlayer(player.getBukkitPlayer(), reward);
+
+                // Отображение сообщения о награде
+                if (rewardMessageEnabled || reward > 0) player.getBukkitPlayer().sendMessage(String.format(moneyRewardForWinningMessage, reward));
+            }
+        }
+
         if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
-            plugin.getBattlegrounder().disable(event.getBattleground());
+            battlegrounder.disable(battleground);
             battleground.getMultiground().launchNextInOrder();
-        } else plugin.getBattlegrounder().reset(event.getBattleground());
+        } else battlegrounder.resetBattleground(battleground);
     }
 
     // TODO: Need some testing. It may not work..?

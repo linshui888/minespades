@@ -11,3 +11,4 @@ depend:
 softdepend:
   - PlaceholderAPI
   - AuthMe
+  - Vault
