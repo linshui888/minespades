@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -80,8 +81,8 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                             Material  material = (Material)  array[1];
                             BlockData bd       = (BlockData) array[2];
                             String    content  = (String)    array[3];
-                            block.setType(material);
-                            block.setBlockData(bd);
+                            block.setType(material, false);
+                            block.setBlockData(bd, false);
                             blockState.deserialize(block.getState(), content);
                         }
                     } catch (Exception ex) {
@@ -101,8 +102,8 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                         Material  material = (Material)  array[1];
                         BlockData bd       = (BlockData) array[2];
                         String    content  = (String)    array[3];
-                        block.setType(material);
-                        block.setBlockData(bd);
+                        block.setType(material, false);
+                        block.setBlockData(bd, false);
                         blockState.deserialize(block.getState(), content);
                     }
                 } catch (Exception ex) {
