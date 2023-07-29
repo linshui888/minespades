@@ -99,9 +99,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     }
 
     @EventHandler
-    private void onBattlegroundSuccessfulLoad(BattlegroundSuccessfulLoadEvent event) {
+    private void onBattlegroundSuccessfulLoad(final BattlegroundSuccessfulLoadEvent event) {
 
         final Battleground battleground = event.getBattleground();
+        battleground.getTeams().stream().filter(t -> t.getFlag() != null).forEach(t -> t.getFlag().reset());
 
         // Если арена является частью мультиграунда, то вместо настоящего названия арены мы используем название мультиграунда
         final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
@@ -269,7 +270,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     @EventHandler
     private void onPlayerDamage(EntityDamageEvent event) {
-        if (!event.isCancelled() && event.getEntity() instanceof Player player && player.getHealth() <= event.getFinalDamage() && player.getLastDamageCause() != null) {
+        if (!event.isCancelled() && event.getEntity() instanceof Player player && BattlegroundPlayer.getBattlegroundPlayer(player) != null && player.getHealth() <= event.getFinalDamage() && player.getLastDamageCause() != null) {
 
             switch (player.getLastDamageCause().getCause()) {
                 case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK, PROJECTILE, MAGIC, THORNS: return;

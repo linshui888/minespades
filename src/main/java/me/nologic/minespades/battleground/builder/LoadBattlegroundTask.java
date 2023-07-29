@@ -19,7 +19,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -31,7 +30,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.io.BukkitObjectInputStream;
-import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
@@ -170,7 +168,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
             while (teams.next()) {
 
-                @Nullable BattlegroundFlag flag = null;
+                final BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"));
 
                 if (teams.getString("flag") != null) {
                     JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
@@ -181,10 +179,9 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     itemFlag.setItemMeta(meta);
 
-                    flag = new BattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), itemFlag);
+                    team.setFlag(new BattlegroundFlag(battleground, team, new Location(battleground.getWorld(), x, y, z), itemFlag));
                 }
 
-                BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"), flag);
 
                 final JsonArray loadouts = JsonParser.parseString(teams.getString("loadouts")).getAsJsonArray();
                 for (JsonElement loadoutElement : loadouts) {

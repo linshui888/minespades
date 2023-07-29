@@ -7,7 +7,6 @@ import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BannerMeta;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

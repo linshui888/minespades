@@ -1,9 +1,7 @@
 package me.nologic.minespades.game.flag;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
@@ -26,17 +24,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-@RequiredArgsConstructor
 public class BattlegroundFlag implements Listener {
 
     private final Battleground battleground;
 
-    @Setter @Getter
-    private BattlegroundTeam team;
+    @Getter
+    private final BattlegroundTeam team;
     private final Location   base;
     private final ItemStack  flag;
 
@@ -46,8 +42,9 @@ public class BattlegroundFlag implements Listener {
     @Getter
     private BattlegroundPlayer carrier;
 
-    @Getter @Nullable
+    /* Current flag location. Can be null. */
     private Location           position;
+
     private BoundingBox        box;
 
     private boolean particle = false;
@@ -55,10 +52,15 @@ public class BattlegroundFlag implements Listener {
 
     @Getter
     private BossBar recoveryBossBar;
-    private Particle.DustOptions dust;
 
-    {
+    public BattlegroundFlag(final Battleground battleground, final BattlegroundTeam team, final Location base, final ItemStack flag) {
+        this.battleground = battleground;
+        this.team = team;
+        this.base = base;
+        this.flag = flag;
+
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
+        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 0.3F);
         this.tick = new BukkitRunnable() {
 
             // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
@@ -66,12 +68,7 @@ public class BattlegroundFlag implements Listener {
             @Override
             public void run() {
                 if (box != null && particle) {
-
-                    if (team != null && dust == null) {
-                        dust = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 1.1F);
-                    }
-
-                    battleground.getWorld().spawnParticle(Particle.REDSTONE, position.add(0.5, 0.5, 0.5), 7, 0.5, 1, 0.5, dust);
+                    battleground.getWorld().spawnParticle(Particle.REDSTONE, position.clone().add(0.5, 0.5, 0.5), 14, 0.5, 1, 0.5, options);
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
@@ -250,7 +247,7 @@ public class BattlegroundFlag implements Listener {
      */
     public void reset() {
         if (position != null) position.getBlock().setType(Material.AIR);
-        position = base;
+        position = base.clone();
         if (carrier != null) {
             carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
             carrier.setFlag(null);
@@ -288,6 +285,7 @@ public class BattlegroundFlag implements Listener {
                 Banner banner = (Banner) position.getBlock().getState();
                 banner.setPatterns(meta.getPatterns());
                 banner.update();
+                Minespades.getInstance().getLogger().info(String.format("Flag validated at %s!", position.toString()));
             });
         }
     }

@@ -43,15 +43,14 @@ public class BattlegroundTeam implements MinorityFeature {
     private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
     private final Set<Player>                players = new HashSet<>();
 
-    @Nullable
-    private final BattlegroundFlag flag;
+    @Setter @Nullable
+    private BattlegroundFlag flag;
 
-    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool, @Nullable BattlegroundFlag flag) {
+    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
         this.battleground = battleground;
         this.name = name;
         this.color = TextColor.fromHexString("#" + color);
         this.lifepool = lifepool;
-        this.flag = flag;
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
