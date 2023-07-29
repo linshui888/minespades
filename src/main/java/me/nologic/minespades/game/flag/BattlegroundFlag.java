@@ -285,7 +285,6 @@ public class BattlegroundFlag implements Listener {
                 Banner banner = (Banner) position.getBlock().getState();
                 banner.setPatterns(meta.getPatterns());
                 banner.update();
-                Minespades.getInstance().getLogger().info(String.format("Flag validated at %s!", position.toString()));
             });
         }
     }

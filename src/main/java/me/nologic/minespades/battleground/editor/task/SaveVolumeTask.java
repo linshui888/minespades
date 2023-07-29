@@ -7,10 +7,7 @@ import me.nologic.minespades.battleground.Table;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -155,8 +152,13 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                 tSt.setInt(3, skull.getY());
                 tSt.setInt(4, skull.getZ());
                 tSt.addBatch();
+            } else if (state instanceof Jukebox jukebox) {
+                tSt.setString(1, this.save(jukebox));
+                tSt.setInt(2, jukebox.getX());
+                tSt.setInt(3, jukebox.getY());
+                tSt.setInt(4, jukebox.getZ());
+                tSt.addBatch();
             }
-
         }
 
         tSt.executeBatch();
@@ -188,6 +190,17 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
             }
         }
         obj.add("items", items);
+        return obj.toString();
+    }
+
+    @SneakyThrows
+    private String save(Jukebox jukebox) {
+
+        final ItemStack record     = jukebox.getRecord();
+        final String    serialized = serializeItemStack(record);
+
+        JsonObject obj = new JsonObject();
+        obj.addProperty("record", serialized);
         return obj.toString();
     }
 

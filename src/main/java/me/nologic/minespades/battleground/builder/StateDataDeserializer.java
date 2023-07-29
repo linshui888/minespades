@@ -7,10 +7,7 @@ import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
-import org.bukkit.block.Sign;
-import org.bukkit.block.Skull;
+import org.bukkit.block.*;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -33,6 +30,7 @@ public class StateDataDeserializer {
         if (state instanceof Sign sign)           deserialize(sign);
         if (state instanceof Container container) deserialize(container);
         if (state instanceof Skull skull)         deserialize(skull);
+        if (state instanceof Jukebox jukebox)     deserialize(jukebox);
         // TODO: Добавить поддержку других тайл-энтитей.
     }
 
@@ -65,6 +63,12 @@ public class StateDataDeserializer {
     /* Десериализация контейнеров (блоки, имеющие инвентарь). */
     private void deserialize(Container container) {
         container.getInventory().setContents(this.readInventory(data).getContents());
+    }
+
+    /* Десериализация проигрывателя. */
+    private void deserialize(Jukebox jukebox) {
+        String serialized = JsonParser.parseString(data).getAsJsonObject().get("record").getAsString();
+        jukebox.setRecord(this.getItemStackFromBase64String(serialized));
     }
 
     private Inventory readInventory(String inventoryJson) {
