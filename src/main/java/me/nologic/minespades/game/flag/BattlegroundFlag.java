@@ -60,7 +60,7 @@ public class BattlegroundFlag implements Listener {
         this.flag = flag;
 
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
-        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 0.3F);
+        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 1.2F);
         this.tick = new BukkitRunnable() {
 
             // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
@@ -68,7 +68,7 @@ public class BattlegroundFlag implements Listener {
             @Override
             public void run() {
                 if (box != null && particle) {
-                    battleground.getWorld().spawnParticle(Particle.REDSTONE, position.clone().add(0.5, 0.5, 0.5), 14, 0.5, 1, 0.5, options);
+                    battleground.getWorld().spawnParticle(Particle.REDSTONE, position.clone().add(0.5, 0.5, 0.5), 9, 0.5, 1, 0.5, options);
                     for (Entity entity : battleground.getWorld().getNearbyEntities(box)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {

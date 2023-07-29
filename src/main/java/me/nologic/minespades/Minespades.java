@@ -1,9 +1,7 @@
 package me.nologic.minespades;
 
-import com.google.gson.JsonParser;
-import lombok.Getter;
 import co.aikar.commands.PaperCommandManager;
-
+import lombok.Getter;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
@@ -29,6 +27,9 @@ import java.util.Random;
 
 @Getter @Translatable
 public final class Minespades extends MinorityExtension implements MinorityFeature {
+
+    @Getter
+    private boolean disabling = false;
 
     @Getter
     private static Minespades instance;
@@ -105,6 +106,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Override
     public void onDisable() {
 
+        this.disabling = true;
         super.getLogger().info(minespadesDisableMessage);
 
         for (final PlayerEditSession session : battlegrounder.getEditor().getEditSessionList()) {

@@ -371,7 +371,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             Player player = battlegroundPlayer.getBukkitPlayer();
             Audience audience = plugin.getAdventureAPI().player(player);
 
-            if (battlegroundPlayer.isCarryingFlag()) {
+            if (battlegroundPlayer.isCarryingFlag() && !plugin.isDisabling()) {
                 battlegroundPlayer.getFlag().drop();
             }
 
