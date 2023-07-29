@@ -121,7 +121,10 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
                     for (int z = minZ; z <= maxZ; z++) {
                         Block block = world.getBlockAt(x, y, z);
                         if (block.getType().isAir()) continue;
-                        if (block.getState() instanceof Container || block.getState() instanceof Sign || block.getState() instanceof Skull) {
+                        if (block.getState() instanceof Container
+                                || block.getState() instanceof Sign
+                                || block.getState() instanceof Skull
+                                || block.getState() instanceof Jukebox) {
                             tiles.add(block.getState());
                         }
                     }
