@@ -3,7 +3,7 @@ package me.nologic.minespades.battleground.editor.task;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
-import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -64,7 +64,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         Connection connection = super.connect();
 
         // Сохранение углов
-        PreparedStatement saveCorners = connection.prepareStatement(Table.CORNERS.getInsertStatement());
+        PreparedStatement saveCorners = connection.prepareStatement(DatabaseTableHelper.CORNERS.getInsertStatement());
         saveCorners.setInt(1, minX);
         saveCorners.setInt(2, minY);
         saveCorners.setInt(3, minZ);

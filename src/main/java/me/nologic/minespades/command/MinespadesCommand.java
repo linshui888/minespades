@@ -117,7 +117,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
 
         @Subcommand("flag")
-        public void onAddFlag(Player player) {
+        public void onAddFlag(Player player, @Optional boolean neutral) {
             if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
 
                 if (!player.getInventory().getItemInMainHand().getType().toString().contains("BANNER")) {
@@ -125,7 +125,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                     return;
                 }
 
-                battlegrounder.getEditor().addFlag(player);
+                if (neutral) {
+
+                } else battlegrounder.getEditor().addFlag(player);
             }
         }
 

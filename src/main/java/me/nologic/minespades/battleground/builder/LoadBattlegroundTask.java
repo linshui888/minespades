@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundTeam;
-import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
@@ -165,7 +165,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
     private void loadTeams() {
         List<BattlegroundTeam> list = new ArrayList<>();
         try (Connection connection = new BattlegroundDataDriver().connect(battleground).getConnection(); Statement statement = connection.createStatement()) {
-            ResultSet teams = statement.executeQuery(Table.TEAMS.getSelectStatement());
+            ResultSet teams = statement.executeQuery(DatabaseTableHelper.TEAMS.getSelectStatement());
             while (teams.next()) {
 
                 final BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"));

@@ -13,9 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 @Translatable
-public class AddFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
+public class AddNeutralFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
 
-    @TranslationKey(section = "editor-info-messages", name = "team-flag-created", value = "§2Success§r. Now team §3%s §rhave a flag!")
+    @TranslationKey(section = "editor-info-messages", name = "neutral-flag-created", value = "§2Success§r. Created a neutral flag at %s.")
     private String flagCreatedMessage;
 
     @Override @SneakyThrows
@@ -43,7 +43,7 @@ public class AddFlagTask extends BaseEditorTask implements MinorityFeature, Runn
         }
     }
 
-    public AddFlagTask(Player player) {
+    public AddNeutralFlagTask(Player player) {
         super(player);
         plugin.getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), plugin);

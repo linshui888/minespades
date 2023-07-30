@@ -9,7 +9,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
-import me.nologic.minespades.battleground.Table;
+import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.editor.task.*;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minority.MinorityFeature;
@@ -83,7 +83,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
 
         // Создание таблиц
-        for (Table table : Table.values()) {
+        for (DatabaseTableHelper table : DatabaseTableHelper.values()) {
             driver.executeUpdate(table.getCreateStatement());
         }
 
@@ -104,7 +104,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     // Создание команды
     public void createTeam(Player player, String teamName) {
         // TODO: Использовать BattlegroundDataDriver вместо этой параши
-        try (Connection connection = connect(this.editSession(player).getTargetBattleground()); PreparedStatement statement = connection.prepareStatement(Table.TEAMS.getInsertStatement())) {
+        try (Connection connection = connect(this.editSession(player).getTargetBattleground()); PreparedStatement statement = connection.prepareStatement(DatabaseTableHelper.TEAMS.getInsertStatement())) {
             statement.setString(1, teamName);
             statement.executeUpdate();
 
@@ -296,9 +296,13 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
                 return;
             }
 
-            Bukkit.getScheduler().runTask(plugin, new AddFlagTask(player));
-
+            Bukkit.getScheduler().runTask(plugin, new AddTeamFlagTask(player));
         }
+    }
+
+    @SneakyThrows
+    public void addNeutralFlag(Player player) {
+        Bukkit.getScheduler().runTask(plugin, new AddTeamFlagTask(player));
     }
 
     public void removeFlag(Player player, String targetTeam) {

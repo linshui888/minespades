@@ -1,7 +1,6 @@
-package me.nologic.minespades.battleground;
+package me.nologic.minespades.battleground.util;
 
-// TODO: Нужно перенести все строки в места где они используются и удалить этот класс. Не очень хороший подход.
-public enum Table {
+public enum DatabaseTableHelper {
 
     VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, content TEXT);",
             "",
@@ -12,16 +11,16 @@ public enum Table {
     TEAMS("CREATE TABLE IF NOT EXISTS teams (name VARCHAR(16) NOT NULL UNIQUE, lifepool INTEGER DEFAULT 100, color CHAR(6) DEFAULT 'FFFFFF', loadouts TEXT, respawnPoints TEXT, flag TEXT);",
             "INSERT INTO teams (name) VALUES (?);",
             "SELECT * FROM teams"),
-    // TODO: Возможно, стоит хранить настройки как JsonArray. Это экономно и удобно.
     PREFERENCES("CREATE TABLE IF NOT EXISTS preferences (world VARCHAR(64) NOT NULL, parameters TEXT);",
             "INSERT INTO preferences (world) VALUES (?);",
-            "SELECT * FROM preferences");
+            "SELECT * FROM preferences"),
+    GAME_OBJECTS("CREATE TABLE IF NOT EXISTS objects (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, type TEXT NOT NULL, data TEXT NOT NULL);", "", "");
 
     private final String createStatement;
     private final String insertStatement;
     private final String selectStatement;
 
-    Table(String createStatement, String insertStatement, String selectStatement) {
+    DatabaseTableHelper(String createStatement, String insertStatement, String selectStatement) {
         this.createStatement = createStatement;
         this.insertStatement = insertStatement;
         this.selectStatement = selectStatement;
