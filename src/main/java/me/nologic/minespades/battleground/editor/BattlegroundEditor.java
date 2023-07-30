@@ -25,6 +25,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.sql.*;
@@ -62,8 +63,11 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
     private String respawnCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-flag-removed", value = "Team §3%s §rflag has been successfully removed.")
+    @TranslationKey(section = "editor-info-messages", name = "team-flag-removed", value = "Team §3%s §rflag has been removed.")
     private String teamFlagRemoved;
+
+    @TranslationKey(section = "editor-info-messages", name = "neutral-flag-removed", value = "Neutral flag at %s has been removed.")
+    private String neutralFlagRemoved;
 
     @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §3%s §ralready have a flag.")
     private String teamFlagErrorMessage;
@@ -309,6 +313,12 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
         driver.executeUpdate("UPDATE teams SET flag = ? WHERE name = ?;", null, targetTeam).closeConnection();
         player.sendMessage(String.format(teamFlagRemoved, targetTeam));
+    }
+
+    public void removeNeutralFlag(Player player, int x, int y, int z) {
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
+        driver.executeUpdate("DELETE FROM objects WHERE x = ? AND y = ? AND z = ?;", x, y, z).closeConnection();
+        player.sendMessage(String.format(teamFlagRemoved, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z)));
     }
 
     public List<PlayerEditSession> getEditSessionList() {

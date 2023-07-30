@@ -295,6 +295,13 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             }
         }
 
+        @Subcommand("neutral-flag")
+        public void onRemoveFlag(final Player player, int x, int y, int z) {
+            if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamHaveFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam())) {
+                battlegrounder.getEditor().removeFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam());
+            }
+        }
+
         @Subcommand("loadout")
         @CommandCompletion("@loadouts")
         public void onRemoveLoadout(final Player player, final String loadoutName) {

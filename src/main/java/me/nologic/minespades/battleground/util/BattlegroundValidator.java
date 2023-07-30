@@ -48,6 +48,9 @@ public class BattlegroundValidator implements MinorityFeature {
     @TranslationKey(section = "validate-error-messages", name = "team-without-flag", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any flag to delete.")
     private String teamWithoutFlagMessage;
 
+    @TranslationKey(section = "validate-error-messages", name = "neutral-flag-not-found", value = "Error. Can't find a neutral flag on battleground §3%s §rat %s.")
+    private String neutralFlagNotFound;
+
     public BattlegroundValidator() {
         plugin.getConfigurationWizard().generate(this.getClass());
         this.init(this, this.getClass(), plugin);
@@ -161,6 +164,7 @@ public class BattlegroundValidator implements MinorityFeature {
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?", teamName)) {
             if (result.next() && result.getString("name").equals(teamName)) {
+                driver.closeConnection();
                 return true;
             }
         } catch (Exception ex) {
@@ -168,6 +172,24 @@ public class BattlegroundValidator implements MinorityFeature {
         }
 
         player.sendMessage(String.format(nonExistingTeamMessage, teamName));
+        return false;
+    }
+
+    public boolean isNeutralFlagAt(Player player, final int x, final int y, final int z) {
+        final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
+
+        try (final ResultSet result = driver.executeQuery("SELECT * FROM objects WHERE x = ? AND y = ? AND z = ?;", x, y, z)) {
+            if (result.next()) {
+                driver.closeConnection();
+                return true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        driver.closeConnection();
+        player.sendMessage(String.format(neutralFlagNotFound, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z), session.getTargetBattleground()));
         return false;
     }
 
