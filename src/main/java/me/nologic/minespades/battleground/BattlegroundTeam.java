@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import me.nologic.minespades.game.flag.BattlegroundFlag;
+import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
 import me.nologic.minority.annotations.ConfigurationKey;
@@ -44,7 +44,7 @@ public class BattlegroundTeam implements MinorityFeature {
     private final Set<Player>                players = new HashSet<>();
 
     @Setter @Nullable
-    private BattlegroundFlag flag;
+    private TeamBattlegroundFlag flag;
 
     public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
         this.battleground = battleground;

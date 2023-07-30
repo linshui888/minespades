@@ -2,15 +2,13 @@ package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
+import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 @Translatable
 public class AddNeutralFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
@@ -20,27 +18,19 @@ public class AddNeutralFlagTask extends BaseEditorTask implements MinorityFeatur
 
     @Override @SneakyThrows
     public void run() {
-        try (Connection connection = connect()) {
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
-            selectStatement.setString(1, editor.editSession(player).getTargetTeam());
-            ResultSet result = selectStatement.executeQuery(); result.next();
 
-            ItemStack item = player.getInventory().getItemInMainHand();
-            JsonObject jsonFlag = new JsonObject();
-            jsonFlag.addProperty("x", player.getLocation().getBlockX());
-            jsonFlag.addProperty("y", player.getLocation().getBlockY());
-            jsonFlag.addProperty("z", player.getLocation().getBlockZ());
-            jsonFlag.addProperty("item", super.serializeItemStack(item));
-            String data = jsonFlag.toString();
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(editor.editSession(player).getTargetBattleground());
+        final String sql = "INSERT INTO objects(x, y, z, type, data) VALUES(?,?,?,?,?)";
+        final Location location = player.getLocation();
 
-            PreparedStatement insertStatement = connection.prepareStatement("UPDATE teams SET flag = ? WHERE name = ?;");
-            insertStatement.setString(1, data);
-            insertStatement.setString(2, editor.editSession(player).getTargetTeam());
-            insertStatement.executeUpdate();
-            player.sendMessage(String.format(flagCreatedMessage, editor.editSession(player).getTargetTeam()));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        ItemStack item = player.getInventory().getItemInMainHand();
+        JsonObject jsonFlag = new JsonObject();
+        jsonFlag.addProperty("item", super.serializeItemStack(item));
+        final String data = jsonFlag.toString();
+
+        driver.executeUpdate(sql, location.getBlockX(), location.getBlockY(), location.getBlockZ(), "NEUTRAL_FLAG", data).closeConnection();
+        player.sendMessage(String.format(flagCreatedMessage, editor.editSession(player).getTargetTeam()));
+
     }
 
     public AddNeutralFlagTask(Player player) {

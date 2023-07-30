@@ -14,7 +14,8 @@ import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.editor.loadout.LoadoutSupplyRule;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minespades.game.event.BattlegroundSuccessfulLoadEvent;
-import me.nologic.minespades.game.flag.BattlegroundFlag;
+import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -113,6 +114,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
 
         // После размещения блоков и тайл-энтитей, приступаем к загрузке команд. На этом этапе размещаются флаги.
         this.loadTeams();
+        this.loadObjects();
 
         // Синхронно удаляем всех энтитей внутри арены (выпавшие блоки, возможные монстры и пр.)
         Bukkit.getScheduler().runTask(plugin, () -> {
@@ -120,6 +122,26 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundSuccessfulLoadEvent(battleground));
         });
 
+    }
+
+    @SneakyThrows
+    private void loadObjects() {
+        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+        try (final ResultSet objects = driver.executeQuery("SELECT * FROM objects;")) {
+            while(objects.next()) {
+                int x = objects.getInt("x"), y = objects.getInt("y"), z = objects.getInt("z");
+                switch (objects.getString("type")) {
+                    case "NEUTRAL_FLAG" -> {
+                        final ItemStack flagItem = this.deserializeItemStack(JsonParser.parseString(objects.getString("data")).getAsJsonObject().get("item").getAsString());
+                        ItemMeta meta = flagItem.getItemMeta();
+                        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+                        flagItem.setItemMeta(meta);
+                        battleground.getNeutralFlags().add(new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem));
+                    }
+                }
+            }
+        }
     }
 
     @SneakyThrows
@@ -179,7 +201,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     itemFlag.setItemMeta(meta);
 
-                    team.setFlag(new BattlegroundFlag(battleground, team, new Location(battleground.getWorld(), x, y, z), itemFlag));
+                    team.setFlag(new TeamBattlegroundFlag(battleground, team, new Location(battleground.getWorld(), x, y, z), itemFlag));
                 }
 
 

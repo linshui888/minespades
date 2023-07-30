@@ -285,7 +285,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     }
 
     @SneakyThrows
-    public void addFlag(Player player) {
+    public void addTeamFlag(Player player) {
         try (Connection connection = connect(this.editSession(player).getTargetBattleground())) {
             PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;");
             selectStatement.setString(1, this.editSession(player).getTargetTeam());

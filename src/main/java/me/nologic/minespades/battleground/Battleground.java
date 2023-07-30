@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -29,18 +30,21 @@ public final class Battleground {
 
     @NotNull
     private final BattlegroundPreferences preferences;
-    private final List<BattlegroundTeam>  teams;
 
-    @Getter @Setter
+    private final List<BattlegroundTeam>  teams;
+    private final List<NeutralBattlegroundFlag> neutralFlags;
+
+    @Setter
     private Multiground multiground;
 
-    @Getter @Setter
+    @Setter
     private BoundingBox boundingBox;
 
     @SneakyThrows
     public Battleground(String battlegroundName) {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
+        this.neutralFlags = new ArrayList<>();
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
