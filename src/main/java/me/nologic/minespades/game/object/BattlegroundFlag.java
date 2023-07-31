@@ -36,6 +36,7 @@ public abstract class BattlegroundFlag {
     @Getter @Setter @Nullable
     protected BattlegroundPlayer carrier;
 
+    @Getter
     protected BukkitRunnable tick;
 
     public BattlegroundFlag(@NotNull Battleground battleground, @NotNull Location basePosition, @NotNull ItemStack flagItem) {
@@ -46,7 +47,7 @@ public abstract class BattlegroundFlag {
     }
 
     protected abstract void pickup(BattlegroundPlayer carrier);
-    protected abstract void drop();
+    public abstract void drop();
     public abstract void reset();
 
     /**

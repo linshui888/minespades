@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.game.object.BattlegroundFlag;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -14,7 +15,7 @@ public class PlayerCarriedFlagEvent extends Event {
 
     private final Battleground battleground;
     private final BattlegroundPlayer player;
-    private final TeamBattlegroundFlag flag;
+    private final BattlegroundFlag flag;
 
     private static final HandlerList HANDLERS = new HandlerList();
 

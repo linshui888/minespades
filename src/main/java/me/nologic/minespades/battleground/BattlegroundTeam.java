@@ -70,12 +70,6 @@ public class BattlegroundTeam implements MinorityFeature {
         return respawnPoints.get((int) (Math.random() * respawnPoints.size())).getPosition();
     }
 
-    public void resetFlag() {
-        if (flag != null) {
-            flag.reset();
-        }
-    }
-
     @NotNull
     public BattlegroundPlayer join(Player player) {
         this.bukkitTeam.addPlayer(player);

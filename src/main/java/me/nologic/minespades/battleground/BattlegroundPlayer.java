@@ -89,4 +89,8 @@ public class BattlegroundPlayer implements MinorityFeature, Colorizable {
         Minespades.getInstance().getGameMaster().getPlayerManager().disconnect(this);
     }
 
+    public void addKills(final int score) {
+        this.kills += score;
+    }
+
 }

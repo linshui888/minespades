@@ -14,6 +14,8 @@ import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
+import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minespades.util.Colorizable;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.*;
@@ -24,6 +26,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -70,6 +73,15 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     @TranslationKey(section = "regular-messages", name = "battleground-click-to-join", value = "Click to join: ")
     private String clickToJoinMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-flag-carried-message", value = "%s has carried the flag of team %s!")
+    private String teamFlagCarriedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "neutral-flag-carried-message", value = "%s has carried the flag!")
+    private String neutralFlagCarriedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
+    private String teamLostLivesMessage;
 
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
     private String moneyRewardForWinningMessage;
@@ -177,25 +189,35 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     }
 
     @EventHandler
-    private void onPlayerCarriedFlagEvent(PlayerCarriedFlagEvent event) {
+    private void onPlayerCarriedFlagEvent(final PlayerCarriedFlagEvent event) {
 
-        BattlegroundTeam team = event.getFlag().getTeam();
+        final ChatColor          carrierTeamColor = ChatColor.of(event.getPlayer().getTeam().getColor().asHexString());
+        final String             carrierName      = event.getPlayer().getBukkitPlayer().getName();
+        final BattlegroundPlayer carrier          = event.getPlayer();
 
-        TextComponent flagCarriedMessage = Component.text("").append(Component.text(event.getPlayer().getBukkitPlayer().getDisplayName()))
-                .append(Component.text(" приносит флаг команды "))
-                .append(team.getDisplayName())
-                .append(Component.text(" на свою базу!"));
+        // Team flag behaviour
+        if (event.getFlag() instanceof final TeamBattlegroundFlag flag) {
 
-        TextComponent lifepoolMessage = Component.text("Команда ").append(team.getDisplayName())
-                .append(Component.text(" теряет " + team.getFlagLifepoolPenalty() + " жизней!"));
+            final BattlegroundTeam team          = flag.getTeam();
+            final ChatColor        flagTeamColor = ChatColor.of(flag.getTeam().getColor().asHexString());
 
-        event.getBattleground().broadcast(flagCarriedMessage);
-        event.getBattleground().broadcast(lifepoolMessage);
+            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "§r", flagTeamColor + flag.getTeam().getName()  + "§r"));
+            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getName() + "§r", team.getFlagLifepoolPenalty()));
+            team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
+            event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
+        }
 
-        event.getFlag().reset();
-        team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
-        event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
+        // Neutral flag behaviour
+        if (event.getFlag() instanceof NeutralBattlegroundFlag) {
+            final int score = carrier.getTeam().getFlagLifepoolPenalty();
+            event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName  + "§r"));
+            carrier.getTeam().setLifepool(carrier.getTeam().getLifepool() + score);
+            carrier.addKills(score);
+        }
+
         event.getPlayer().getBukkitPlayer().setGlowing(false);
+        event.getFlag().reset();
+
     }
 
     @EventHandler

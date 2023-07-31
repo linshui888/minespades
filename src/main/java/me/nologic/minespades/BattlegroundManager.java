@@ -6,6 +6,7 @@ import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
+import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import me.nologic.minespades.util.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -98,7 +99,7 @@ public class BattlegroundManager {
         this.enabledBattlegrounds.remove(battleground.getBattlegroundName());
 
         // Останавливаем все BukkitRunnable из правил автовыдачи
-        for (BattlegroundTeam team : battleground.getTeams()) {
+        for (final BattlegroundTeam team : battleground.getTeams()) {
 
             if (team.getFlag() != null)
                 team.getFlag().getTick().cancel();
@@ -112,6 +113,10 @@ public class BattlegroundManager {
                     task.cancel();
                 }
             }
+        }
+
+        for (final NeutralBattlegroundFlag flag : battleground.getNeutralFlags()) {
+            flag.getTick().cancel();
         }
     }
 
