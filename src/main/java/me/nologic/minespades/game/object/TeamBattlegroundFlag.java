@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -11,7 +12,6 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
-import org.bukkit.block.Banner;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -20,9 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.BoundingBox;
 
 import java.util.Objects;
 
@@ -94,18 +92,17 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
     protected void pickup(BattlegroundPlayer carrier) {
         this.carrier = carrier;
 
+        super.playFlagEquipSound();
+
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
-        carrier.getBukkitPlayer().setGlowing(true);
+
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+            carrier.getBukkitPlayer().setGlowing(true);
+        }
 
         Player player = carrier.getBukkitPlayer();
         player.getInventory().setHelmet(flagItem);
-
-        TextComponent stealMessage = Component.text(player.getName()).color(carrier.getTeam().getColor())
-                .append(Component.text(" крадёт флаг команды ").color(NamedTextColor.WHITE))
-                .append(Component.text(team.getName()).color(team.getColor())).append(Component.text("!").color(NamedTextColor.WHITE));
-
-        battleground.broadcast(stealMessage);
 
         if (currentPosition != null) {
             currentPosition.getBlock().setType(Material.AIR);
@@ -134,12 +131,9 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
         if (carrier == null)
             return;
 
-        // TODO: сообщения нужно куда-то убрать, код станет гораздо чище
-        TextComponent flagDropMessage = Component.text(carrier.getBukkitPlayer().getName()).color(carrier.getTeam().getColor())
-                .append(Component.text(" теряет флаг команды ").color(NamedTextColor.WHITE))
-                .append(Component.text(team.getName()).color(team.getColor())).append(Component.text("!").color(NamedTextColor.WHITE));
-
-        battleground.broadcast(flagDropMessage);
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+            carrier.getBukkitPlayer().setGlowing(false);
+        }
 
         Player player = carrier.getBukkitPlayer();
         if (player.getLastDamageCause() != null && Objects.equals(player.getLastDamageCause().getCause(), EntityDamageEvent.DamageCause.LAVA) || player.getLocation().getBlock().getType() == Material.LAVA) {
@@ -147,7 +141,6 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
             return;
         }
 
-        player.setGlowing(false);
         carrier.setFlag(null);
         carrier.setCarryingFlag(false);
 

@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundPreferences;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -33,6 +34,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
 
+        final Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(220, 20, 60), 1.4F);
         this.tick = new BukkitRunnable() {
 
             // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
@@ -40,7 +42,8 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             @Override
             public void run() {
                 if (currentPosition != null && boundingBox != null && particle) {
-                    battleground.getWorld().spawnParticle(Particle.SNOWFLAKE, currentPosition.clone().add(0.5, 0.5, 0.5), 9, 0.5, 1, 0.5);
+
+                    battleground.getWorld().spawnParticle(Particle.REDSTONE, currentPosition.clone().add(0.5, 0.5, 0.5), 2, 0.5, 1, 0.5, options);
                     for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
@@ -77,16 +80,18 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
         }
     }
 
-    /**
-     * Когда игрок входит в box, должен вызываться этот метод.
-     */
     @Override
     protected void pickup(final BattlegroundPlayer carrier) {
         this.carrier = carrier;
 
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
-        carrier.getBukkitPlayer().setGlowing(true);
+
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+            carrier.getBukkitPlayer().setGlowing(true);
+        }
+
+        super.playFlagEquipSound();
 
         Player player = carrier.getBukkitPlayer();
         player.getInventory().setHelmet(flagItem);
@@ -110,9 +115,6 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
     }
 
     // TODO: дроп флага в воздухе и в лаве должен обрабатываться отдельно
-    /**
-     * Когда вор флага умирает, должен вызываться этот метод.
-     */
     public void drop() {
 
         if (carrier == null)
@@ -124,7 +126,10 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             return;
         }
 
-        player.setGlowing(false);
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+            carrier.getBukkitPlayer().setGlowing(false);
+        }
+
         carrier.setFlag(null);
         carrier.setCarryingFlag(false);
 
@@ -204,9 +209,6 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
         flagRecoveryTimer.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 20);
     }
 
-    /**
-     * Возвращение флага к изначальному состоянию.
-     */
     public void reset() {
         Bukkit.getServer().getScheduler().runTask(Minespades.getInstance(), () -> {
             if (currentPosition != null) currentPosition.getBlock().setType(Material.AIR);

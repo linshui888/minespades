@@ -297,7 +297,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
         @Subcommand("neutral-flag")
         public void onRemoveNeutralFlag(final Player player, int x, int y, int z) {
-            if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamHaveFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam())) {
+            if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isNeutralFlagAt(player, x, y, z)) {
                 battlegrounder.getEditor().removeNeutralFlag(player, x, y, z);
             }
         }

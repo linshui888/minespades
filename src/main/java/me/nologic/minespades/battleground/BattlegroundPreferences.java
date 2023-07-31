@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
@@ -97,11 +98,22 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @EventHandler
-    private void onPotionConsume(PlayerItemConsumeEvent event) {
-        if (preferences.get(Preference.DELETE_EMPTY_BOTTLES)) {
-            if (event.getItem().getType() == Material.POTION) {
-                event.getPlayer().getInventory().remove(Material.GLASS_BOTTLE);
-            }
+    private void onPotionConsume(final PlayerItemConsumeEvent event) {
+        if (preferences.get(Preference.REMOVE_EMPTY_BOTTLES)) {
+
+            if (!event.getItem().getType().equals(Material.POTION))
+                return;
+
+            final Player player = event.getPlayer();
+
+            Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
+                for (ItemStack item : player.getInventory().getContents()) {
+                    if (item.getType().equals(Material.GLASS_BOTTLE)) {
+                        player.getInventory().remove(Material.GLASS_BOTTLE);
+                    }
+                }
+            }, 1L);
+
         }
     }
 
@@ -290,7 +302,7 @@ public class BattlegroundPreferences implements Listener {
         FORCE_AUTO_ASSIGN(true),
         FRIENDLY_FIRE(false),
         KEEP_INVENTORY(true),
-        DELETE_EMPTY_BOTTLES(true),
+        REMOVE_EMPTY_BOTTLES(true),
         COLORFUL_ENDING(true),
         FLAG_PARTICLES(true),
         DISABLE_PORTALS(true),
@@ -301,7 +313,8 @@ public class BattlegroundPreferences implements Listener {
         DENY_BED_SLEEP(true),
         PUNISH_COWARDS(true),
         IS_MULTIGROUND(false),
-        FORCE_AUTOJOIN(false);
+        FORCE_AUTOJOIN(false),
+        FLAG_CARRIER_GLOW(true);
 
         private final boolean defaultValue;
 

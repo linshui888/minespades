@@ -9,9 +9,9 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
-import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.editor.task.*;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
@@ -25,7 +25,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.sql.*;
@@ -315,10 +314,10 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         player.sendMessage(String.format(teamFlagRemoved, targetTeam));
     }
 
-    public void removeNeutralFlag(Player player, int x, int y, int z) {
+    public void removeNeutralFlag(Player player, final int x, final int y, final int z) {
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
         driver.executeUpdate("DELETE FROM objects WHERE x = ? AND y = ? AND z = ?;", x, y, z).closeConnection();
-        player.sendMessage(String.format(teamFlagRemoved, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z)));
+        player.sendMessage(String.format(neutralFlagRemoved, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z)));
     }
 
     public List<PlayerEditSession> getEditSessionList() {
