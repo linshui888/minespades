@@ -37,11 +37,18 @@ public class BattlegroundDataDriver {
     private Connection connection; @SneakyThrows
     public BattlegroundDataDriver connect(final String battlegroundName) {
         this.connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db");
+        this.checksum();
         return this;
     }
 
     public BattlegroundDataDriver connect(Battleground battleground) {
         return this.connect(battleground.getBattlegroundName());
+    }
+
+    private void checksum() {
+        for (DatabaseTableHelper table : DatabaseTableHelper.values()) {
+            this.executeUpdate(table.getCreateStatement());
+        }
     }
 
     @SneakyThrows

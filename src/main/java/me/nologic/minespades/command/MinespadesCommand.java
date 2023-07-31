@@ -117,7 +117,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
 
         @Subcommand("flag")
-        public void onAddFlag(Player player, @Optional boolean neutral) {
+        public void onAddFlag(Player player, @Optional String neutral) {
             if (validated(player, Selection.BATTLEGROUND)) {
 
                 // Проверяем баннер в руке
@@ -126,7 +126,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                     return;
                 }
 
-                if (neutral) {
+                if (neutral != null && neutral.equals("-n")) {
                     battlegrounder.getEditor().addNeutralFlag(player);
                 } else if (validated(player, Selection.TEAM)) {
                     battlegrounder.getEditor().addTeamFlag(player);
@@ -296,9 +296,9 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
 
         @Subcommand("neutral-flag")
-        public void onRemoveFlag(final Player player, int x, int y, int z) {
+        public void onRemoveNeutralFlag(final Player player, int x, int y, int z) {
             if (validated(player, Selection.BATTLEGROUND) && battlegrounder.getValidator().isTeamHaveFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam())) {
-                battlegrounder.getEditor().removeFlag(player, battlegrounder.getEditor().editSession(player).getTargetTeam());
+                battlegrounder.getEditor().removeNeutralFlag(player, x, y, z);
             }
         }
 

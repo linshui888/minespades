@@ -306,7 +306,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
     @SneakyThrows
     public void addNeutralFlag(Player player) {
-        Bukkit.getScheduler().runTask(plugin, new AddTeamFlagTask(player));
+        Bukkit.getScheduler().runTask(plugin, new AddNeutralFlagTask(player));
     }
 
     public void removeFlag(Player player, String targetTeam) {

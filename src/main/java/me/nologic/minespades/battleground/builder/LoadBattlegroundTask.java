@@ -137,7 +137,9 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                         meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                         flagItem.setItemMeta(meta);
-                        battleground.getNeutralFlags().add(new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem));
+                        final NeutralBattlegroundFlag flag = new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem);
+                        battleground.getNeutralFlags().add(flag);
+                        flag.reset();
                     }
                 }
             }

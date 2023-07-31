@@ -40,7 +40,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             @Override
             public void run() {
                 if (currentPosition != null && boundingBox != null && particle) {
-                    battleground.getWorld().spawnParticle(Particle.SMALL_FLAME, currentPosition.clone().add(0.5, 0.5, 0.5), 9, 0.5, 1, 0.5);
+                    battleground.getWorld().spawnParticle(Particle.SNOWFLAKE, currentPosition.clone().add(0.5, 0.5, 0.5), 9, 0.5, 1, 0.5);
                     for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
                         if (entity instanceof Player player) {
                             if (battleground.getScoreboard().equals(player.getScoreboard())) {
@@ -208,22 +208,24 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
      * Возвращение флага к изначальному состоянию.
      */
     public void reset() {
-        if (currentPosition != null) currentPosition.getBlock().setType(Material.AIR);
-        currentPosition = basePosition.clone();
-        if (carrier != null) {
-            carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
-            carrier.setFlag(null);
-            carrier.setCarryingFlag(false);
-            carrier = null;
-        }
-        updateBoundingBox();
-        validateBannerData();
-        particle = true;
+        Bukkit.getServer().getScheduler().runTask(Minespades.getInstance(), () -> {
+            if (currentPosition != null) currentPosition.getBlock().setType(Material.AIR);
+            currentPosition = basePosition.clone();
+            if (carrier != null) {
+                carrier.getBukkitPlayer().getInventory().setHelmet(new ItemStack(Material.AIR));
+                carrier.setFlag(null);
+                carrier.setCarryingFlag(false);
+                carrier = null;
+            }
+            updateBoundingBox();
+            validateBannerData();
+            particle = true;
 
-        if (flagRecoveryTimer != null) {
-            flagRecoveryTimer.cancel();
-            recoveryBossBar = null;
-        }
+            if (flagRecoveryTimer != null) {
+                flagRecoveryTimer.cancel();
+                recoveryBossBar = null;
+            }
+        });
     }
 
 }
