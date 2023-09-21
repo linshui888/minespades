@@ -41,7 +41,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
     public void run() {
 
         if (corners[0] == null || corners[1] == null) {
-            player.sendMessage("§4Необходимо указать два угла кубоида.");
+            player.sendMessage("&4Необходимо указать два угла кубоида.");
             return;
         }
 
@@ -80,7 +80,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         final int size = 10000;
         World world = player.getWorld();
 
-        this.completeBar.title(String.format("§6%s§7: §eSaving blocks...", battlegroundName));
+        this.completeBar.title(String.format("&6%s&7: &eSaving blocks...", battlegroundName));
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
@@ -171,7 +171,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         connection.close();
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage(String.format("§7Successfully saved the volume. §8(§33%db.§8, §3%ds.§8)", i, totalTime / 1000));
+        player.sendMessage(String.format("&7Successfully saved the volume. &8(&33%db.&8, &3%ds.&8)", i, totalTime / 1000));
         completeBar.cleanViewers().visible(false);
         editor.editSession(player).resetCorners();
         editor.setSaving(false);

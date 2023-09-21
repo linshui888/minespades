@@ -3,6 +3,9 @@ Minespades is a **Spigot (Bukkit)** plugin that adds a new game mode to Minecraf
 
 SpigotMC: https://www.spigotmc.org/resources/minespades.110959/
 
+## Building
+`mvn clean package`
+
 ## Features and stuff
 - **Completely destructible battlegrounds** with teams, where players can fight with each other. When the game on battleground ends, it will be restored to its default state and everything will start over!
 - Two game modes: **TDM** and **CTF**. Kill as many players as you can, or bring the enemy flag to your base!

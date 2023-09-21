@@ -241,7 +241,7 @@ public class BattlegroundPreferences implements Listener {
             // Подключаем игрока к арене через 1 тик после логина, дабы избежать багов
             if (preferences.get(Preference.FORCE_AUTOJOIN) && !Bukkit.getPluginManager().isPluginEnabled("AuthMe")) {
                 Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
-                event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+                event.getPlayer().sendMessage("&7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите &3/ms q&7.");
             }
         }, 1);
     }
@@ -255,7 +255,7 @@ public class BattlegroundPreferences implements Listener {
             Bukkit.getScheduler().runTaskLater(Minespades.getInstance(), () -> {
                 if (preferences.get(Preference.FORCE_AUTOJOIN)) {
                     Minespades.getInstance().getGameMaster().getPlayerManager().connect(event.getPlayer(), battleground, battleground.getSmallestTeam());
-                    event.getPlayer().sendMessage("§7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите §3/ms q§7.");
+                    event.getPlayer().sendMessage("&7Вы были автоматически подключены к арене. Чтобы покинуть арену, напишите &3/ms q&7.");
                 }
             }, 1);
         }

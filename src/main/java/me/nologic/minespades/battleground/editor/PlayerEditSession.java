@@ -37,22 +37,22 @@ public class PlayerEditSession implements MinorityFeature {
     @TranslationKey(section = "editor-sidebar", name = "label", value = "Battleground Editor")
     private String editorSidebarLabel;
 
-    @TranslationKey(section = "editor-sidebar", name = "select-battleground", value = "§cSelect battleground to edit!")
+    @TranslationKey(section = "editor-sidebar", name = "select-battleground", value = "&cSelect battleground to edit!")
     private String selectBattlegroundMessage;
 
-    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "§7Battleground: §b§l%s §8[%s§8]")
+    @TranslationKey(section = "editor-sidebar", name = "battleground", value = "&7Battleground: &b&l%s &8[%s&8]")
     private String battleground;
 
-    @TranslationKey(section = "editor-sidebar", name = "team", value = "§7Team: ")
+    @TranslationKey(section = "editor-sidebar", name = "team", value = "&7Team: ")
     private String team;
 
-    @TranslationKey(section = "editor-sidebar", name = "lifepool", value = "§8╚ §7Lifepool: §e%s")
+    @TranslationKey(section = "editor-sidebar", name = "lifepool", value = "&8╚ &7Lifepool: &e%s")
     private String lifepool;
 
-    @TranslationKey(section = "editor-sidebar", name = "loadout", value = "§7Loadout: §3%s")
+    @TranslationKey(section = "editor-sidebar", name = "loadout", value = "&7Loadout: &3%s")
     private String loadout;
 
-    @TranslationKey(section = "editor-sidebar", name = "corner", value = "§7Corner")
+    @TranslationKey(section = "editor-sidebar", name = "corner", value = "&7Corner")
     private String corner;
 
     public PlayerEditSession(Player p) {
@@ -67,12 +67,12 @@ public class PlayerEditSession implements MinorityFeature {
         sidebar.addConditionalLine(player -> TextComponent.fromLegacyText((String.format(battleground, targetBattleground, this.validationMark()))), k -> targetBattleground != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> corners[0] != null || corners[1] != null);
-        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
-        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " &3#1&7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " &3#2&7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
 
         // Team
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(team + this.getColoredTeam() + " §7≡ " + this.flagState()), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(team + this.getColoredTeam() + " &7≡ " + this.flagState()), player -> targetTeam != null);
         sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> targetLoadout != null);
@@ -82,17 +82,17 @@ public class PlayerEditSession implements MinorityFeature {
     }
 
     private String validationMark() {
-        if (Minespades.getInstance().getBattlegrounder().getEditor().isSaving()) return "§e♻";
+        if (Minespades.getInstance().getBattlegrounder().getEditor().isSaving()) return "&e♻";
         final boolean valid = Minespades.getInstance().getBattlegrounder().getValidator().isValid(targetBattleground);
-        if (valid) return "§2✔";
-        else return "§4✘";
+        if (valid) return "&2✔";
+        else return "&4✘";
     }
 
     // TODO: Брать значение не из датабазы. Карта или просто переменная, что угодно. Но не из ДБ.
     private String flagState() {
-        if (Minespades.getInstance().getBattlegrounder().getEditor().isSaving()) return "§e♻";
-        if (targetTeam != null && Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(targetBattleground, targetTeam)) return "§2⚑";
-        else return "§4§m⚑";
+        if (Minespades.getInstance().getBattlegrounder().getEditor().isSaving()) return "&e♻";
+        if (targetTeam != null && Minespades.getInstance().getBattlegrounder().getValidator().isTeamHaveFlag(targetBattleground, targetTeam)) return "&2⚑";
+        else return "&4&m⚑";
     }
 
     private String getColoredTeam() {
@@ -103,7 +103,7 @@ public class PlayerEditSession implements MinorityFeature {
 
     private String stringifyLocation(final @Nullable Location location) {
         if (location == null) return null;
-        return String.format("§7x§b%s§7, y§b%s§7, z§b%s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        return String.format("&7x&b%s&7, y&b%s&7, z&b%s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     public void displaySidebar() {

@@ -54,7 +54,7 @@ public class SaveSupplyTask extends BaseEditorTask implements Runnable {
 
                     for (JsonElement supplyElement : supplies) {
                         if (Objects.equals(supplyElement.getAsJsonObject().get("name").getAsString(), supplyRule.get("name").getAsString())) {
-                            player.sendMessage(String.format("§4Ошибка. Название %s уже занято.", supplyRule.get("name").getAsString()));
+                            player.sendMessage(String.format("&4Ошибка. Название %s уже занято.", supplyRule.get("name").getAsString()));
                             return;
                         }
                     }

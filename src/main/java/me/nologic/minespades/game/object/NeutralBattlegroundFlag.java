@@ -148,13 +148,13 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
+            final BossBar bossBar = BossBar.bossBar(String.format("Нейтральный флаг пропадёт через &e%sс&f..", timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
 
             @Override
             public void run() {
                 NeutralBattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.title(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20));
+                bossBar.title(String.format("Нейтральный флаг пропадёт через &e%sс&f..", timer / 20));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);

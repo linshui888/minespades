@@ -44,7 +44,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -58,23 +57,32 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
     private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler();
 
-    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use §3/ms q§r to quit.")
+    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use &3/ms q&r to quit.")
     private String autoConnectedToBattlegroundMessage;
 
     @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
-    private String successfullyConnectedTitleMessage;
+    private String successfullyConnectedTitle;
+
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s!")
+    private String successfullyConnectedSubtitle;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
+    private String battlegroundConnectionCancelled;
 
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
     private String battlegroundLaunchedBroadcastMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-flag-carried-message", value = "%s has carried the flag of team %s!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s has carried the flag of team %s!")
     private String teamFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "neutral-flag-carried-message", value = "%s has carried the flag!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s has carried the flag!")
     private String neutralFlagCarriedMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
     private String teamLostLivesMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s lose!")
+    private String teamLoseGameMessage;
 
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
     private String moneyRewardForWinningMessage;
@@ -151,11 +159,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 if (event.getVictim().isCarryingFlag())
                     event.getVictim().getFlag().drop();
 
-                switch (event.getRespawnMethod()) {
-                    case QUICK -> player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
-                    case AOS -> player.sendMessage("не реализовано...");
-                    case NORMAL -> player.sendMessage("lol ok");
-                }
+                player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
                 player.setNoDamageTicks(40);
                 player.setHealth(20);
                 player.setFoodLevel(20);
@@ -182,7 +186,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @EventHandler
     private void onPlayerCarriedFlagEvent(final PlayerCarriedFlagEvent event) {
 
-        final ChatColor          carrierTeamColor = ChatColor.of(event.getPlayer().getTeam().getColor().asHexString());
+        final ChatColor          carrierTeamColor = event.getPlayer().getTeam().getColor();
         final String             carrierName      = event.getPlayer().getBukkitPlayer().getName();
         final BattlegroundPlayer carrier          = event.getPlayer();
 
@@ -190,10 +194,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         if (event.getFlag() instanceof final TeamBattlegroundFlag flag) {
 
             final BattlegroundTeam team          = flag.getTeam();
-            final ChatColor        flagTeamColor = ChatColor.of(flag.getTeam().getColor().asHexString());
+            final ChatColor        flagTeamColor = flag.getTeam().getColor();
 
-            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "§r", flagTeamColor + flag.getTeam().getTeamName()  + "§r"));
-            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getTeamName() + "§r", team.getFlagLifepoolPenalty()));
+            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "&r", flagTeamColor + flag.getTeam().getTeamName()  + "&r"));
+            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getTeamName() + "&r", team.getFlagLifepoolPenalty()));
             team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
             event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
         }
@@ -201,7 +205,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         // Neutral flag behaviour
         if (event.getFlag() instanceof NeutralBattlegroundFlag) {
             final int score = carrier.getTeam().getFlagLifepoolPenalty();
-            event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName  + "§r"));
+            event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName  + "&r"));
             carrier.getTeam().setLifepool(carrier.getTeam().getLifepool() + score);
             carrier.addKills(score);
         }
@@ -213,8 +217,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     @EventHandler
     private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-        TextComponent message = Component.text("Команда ").append(event.getTeam().getDisplayName()).append(Component.text(" проиграла!"));
-        event.getBattleground().broadcast(message);
+
+        final String teamLoseMessage = String.format(teamLoseGameMessage, event.getTeam().getDisplayName());
+        event.getBattleground().broadcast(teamLoseMessage);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
         if (event.getBattleground().getTeams().stream().filter(team -> !team.isDefeated()).count() <= 1) {
@@ -321,7 +326,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
      * свои вещи, необходимо сохранять старый инвентарь в датабазе и загружать его, когда игрок покидает арену.
      * И не только инвентарь! Кол-во хитпоинтов, голод, координаты, активные баффы и дебаффы и т. д.
      * */
-    public static class BattlegroundPlayerManager implements Colorizable {
+    public class BattlegroundPlayerManager {
 
         @Getter
         private final List<BattlegroundPlayer> playersInGame = new ArrayList<>();
@@ -347,7 +352,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
                 this.getPlayersInGame().add(bgPlayer);
 
-                final String name = this.translateColors(team.getColor().asHexString() + player.getName());
+                final String name = bgPlayer.getDisplayName();
                 player.setDisplayName(name);
                 player.setPlayerListName(name);
                 player.setHealth(20);
@@ -357,22 +362,17 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
                 for (BattlegroundTeam t : battleground.getTeams()) {
                     if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {
-                        audience.showBossBar(t.getFlag().getRecoveryBossBar());
+                        t.getFlag().getRecoveryBossBar().addViewer(player);
                     }
                 }
 
-                // Попробуем отправить сообщение об успешном подключении через тайтл..
-                Title title = Title.title(Component.text("Подключение успешно!").color(TextColor.color(162, 9, 78)),
-                        Component.text("Ваша команда: ").append(team.getDisplayName().decorate(TextDecoration.BOLD)),
-                        Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(4000), Duration.ofMillis(500))
-                );
-                audience.showTitle(title);
+                player.sendTitle(successfullyConnectedTitle, String.format(successfullyConnectedSubtitle, team.getDisplayName()), 20, 20, 20);
 
                 // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
                 return bgPlayer;
             } else {
-                player.sendMessage("§4Подключение неудачно. Арена отключена или вы уже в игре.");
+                player.sendMessage(battlegroundConnectionCancelled);
                 return null;
             }
         }
@@ -389,7 +389,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             battlegroundPlayer.removeSidebar();
             for (BattlegroundTeam team : battlegroundPlayer.getBattleground().getTeams()) {
                 if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
-                    audience.hideBossBar(team.getFlag().getRecoveryBossBar());
+                    team.getFlag().getRecoveryBossBar().removeViewer(player);
                 }
             }
 
@@ -460,7 +460,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
                 World     world     = Bukkit.getWorld(r.getString("world"));
                 Location  location  = this.decodeLocation(world, r.getString("location"));
-                Inventory inventory = this.parseJsonToInventory(r.getString("inventory"));
+                Inventory inventory = this.parseJSONToInventory(r.getString("inventory"));
                 double    health    = r.getDouble("health");
                 int       hunger    = r.getInt("hunger");
 
@@ -469,7 +469,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 player.setHealth(health);
                 player.setFoodLevel(hunger);
                 player.setGameMode(GameMode.SURVIVAL);
-                player.sendMessage("§7Инвентарь был восстановлен.");
+                player.sendMessage("&7Инвентарь был восстановлен.");
             }
         }
 
@@ -489,7 +489,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         }
 
         @NotNull
-        private Inventory parseJsonToInventory(String string) {
+        private Inventory parseJSONToInventory(String string) {
             JsonObject obj = JsonParser.parseString(string).getAsJsonObject();
 
             Inventory inv = Bukkit.createInventory(null, InventoryType.valueOf(obj.get("type").getAsString()));

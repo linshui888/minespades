@@ -12,8 +12,7 @@ import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -65,7 +64,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "preference-changed", value = "§2Success§r. §6%s §ris changed to §3%s§r.")
+    @TranslationKey(section = "editor-info-messages", name = "preference-changed", value = "&2Success&r. &6%s &ris changed to &3%s&r.")
     private String parameterChangedMessage;
 
     @Subcommand("config")
@@ -85,7 +84,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-error-messages", name = "no-banner-in-hand", value = "Error. Hold the banner you want to be the flag.")
     private String holdTheBannerMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "join-while-editing", value = "Error. You can't join games while in editor mode. Use §3/ms edit §ragain to close editor.")
+    @TranslationKey(section = "editor-error-messages", name = "join-while-editing", value = "Error. You can't join games while in editor mode. Use &3/ms edit &ragain to close editor.")
     private String joinWhileEditingMessage;
 
     @TranslationKey(section = "editor-error-messages", name = "edit-while-playing", value = "Error. You can't edit battlegrounds while playing.")
@@ -138,28 +137,28 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
 
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "multiground-created", value = "§2Success§r. Multiground §3%s §rhas been created.")
+    @TranslationKey(section = "editor-info-messages", name = "multiground-created", value = "&2Success&r. Multiground &3%s &rhas been created.")
     private String multigroundCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "battleground-deleted-from-multiground", value = "§2Success§r. Battleground §3%s §rhas been removed from multiground §3%s§r.")
+    @TranslationKey(section = "editor-info-messages", name = "battleground-deleted-from-multiground", value = "&2Success&r. Battleground &3%s &rhas been removed from multiground &3%s&r.")
     private String battlegroundDeletedFromMultiground;
 
-    @TranslationKey(section = "editor-info-messages", name = "multiground-battleground-added", value = "§2Success§r. Battleground §3%s §rnow is part of §3%s §rmultiground.")
+    @TranslationKey(section = "editor-info-messages", name = "multiground-battleground-added", value = "&2Success&r. Battleground &3%s &rnow is part of &3%s &rmultiground.")
     private String battlegroundAddedToMultigroundMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "battleground-is-part-of-multiground", value = "§4Error§r. Battleground §3%s §ris already part of some multiground.")
+    @TranslationKey(section = "editor-error-messages", name = "battleground-is-part-of-multiground", value = "&4Error&r. Battleground &3%s &ris already part of some multiground.")
     private String battlegroundIsPartOfMultigroundMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "multiground-already-launched", value = "§4Error§r. Multiground §3%s §ralready launched.")
+    @TranslationKey(section = "editor-error-messages", name = "multiground-already-launched", value = "&4Error&r. Multiground &3%s &ralready launched.")
     private String multigroundAlreadyLaunchedMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "multiground-name-is-taken", value = "§4Error§r. Multiground with name §3%s §ralready exist.")
+    @TranslationKey(section = "editor-error-messages", name = "multiground-name-is-taken", value = "&4Error&r. Multiground with name &3%s &ralready exist.")
     private String multigroundNameIsTakenMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-exist", value = "§4Error§r. Multiground with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-exist", value = "&4Error&r. Multiground with name &3%s &rdoesn't exist.")
     private String notExistingMultigroundMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-have-battleground", value = "§4Error§r. Multiground §3%s §rdoesn't have battleground §3%s§r.")
+    @TranslationKey(section = "editor-error-messages", name = "multiground-does-not-have-battleground", value = "&4Error&r. Multiground &3%s &rdoesn't have battleground &3%s&r.")
     private String battlegroundNotFoundMessage;
 
     @Subcommand("multiground")
@@ -278,10 +277,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         session.setActive(!session.isActive());
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "how-to-select-corners", value = "Hold a golden sword and use §lRMB/LMB §rto select two corners, then use §3/ms save §rto save the volume.")
+    @TranslationKey(section = "editor-info-messages", name = "how-to-select-corners", value = "Hold a golden sword and use &lRMB/LMB &rto select two corners, then use &3/ms save &rto save the volume.")
     private String howToSelectCornersMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team §3%s §rnew color: ")
+    @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team &3%s &rnew color: ")
     private String teamColorUpdatedMessage;
 
     @Subcommand("remove")
@@ -376,8 +375,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
 
                 final String team = battlegrounder.getEditor().editSession(player).getTargetTeam();
-                plugin.getAdventureAPI().player(player).sendMessage(Component.text(String.format(teamColorUpdatedMessage, team))
-                        .append(Component.text(hexColor).color(TextColor.fromHexString("#" + hexColor))));
+                player.sendMessage(String.format(teamColorUpdatedMessage, ChatColor.of("#" + hexColor + team)));
             }
         }
 
@@ -457,7 +455,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         else player.sendMessage(notInGameMessage);
     }
 
-    @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground §l%s §rwas forcefully reset by §3%s§r.")
+    @TranslationKey(section = "regular-messages", name = "battleground-force-reset", value = "Battleground &l%s &rwas forcefully reset by &3%s&r.")
     private String battlegroundForceResetMessage;
 
     @Subcommand("reset")
@@ -493,10 +491,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-error-messages", name = "inactive-edit-session", value = "Error. Edit session is inactive. Select battleground first.")
     private String noActiveSessionMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "battleground-name-is-taken", value = "Error. Battleground with name §3%s §ris already exist.")
+    @TranslationKey(section = "editor-error-messages", name = "battleground-name-is-taken", value = "Error. Battleground with name &3%s &ris already exist.")
     private String battlegroundNameIsTakenMessage;
 
-    @TranslationKey(section = "editor-error-messages", name = "battleground-not-exist", value = "Error. Battleground with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "editor-error-messages", name = "battleground-not-exist", value = "Error. Battleground with name &3%s &rdoesn't exist.")
     private String battlegroundNotExistMessage;
 
     /**

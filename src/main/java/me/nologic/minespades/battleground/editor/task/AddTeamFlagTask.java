@@ -15,7 +15,7 @@ import java.sql.ResultSet;
 @Translatable
 public class AddTeamFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
 
-    @TranslationKey(section = "editor-info-messages", name = "team-flag-created", value = "§2Success§r. Now team §3%s §rhave a flag!")
+    @TranslationKey(section = "editor-info-messages", name = "team-flag-created", value = "&2Success&r. Now team &3%s &rhave a flag!")
     private String flagCreatedMessage;
 
     @Override @SneakyThrows

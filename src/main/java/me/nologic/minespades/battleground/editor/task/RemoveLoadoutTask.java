@@ -55,7 +55,7 @@ public class RemoveLoadoutTask extends BaseEditorTask implements Runnable {
                 session.setTargetLoadout(null);
             }
 
-            player.sendMessage(String.format("Loadout §3%s §rhas been deleted.", loadoutName));
+            player.sendMessage(String.format("Loadout &3%s &rhas been deleted.", loadoutName));
         }
     }
 

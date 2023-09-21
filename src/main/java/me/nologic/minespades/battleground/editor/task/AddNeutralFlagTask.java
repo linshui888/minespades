@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Translatable
 public class AddNeutralFlagTask extends BaseEditorTask implements MinorityFeature, Runnable {
 
-    @TranslationKey(section = "editor-info-messages", name = "neutral-flag-created", value = "§2Success§r. Added a neutral flag at %s.")
+    @TranslationKey(section = "editor-info-messages", name = "neutral-flag-created", value = "&2Success&r. Added a neutral flag at %s.")
     private String neutralFlagCreatedMessage;
 
     @Override @SneakyThrows
@@ -41,7 +41,7 @@ public class AddNeutralFlagTask extends BaseEditorTask implements MinorityFeatur
 
     private String stringifyLocation(final @Nullable Location location) {
         if (location == null) return null;
-        return String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        return String.format("&ex&b%s&f, &ey&b%s&f, &ez&b%s&f", location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
 }

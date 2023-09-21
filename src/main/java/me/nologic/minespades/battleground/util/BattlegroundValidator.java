@@ -24,31 +24,31 @@ public class BattlegroundValidator implements MinorityFeature {
 
     private static final Minespades plugin = Minespades.getPlugin(Minespades.class);
 
-    @TranslationKey(section = "validate-error-messages", name = "battleground-does-not-exist", value = "Error. Battleground with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "validate-error-messages", name = "battleground-does-not-exist", value = "Error. Battleground with name &3%s &rdoesn't exist.")
     private String battlegroundNotExistMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "loadout-does-not-exist", value = "Error. Loadout with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "validate-error-messages", name = "loadout-does-not-exist", value = "Error. Loadout with name &3%s &rdoesn't exist.")
     private String nonExistingLoadoutMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "supple-does-not-exist", value = "Error. Supply with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "validate-error-messages", name = "supple-does-not-exist", value = "Error. Supply with name &3%s &rdoesn't exist.")
     private String nonExistingSupplyMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "team-does-not-exist", value = "Error. Team with name §3%s §rdoesn't exist.")
+    @TranslationKey(section = "validate-error-messages", name = "team-does-not-exist", value = "Error. Team with name &3%s &rdoesn't exist.")
     private String nonExistingTeamMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground §3%s §rdoesn't have two teams §7(which is required minimum)§r.")
+    @TranslationKey(section = "validate-error-messages", name = "battleground-less-than-two-teams", value = "Error. Battleground &3%s &rdoesn't have two teams &7(which is required minimum)&r.")
     private String lessThanTwoTeamsMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "team-without-respawn-point", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any respawn points. Create a new one using §3/ms add respawn§r.")
+    @TranslationKey(section = "validate-error-messages", name = "team-without-respawn-point", value = "Error. Team &3%s &ron battleground &6%s &rdoesn't have any respawn points. Create a new one using &3/ms add respawn&r.")
     private String noRespawnPointMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "team-without-loadout", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any loadouts. Create a new one using §3/ms add loadout <name>§r.")
+    @TranslationKey(section = "validate-error-messages", name = "team-without-loadout", value = "Error. Team &3%s &ron battleground &6%s &rdoesn't have any loadouts. Create a new one using &3/ms add loadout <name>&r.")
     private String noLoadoutMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "team-without-flag", value = "Error. Team §3%s §ron battleground §6%s §rdoesn't have any flag to delete.")
+    @TranslationKey(section = "validate-error-messages", name = "team-without-flag", value = "Error. Team &3%s &ron battleground &6%s &rdoesn't have any flag to delete.")
     private String teamWithoutFlagMessage;
 
-    @TranslationKey(section = "validate-error-messages", name = "neutral-flag-not-found", value = "Error. Can't find a neutral flag on battleground §3%s §rat %s.")
+    @TranslationKey(section = "validate-error-messages", name = "neutral-flag-not-found", value = "Error. Can't find a neutral flag on battleground &3%s &rat %s.")
     private String neutralFlagNotFound;
 
     public BattlegroundValidator() {
@@ -189,7 +189,7 @@ public class BattlegroundValidator implements MinorityFeature {
         }
 
         driver.closeConnection();
-        player.sendMessage(String.format(neutralFlagNotFound, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z), session.getTargetBattleground()));
+        player.sendMessage(String.format(neutralFlagNotFound, String.format("&ex&b%s&f, &ey&b%s&f, &ez&b%s&f", x, y, z), session.getTargetBattleground()));
         return false;
     }
 

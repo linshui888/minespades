@@ -47,28 +47,28 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground §3%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "battleground-created", value = "Battleground &3%s &rhas been successfully created.")
     private String battlegroundCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team §3%s §rhas been successfully created.")
+    @TranslationKey(section = "editor-info-messages", name = "team-created", value = "Team &3%s &rhas been successfully created.")
     private String teamCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-removed", value = "Team §3%s §rhas been successfully removed.")
+    @TranslationKey(section = "editor-info-messages", name = "team-removed", value = "Team &3%s &rhas been successfully removed.")
     private String teamRemovedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "supply-removed", value = "Supply §3%s §rhas been successfully removed from loadout §3%s§r.")
+    @TranslationKey(section = "editor-info-messages", name = "supply-removed", value = "Supply &3%s &rhas been successfully removed from loadout &3%s&r.")
     private String supplyRemovedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team §3%s §rhas been successfully created. §8(%f, %f, %f)")
+    @TranslationKey(section = "editor-info-messages", name = "respawn-point-created", value = "A new respawn point for team &3%s &rhas been successfully created. &8(%f, %f, %f)")
     private String respawnCreatedMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-flag-removed", value = "Team §3%s §rflag has been removed.")
+    @TranslationKey(section = "editor-info-messages", name = "team-flag-removed", value = "Team &3%s &rflag has been removed.")
     private String teamFlagRemoved;
 
     @TranslationKey(section = "editor-info-messages", name = "neutral-flag-removed", value = "Neutral flag at %s has been removed.")
     private String neutralFlagRemoved;
 
-    @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team §3%s §ralready have a flag.")
+    @TranslationKey(section = "editor-error-messages", name = "team-already-have-a-flag", value = "Error. Team &3%s &ralready have a flag.")
     private String teamFlagErrorMessage;
 
     @TranslationKey(section = "editor-error-messages", name = "saving-is-running", value = "Error. Wait for the volume to be saved.")
@@ -317,7 +317,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     public void removeNeutralFlag(Player player, final int x, final int y, final int z) {
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
         driver.executeUpdate("DELETE FROM objects WHERE x = ? AND y = ? AND z = ?;", x, y, z).closeConnection();
-        player.sendMessage(String.format(neutralFlagRemoved, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z)));
+        player.sendMessage(String.format(neutralFlagRemoved, String.format("&ex&b%s&f, &ey&b%s&f, &ez&b%s&f", x, y, z)));
     }
 
     public List<PlayerEditSession> getEditSessionList() {

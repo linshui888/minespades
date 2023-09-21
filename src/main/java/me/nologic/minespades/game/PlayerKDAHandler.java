@@ -46,7 +46,7 @@ public class PlayerKDAHandler implements MinorityFeature {
         String deathMessage;
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
-            deathMessage = String.format(event.getKiller().getDisplayName() + " §f%s " + event.getVictim().getDisplayName(), symbol);
+            deathMessage = String.format(event.getKiller().getDisplayName() + " &f%s " + event.getVictim().getDisplayName(), symbol);
             event.getKiller().setKills(event.getKiller().getKills() + 1);
 
             // Обновляем счётчик киллов для убийцы в таблисте
