@@ -9,9 +9,8 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +32,7 @@ public class PlayerEditSession implements MinorityFeature {
     @Getter
     private final Location[] corners = new Location[] { null, null };
 
-    private final Sidebar<Component> sidebar;
+    private final Sidebar<BaseComponent[]> sidebar;
 
     @TranslationKey(section = "editor-sidebar", name = "label", value = "Battleground Editor")
     private String editorSidebarLabel;
@@ -62,25 +61,22 @@ public class PlayerEditSession implements MinorityFeature {
         this.init(this, this.getClass(), Minespades.getInstance());
 
         this.player = p;
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(TextIterators.textFadeHypixel(editorSidebarLabel == null ? "Editor" : editorSidebarLabel), Minespades.getInstance());
+        this.sidebar = ProtocolSidebar.newBungeeChatSidebar(TextIterators.textFadeHypixel(editorSidebarLabel == null ? "Editor" : editorSidebarLabel), Minespades.getInstance());
 
-        sidebar.addConditionalLine(player -> Component.text(selectBattlegroundMessage)
-                .color(NamedTextColor.WHITE), player -> targetBattleground == null);
-
-        sidebar.addConditionalLine(player -> Component.text(String.format(battleground, targetBattleground, this.validationMark()))
-                .color(NamedTextColor.WHITE), player -> targetBattleground != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(selectBattlegroundMessage), player -> targetBattleground == null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText((String.format(battleground, targetBattleground, this.validationMark()))), k -> targetBattleground != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> corners[0] != null || corners[1] != null);
-        sidebar.addConditionalLine(player -> Component.text(corner + " §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
-        sidebar.addConditionalLine(player -> Component.text(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " §3#1§7: " + this.stringifyLocation(corners[0])), player -> corners[0] != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(corner + " §3#2§7: " + this.stringifyLocation(corners[1])), player -> corners[1] != null);
 
         // Team
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text(team).append(this.getColoredTeam()).append(Component.text(" §7≡ " + this.flagState())), player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> Component.text(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(team + this.getColoredTeam() + " §7≡ " + this.flagState()), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(lifepool, Minespades.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> targetLoadout != null);
-        sidebar.addConditionalLine(player -> Component.text(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(loadout, targetLoadout)), player -> targetLoadout != null);
 
         sidebar.updateLinesPeriodically(0, 10);
     }
@@ -99,10 +95,10 @@ public class PlayerEditSession implements MinorityFeature {
         else return "§4§m⚑";
     }
 
-    private TextComponent getColoredTeam() {
+    private String getColoredTeam() {
         if (targetTeam == null) {
-            return Component.empty();
-        } else return Component.text(targetTeam).color(Minespades.getInstance().getBattlegrounder().getEditor().getTeamColor(targetBattleground, targetTeam));
+            return "";
+        } else return Minespades.getInstance().getBattlegrounder().getEditor().getTeamColor(targetBattleground, targetTeam) + targetTeam;
     }
 
     private String stringifyLocation(final @Nullable Location location) {

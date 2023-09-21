@@ -5,11 +5,11 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
+import me.nologic.minespades.util.BossBar;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -107,7 +107,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
             // Не забываем скрывать таймер, если флаг был поднят
             Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> {
-                Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(recoveryBossBar));
+                this.recoveryBossBar.cleanViewers();
                 recoveryBossBar = null;
             });
             flagRecoveryTimer = null;
@@ -148,13 +148,13 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(Component.text(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20)), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20);
+            final BossBar bossBar = BossBar.bossBar(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
 
             @Override
             public void run() {
                 NeutralBattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.name(Component.text(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20)));
+                bossBar.title(String.format("Нейтральный флаг пропадёт через §e%sс§f..", timer / 20));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -169,8 +169,8 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                 if (timer == 0) {
 
                     // Попытаемся сделать всё красиво, нам нужно заполнить боссбар, изменить сообщение на ФЛАГ ВОССТАНОВЛЕН! и сменить цвет
-                    bossBar.name(Component.text("Флаг восстановлен!").decorate(TextDecoration.BOLD));
-                    bossBar.color(BossBar.Color.RED);
+                    bossBar.title("Флаг восстановлен!");
+                    bossBar.color(BarColor.RED);
                     bossBar.progress(0);
 
                     NeutralBattlegroundFlag.this.reset();
@@ -186,8 +186,8 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                             } else  {
                                 // Скрываем боссбар через полторы секунды после заполнения
                                 bossBar.progress(1.0f);
-                                bossBar.color(BossBar.Color.GREEN);
-                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(bossBar)), 30);
+                                bossBar.color(BarColor.GREEN);
+                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> bossBar.cleanViewers(), 30);
                                 this.cancel();
                             }
                         }
@@ -200,8 +200,10 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
                 for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
                     Player player = bgPlayer.getBukkitPlayer();
-                    Minespades.getInstance().getAdventureAPI().player(player).showBossBar(bossBar);
+                    bossBar.addViewer(player);
                 }
+
+                bossBar.visible(true);
             }
 
         };

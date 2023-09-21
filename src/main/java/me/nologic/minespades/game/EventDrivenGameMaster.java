@@ -67,9 +67,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
     private String battlegroundLaunchedBroadcastMessage;
 
-    @TranslationKey(section = "regular-messages", name = "battleground-click-to-join", value = "Click to join: ")
-    private String clickToJoinMessage;
-
     @TranslationKey(section = "regular-messages", name = "team-flag-carried-message", value = "%s has carried the flag of team %s!")
     private String teamFlagCarriedMessage;
 
@@ -126,9 +123,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), broadcastSound, 1F, 1F));
 
-        plugin.broadcast(Component.text(String.format(battlegroundLaunchedBroadcastMessage, name)).color(TextColor.color(180, 63, 61)));
-        plugin.broadcast(Component.text(clickToJoinMessage).color(TextColor.color(180, 63, 61))
-                .append(Component.text("/ms join " + name).clickEvent(ClickEvent.runCommand("/ms join " + name)).color(TextColor.color(182, 48, 41)).decorate(TextDecoration.UNDERLINED)));
+        plugin.broadcast(String.format(battlegroundLaunchedBroadcastMessage, name));
     }
 
     @EventHandler
@@ -197,8 +192,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             final BattlegroundTeam team          = flag.getTeam();
             final ChatColor        flagTeamColor = ChatColor.of(flag.getTeam().getColor().asHexString());
 
-            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "§r", flagTeamColor + flag.getTeam().getName()  + "§r"));
-            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getName() + "§r", team.getFlagLifepoolPenalty()));
+            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "§r", flagTeamColor + flag.getTeam().getTeamName()  + "§r"));
+            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getTeamName() + "§r", team.getFlagLifepoolPenalty()));
             team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
             event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
         }
@@ -352,7 +347,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
                 this.getPlayersInGame().add(bgPlayer);
 
-                Audience audience = plugin.getAdventureAPI().player(player);
                 final String name = this.translateColors(team.getColor().asHexString() + player.getName());
                 player.setDisplayName(name);
                 player.setPlayerListName(name);
@@ -387,7 +381,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         public void disconnect(@NotNull BattlegroundPlayer battlegroundPlayer) {
 
             Player player = battlegroundPlayer.getBukkitPlayer();
-            Audience audience = plugin.getAdventureAPI().player(player);
 
             if (battlegroundPlayer.isCarryingFlag() && !plugin.isDisabling()) {
                 battlegroundPlayer.getFlag().drop();

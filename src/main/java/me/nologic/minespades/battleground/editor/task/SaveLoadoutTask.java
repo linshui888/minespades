@@ -6,10 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -49,41 +45,8 @@ public class SaveLoadoutTask extends BaseEditorTask implements Runnable {
             updateStatement.executeUpdate();
 
             editor.editSession(player).setTargetLoadout(name);
-
-            this.listEntries();
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-    }
-
-    @SneakyThrows
-    private void listEntries() { // TODO: Убрать в отдельный класс (но какой?..)
-        try (Connection connection = connect(); PreparedStatement listStatement = connection.prepareStatement("SELECT * FROM teams WHERE name = ?;")) {
-
-            // Воспроизводим звук как показатель успешного выполнения команды и отображения листа
-            player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1F, 1.4F);
-
-            listStatement.setString(1, editor.editSession(player).getTargetTeam());
-            ResultSet data = listStatement.executeQuery();
-
-            // Проходимся по всем элементам JSON-массива и отправляем игроку-редактору лист со всеми наборами экипировки редактируемой команды
-            while (data.next()) {
-                Minespades.getInstance().getAdventureAPI().player(player).sendMessage(Component.text("Наборы экипировки " + data.getString("name") + ":").color(TextColor.fromHexString("#" + data.getString("color"))));
-
-                JsonArray loadouts = JsonParser.parseString(data.getString("loadouts")).getAsJsonArray();
-                for (JsonElement element : loadouts) {
-                    JsonObject loadout = element.getAsJsonObject();
-                    String name = loadout.get("name").getAsString();
-                    Minespades.getInstance().getAdventureAPI().player(player).sendMessage(
-                            Component.text(" - " + name, TextColor.color(172, 127, 67))
-                                    .append(Component.text(" [x]")
-                                            .color(TextColor.color(187, 166, 96))
-                                            .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы удалить " + name).color(TextColor.color(193, 186, 80))))
-                                            .clickEvent(ClickEvent.runCommand("/ms remove loadout " + name))
-                                    )
-                    );
-                }
-            }
         }
     }
 

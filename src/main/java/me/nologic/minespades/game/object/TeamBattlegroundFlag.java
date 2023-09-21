@@ -6,13 +6,11 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundTeam;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import me.nologic.minespades.util.BossBar;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,7 +38,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
         this.team = team;
 
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
-        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().red(), team.getColor().green(), team.getColor().blue()), 1.2F);
+        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().getColor().getRed(), team.getColor().getColor().getGreen(), team.getColor().getColor().getBlue()), 1.2F);
         this.tick = new BukkitRunnable() {
 
             // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
@@ -115,7 +113,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
 
             // Не забываем скрывать таймер, если флаг был поднят
             Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> {
-                Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(recoveryBossBar));
+                recoveryBossBar.cleanViewers().visible(false);
                 recoveryBossBar = null;
             });
             flagRecoveryTimer = null;
@@ -159,14 +157,13 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" пропадёт через §e%sс§f..", timer / 20))), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_20)
-                    .addFlag(BossBar.Flag.CREATE_WORLD_FOG);
+            final BossBar bossBar = BossBar.bossBar(String.format("Флаг %s пропадёт через &e%sс&f...", team.getDisplayName(), timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
 
             @Override
             public void run() {
                 TeamBattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.name(Component.text("Флаг ").append(team.getDisplayName()).append(Component.text(String.format(" пропадёт через §e%sс§f..", timer / 20))));
+                bossBar.title(String.format("Флаг %s пропадёт через &e%sс&f...", team.getDisplayName(), timer / 20));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -181,8 +178,8 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
                 if (timer == 0) {
 
                     // Попытаемся сделать всё красиво, нам нужно заполнить боссбар, изменить сообщение на ФЛАГ ВОССТАНОВЛЕН! и сменить цвет
-                    bossBar.name(Component.text("Флаг восстановлен!").decorate(TextDecoration.BOLD));
-                    bossBar.color(BossBar.Color.RED);
+                    bossBar.title("&lФлаг восстановлен!");
+                    bossBar.color(BarColor.RED);
                     bossBar.progress(0);
 
                     TeamBattlegroundFlag.this.reset();
@@ -198,8 +195,8 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
                             } else  {
                                 // Скрываем боссбар через полторы секунды после заполнения
                                 bossBar.progress(1.0f);
-                                bossBar.color(BossBar.Color.GREEN);
-                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> Bukkit.getOnlinePlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p).hideBossBar(bossBar)), 30);
+                                bossBar.color(BarColor.GREEN);
+                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> bossBar.cleanViewers().visible(false), 30);
                                 this.cancel();
                             }
                         }
@@ -212,8 +209,10 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
 
                 for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
                     Player player = bgPlayer.getBukkitPlayer();
-                    Minespades.getInstance().getAdventureAPI().player(player).showBossBar(bossBar);
+                    bossBar.addViewer(player);
                 }
+
+                bossBar.visible(true);
             }
 
         };

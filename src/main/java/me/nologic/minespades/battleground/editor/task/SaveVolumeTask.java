@@ -5,10 +5,11 @@ import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
-import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
+import me.nologic.minespades.util.BossBar;
 import org.bukkit.*;
 import org.bukkit.block.*;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -32,8 +33,8 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         super(player);
 
         this.battlegroundName = battlegroundName;
-        this.completeBar = BossBar.bossBar(Component.text(battlegroundName), 0.0F, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_20);
-        this.corners = corners;
+        this.completeBar      = BossBar.bossBar(battlegroundName, 0.0F, BarColor.YELLOW, BarStyle.SEGMENTED_20);
+        this.corners          = corners;
     }
 
     @SneakyThrows
@@ -45,7 +46,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         }
 
         editor.setSaving(true);
-        plugin.getAdventureAPI().player(player).showBossBar(completeBar);
+        completeBar.addViewer(player).visible(true);
 
         // Удаляем старое содержимое (возможно имеет смысл сохранять это куда-нибудь, но это не такая уж и обязательная фича, да и лень мне)
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battlegroundName);
@@ -78,7 +79,8 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
         final int size = 10000;
         World world = player.getWorld();
-        this.completeBar.name(Component.text(String.format("§6%s§7: §eSaving blocks...", battlegroundName)));
+
+        this.completeBar.title(String.format("§6%s§7: §eSaving blocks...", battlegroundName));
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
@@ -88,7 +90,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
                     Block block = world.getBlockAt(x, y, z);
                     if (++b % size == 0) {
-                        final float progress = this.completeBar.progress() + step * size;
+                        final double progress = this.completeBar.progress() + step * size;
                         this.completeBar.progress(Math.min(progress, 1.0f));
                     }
 
@@ -170,7 +172,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
         player.sendMessage(String.format("§7Successfully saved the volume. §8(§33%db.§8, §3%ds.§8)", i, totalTime / 1000));
-        plugin.getAdventureAPI().player(player).hideBossBar(completeBar);
+        completeBar.cleanViewers().visible(false);
         editor.editSession(player).resetCorners();
         editor.setSaving(false);
     }

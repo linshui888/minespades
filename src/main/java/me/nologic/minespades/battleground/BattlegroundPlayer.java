@@ -4,17 +4,21 @@ import lombok.Getter;
 import lombok.Setter;
 import me.catcoder.sidebar.ProtocolSidebar;
 import me.catcoder.sidebar.Sidebar;
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.object.BattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
-import me.nologic.minority.annotations.Translatable;
-import me.nologic.minority.annotations.TranslationKey;
-import net.kyori.adventure.text.Component;
+import me.nologic.minority.annotations.*;
+
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
-@Translatable
-public class BattlegroundPlayer implements MinorityFeature, Colorizable {
+import java.util.List;
+
+@Configurable(path = "battleground-sidebar") @Translatable
+public class BattlegroundPlayer implements MinorityFeature {
 
     private @Getter final Battleground       battleground;
     private @Getter final BattlegroundTeam   team;
@@ -26,7 +30,7 @@ public class BattlegroundPlayer implements MinorityFeature, Colorizable {
     private @Setter @Getter boolean          carryingFlag;
     private @Setter @Getter BattlegroundFlag flag;
 
-    private Sidebar<Component> sidebar;
+    private Sidebar<BaseComponent[]> sidebar;
 
     public BattlegroundPlayer(final Battleground battleground, final BattlegroundTeam team, final Player player) {
         this.battleground = battleground;
@@ -36,33 +40,34 @@ public class BattlegroundPlayer implements MinorityFeature, Colorizable {
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
-    @TranslationKey(section = "battleground-sidebar", name = "label", value = "Minespades")
+    @ConfigurationKey(name = "enabled", type = Type.BOOLEAN, value = "true")
+    private boolean enabled;
+
+    @ConfigurationKey(name = "update-period", type = Type.INTEGER, value = "10", comment = "Ticks between each sidebar update.")
+    private int updateTicks;
+
+    @ConfigurationKey(name = "label", value = "#fcd617Minespades")
     private String sidebarLabel;
 
-    @TranslationKey(section = "battleground-sidebar", name = "KDA", value = "K/D/A:")
-    private String sidebarKDALabel;
-
-    @TranslationKey(section = "battleground-sidebar", name = "team", value = "Team")
-    private String playerTeamLabel;
-
-    @TranslationKey(section = "battleground-sidebar", name = "lifepool", value = "Lifepool")
-    private String lifepoolLabel;
-
-    @TranslationKey(section = "battleground-sidebar", name = "map", value = "Map")
-    private String mapLabel;
+    @ConfigurationKey(name = "lines", type = Type.LIST_OF_STRINGS, comment = "Battleground sidebar lines, use placeholders to provide information.", value = {
+            "K/D/A: &c%minespades_player_current_kill_score%/%minespades_player_current_death_score%/%minespades_player_current_assist_score%",
+            "",
+            "Team %minespades_player_current_team%",
+            "Lifepool %minespades_player_current_lifepool%",
+            "",
+            "Map %minespades_player_current_map%" })
+    private List<String> sidebarLines;
 
     public void showSidebar() {
-        this.sidebar = ProtocolSidebar.newAdventureSidebar(Component.text(sidebarLabel == null ? "Minespades" : sidebarLabel), Minespades.getPlugin(Minespades.class));
-        sidebar.addUpdatableLine(player -> Component.text(sidebarKDALabel + " " + kills + "/" + deaths + "/" + assists));
-        sidebar.addBlankLine();
-
-        sidebar.addLine(Component.text(playerTeamLabel + " ").append(team.getDisplayName()));
-        sidebar.addUpdatableLine(player -> Component.text(lifepoolLabel + " " + team.getLifepool()));
-
-        sidebar.addBlankLine();
-        sidebar.addLine(Component.text(mapLabel + " " + battleground.getBattlegroundName()));
-
-        sidebar.updateLinesPeriodically(0, 10);
+        this.sidebar = ProtocolSidebar.newBungeeChatSidebar(TextComponent.fromLegacyText(sidebarLabel), Minespades.getPlugin(Minespades.class));
+        for (final String string : sidebarLines) {
+            if (string.isBlank()) {
+                sidebar.addBlankLine();
+            } else {
+                sidebar.addUpdatableLine(player -> TextComponent.fromLegacyText(PlaceholderAPI.setPlaceholders(bukkitPlayer, string)));
+            }
+        }
+        sidebar.updateLinesPeriodically(0, updateTicks);
         sidebar.addViewer(bukkitPlayer);
     }
 
@@ -79,8 +84,8 @@ public class BattlegroundPlayer implements MinorityFeature, Colorizable {
         return Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
     }
 
-    public String getColorizedName() {
-        return this.translateColors(team.getColor().asHexString() + bukkitPlayer.getName());
+    public String getDisplayName() {
+        return team.getColor() + bukkitPlayer.getName();
     }
 
     public void disconnect() {

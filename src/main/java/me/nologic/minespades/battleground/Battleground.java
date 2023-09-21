@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -67,7 +66,7 @@ public final class Battleground {
     }
 
     public void addTeam(BattlegroundTeam team) {
-        Team bukkitTeam = scoreboard.registerNewTeam(team.getName());
+        Team bukkitTeam = scoreboard.registerNewTeam(team.getTeamName());
         bukkitTeam.setAllowFriendlyFire(false);
         bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
         bukkitTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
@@ -90,7 +89,7 @@ public final class Battleground {
      * */
     @Nullable
     public BattlegroundTeam getTeamByName(String name) {
-        return this.teams.stream().filter(b -> b.getName().equals(name)).findFirst().orElse(null);
+        return this.teams.stream().filter(b -> b.getTeamName().equals(name)).findFirst().orElse(null);
     }
 
     public List<BattlegroundPlayer> getPlayers() {
@@ -105,10 +104,6 @@ public final class Battleground {
 
     public void broadcast(String message) {
         this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
-    }
-
-    public void broadcast(TextComponent message) {
-        this.getPlayers().forEach(p -> Minespades.getInstance().getAdventureAPI().player(p.getBukkitPlayer()).sendMessage(message));
     }
 
     public boolean getPreference(Preference preference) {

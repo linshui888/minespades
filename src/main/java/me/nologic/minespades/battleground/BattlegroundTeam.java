@@ -9,9 +9,8 @@ import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
 import me.nologic.minority.annotations.ConfigurationKey;
 import me.nologic.minority.annotations.Type;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.TextColor;
+
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -30,12 +29,12 @@ public class BattlegroundTeam implements MinorityFeature {
     private final Battleground   battleground;
     private @Setter Team         bukkitTeam;
 
-    private final TextColor      color;
-    private final String         name;
+    private final ChatColor      color;
+    private final String         teamName;
     private @Setter int          lifepool;
 
     // Количество очков, забираемое в случае потери флага
-    @ConfigurationKey(name = "flag-lifepool-penalty", type = Type.INTEGER, value = "15", comment = "How many lifepoints will the team lose if their flag is stolen?")
+    @ConfigurationKey(name = "flag-lifepool-penalty", type = Type.INTEGER, value = "15", comment = "How many lifepoints will lost if team flag is stolen?")
     private @Getter int flagLifepoolPenalty;
 
     @Getter
@@ -48,14 +47,14 @@ public class BattlegroundTeam implements MinorityFeature {
 
     public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
         this.battleground = battleground;
-        this.name = name;
-        this.color = TextColor.fromHexString("#" + color);
+        this.teamName = name;
+        this.color = ChatColor.of("#" + color);
         this.lifepool = lifepool;
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
-    public TextComponent getDisplayName() {
-        return Component.text(name).color(color);
+    public String getDisplayName() {
+        return color + teamName;
     }
 
     public void addRespawnLocation(Location location) {

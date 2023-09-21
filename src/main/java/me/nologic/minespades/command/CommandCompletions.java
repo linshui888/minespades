@@ -15,7 +15,6 @@ import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import org.bukkit.entity.Player;
 
-import javax.crypto.NullCipher;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -152,9 +151,9 @@ public class CommandCompletions {
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegroundName);
         Multiground multiground = battlegrounder.getMultiground(battlegroundName);
         if (battleground != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN)) {
-            battleground.getTeams().forEach(team -> teams.add(team.getName()));
+            battleground.getTeams().forEach(team -> teams.add(team.getTeamName()));
         } else if (multiground != null && !multiground.getBattleground().getPreference(Preference.FORCE_AUTO_ASSIGN)) {
-            multiground.getBattleground().getTeams().forEach(team -> teams.add(team.getName()));
+            multiground.getBattleground().getTeams().forEach(team -> teams.add(team.getTeamName()));
         }
 
         return teams;
