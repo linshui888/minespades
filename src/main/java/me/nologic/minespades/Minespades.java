@@ -74,7 +74,6 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         commandManager.registerCommand(new MinespadesCommand(this));
 
         getServer().getPluginManager().registerEvents(gameMaster, this);
-        this.enableBattlegrounds();
 
         if (super.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             final MinespadesPlaceholderExpansion mpe = new MinespadesPlaceholderExpansion();

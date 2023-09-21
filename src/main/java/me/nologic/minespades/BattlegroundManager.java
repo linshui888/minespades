@@ -121,7 +121,7 @@ public class BattlegroundManager {
     }
 
     @Nullable
-    public Economy getEconomy() {
+    public Economy getEconomyManager() {
         return this.vault.getEconomy();
     }
 

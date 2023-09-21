@@ -16,16 +16,9 @@ import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
-import me.nologic.minespades.util.Colorizable;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.*;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.title.Title;
+
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -240,7 +233,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         final Battleground battleground = event.getBattleground();
 
         // Денежная награда за завершение игры и её вычисление
-        if (battlegrounder.getEconomy() != null) {
+        if (battlegrounder.getEconomyManager() != null) {
             for (BattlegroundPlayer player : battleground.getPlayers()) {
                 final boolean isWinner   = !player.getTeam().isDefeated();
                 final double  killReward = player.getKills() * rewardPerKill;
@@ -249,7 +242,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 if (isWinner) reward += rewardForWinning;
 
                 reward += killReward;
-                battlegrounder.getEconomy().depositPlayer(player.getBukkitPlayer(), reward);
+                battlegrounder.getEconomyManager().depositPlayer(player.getBukkitPlayer(), reward);
 
                 // Отображение сообщения о награде
                 if (rewardMessageEnabled || reward > 0) player.getBukkitPlayer().sendMessage(String.format(moneyRewardForWinningMessage, reward));
