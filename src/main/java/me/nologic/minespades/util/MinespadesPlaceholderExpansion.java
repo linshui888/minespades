@@ -29,13 +29,17 @@ public class MinespadesPlaceholderExpansion extends PlaceholderExpansion {
         // Если игрок не играет на арене, то будет возвращён null
         if (player != null) {
             return switch (params.toLowerCase()) {
-                case "player_kda" -> player.getKills() + "/" + player.getDeaths() + "/" + player.getAssists();
-                case "player_team_lifepool" -> "" + player.getTeam().getLifepool();
+                case "player_current_kill_score" -> "" + player.getKills();
+                case "player_current_death_score" -> "" + player.getDeaths();
+                case "player_current_assist_score" -> "" + player.getAssists();
+                case "player_current_lifepool" -> "" + player.getTeam().getLifepool();
+                case "player_current_team" -> player.getTeam().getDisplayName();
+                case "player_current_map" -> player.getBattleground().getBattlegroundName();
                 default -> null;
             };
         }
 
-        return null; // Placeholder is unknown by the Expansion
+        return null;
     }
 
 }

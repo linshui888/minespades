@@ -446,8 +446,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 preparedStatement.setDouble(5, player.getHealth());
                 preparedStatement.setDouble(6, player.getFoodLevel());
                 preparedStatement.executeUpdate();
-
-                plugin.getLogger().info(String.format("Инвентарь игрока %s был сохранён.", player.getName()));
             }
         }
 
@@ -469,7 +467,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 player.setHealth(health);
                 player.setFoodLevel(hunger);
                 player.setGameMode(GameMode.SURVIVAL);
-                player.sendMessage("&7Инвентарь был восстановлен.");
             }
         }
 

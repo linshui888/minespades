@@ -43,7 +43,7 @@ public class BattlegroundPlayer implements MinorityFeature {
     @ConfigurationKey(name = "enabled", type = Type.BOOLEAN, value = "true")
     private boolean enabled;
 
-    @ConfigurationKey(name = "update-period", type = Type.INTEGER, value = "10", comment = "Ticks between each sidebar update.")
+    @ConfigurationKey(name = "update-period", type = Type.INTEGER, value = "10", comment = "Ticks between each sidebar update")
     private int updateTicks;
 
     @ConfigurationKey(name = "label", value = "#fcd617Minespades")
