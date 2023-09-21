@@ -68,6 +68,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use §3/ms q§r to quit.")
     private String autoConnectedToBattlegroundMessage;
 
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
+    private String successfullyConnectedTitleMessage;
+
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
     private String battlegroundLaunchedBroadcastMessage;
 

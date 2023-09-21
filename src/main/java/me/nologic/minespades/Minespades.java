@@ -20,37 +20,23 @@ import me.nologic.minority.MinorityExtension;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.util.Random;
 
 @Getter @Translatable
 public final class Minespades extends MinorityExtension implements MinorityFeature {
 
-    @Getter
     private boolean disabling = false;
 
     @Getter
     private static Minespades instance;
 
-    private BukkitAudiences adventureAPI;
     private final Random random = new Random();
 
     private EventDrivenGameMaster gameMaster;
     private BattlegroundManager   battlegrounder;
     private PaperCommandManager   commandManager;
-
-    @TranslationKey(section = "log-info-messages", name = "battleground-folder-created", value = "Minespades created a battlegrounds folder.")
-    private String battlegroundFolderMessage;
-
-    @TranslationKey(section = "log-info-messages", name = "battleground-load", value = "Minespades is trying to load battleground %s.")
-    private String battlegroundLoadMessage;
-
-    @TranslationKey(section = "log-info-messages", name = "plugin-disable", value = "Minespades will be disabled. All running battlegrounds will be stopped.")
-    private String minespadesDisableMessage;
 
     @Override
     public void onLoad() {
@@ -71,7 +57,6 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
     @Override
     public void onEnable() {
         instance = this;
-        this.adventureAPI = BukkitAudiences.create(this);
 
         this.init(this, this.getClass(), this);
 
@@ -97,15 +82,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         }
     }
 
-    // TODO: Необходимо починить загрузку арен на старте.
-    private void enableBattlegrounds() {
-        super.getConfig().getStringList("battlegrounds").forEach(name -> {
-
-            // FIXME: почини меня, дай мне свежесть
-            super.getLogger().info(String.format(battlegroundLoadMessage, name));
-            battlegrounder.enable(name);
-        });
-    }
+    // TODO: 21.09.2023 Необходимо добавить автоматическую загрузку арен.
 
     @Override
     public void onDisable() {
@@ -125,17 +102,21 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
             battlegrounder.disable(battleground);
         }
 
-        if (this.adventureAPI != null) {
-            this.adventureAPI.close();
-            this.adventureAPI = null;
-        }
-
     }
 
-    public void broadcast(final Component message) {
-        for (Player p : getServer().getOnlinePlayers()) {
-            adventureAPI.player(p).sendMessage(message);
+    public void broadcast(final String message) {
+        for (Player player : super.getServer().getOnlinePlayers()) {
+            player.sendMessage(message);
         }
     }
+
+    @TranslationKey(section = "log-info-messages", name = "battleground-folder-created", value = "Minespades created a battlegrounds folder.")
+    private String battlegroundFolderMessage;
+
+    @TranslationKey(section = "log-info-messages", name = "battleground-load", value = "Minespades is trying to load battleground %s.")
+    private String battlegroundLoadMessage;
+
+    @TranslationKey(section = "log-info-messages", name = "plugin-disable", value = "Minespades will be disabled. All running battlegrounds will be stopped.")
+    private String minespadesDisableMessage;
 
 }
