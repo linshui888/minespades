@@ -14,6 +14,7 @@ import me.nologic.minority.annotations.*;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -80,6 +81,7 @@ public class BattlegroundPlayer implements MinorityFeature {
         bukkitPlayer.getInventory().setContents(loadout.getInventory().getContents());
     }
 
+    @Nullable
     public static BattlegroundPlayer getBattlegroundPlayer(Player player) {
         return Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
     }

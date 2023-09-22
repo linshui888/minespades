@@ -67,7 +67,7 @@ public final class Battleground {
 
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getTeamName());
-        bukkitTeam.setAllowFriendlyFire(false);
+        bukkitTeam.setAllowFriendlyFire(this.getPreference(Preference.FRIENDLY_FIRE));
         bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
         bukkitTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
         team.setBukkitTeam(bukkitTeam);

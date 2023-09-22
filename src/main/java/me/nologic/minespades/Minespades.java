@@ -10,6 +10,7 @@ import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.editor.task.AddNeutralFlagTask;
 import me.nologic.minespades.battleground.editor.task.AddTeamFlagTask;
+import me.nologic.minespades.battleground.editor.task.SaveVolumeTask;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
@@ -52,6 +53,7 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         super.getConfigurationWizard().generate(BattlegroundTeam.class);
         super.getConfigurationWizard().generate(AddNeutralFlagTask.class);
         super.getConfigurationWizard().generate(BattlegroundFlag.class);
+        super.getConfigurationWizard().generate(SaveVolumeTask.class);
     }
 
     @Override

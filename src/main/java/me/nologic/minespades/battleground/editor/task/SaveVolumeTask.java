@@ -3,9 +3,14 @@ package me.nologic.minespades.battleground.editor.task;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minespades.util.BossBar;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.ConfigurationKey;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.boss.BarColor;
@@ -23,7 +28,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Future;
 
-public class SaveVolumeTask extends BaseEditorTask implements Runnable {
+@Translatable
+public class SaveVolumeTask extends BaseEditorTask implements Runnable, MinorityFeature {
 
     private final BossBar    completeBar;
     private final String     battlegroundName;
@@ -31,7 +37,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
     public SaveVolumeTask(final String battlegroundName, Player player, Location[] corners) {
         super(player);
-
+        this.init(this, this.getClass(), Minespades.getInstance());
         this.battlegroundName = battlegroundName;
         this.completeBar      = BossBar.bossBar(battlegroundName, 0.0F, BarColor.YELLOW, BarStyle.SEGMENTED_20);
         this.corners          = corners;
@@ -41,7 +47,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
     public void run() {
 
         if (corners[0] == null || corners[1] == null) {
-            player.sendMessage("&4Необходимо указать два угла кубоида.");
+            player.sendMessage(selectTwoCornersMessage);
             return;
         }
 
@@ -80,7 +86,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         final int size = 10000;
         World world = player.getWorld();
 
-        this.completeBar.title(String.format("&6%s&7: &eSaving blocks...", battlegroundName));
+        this.completeBar.title(String.format(saveStateBarTitle, battlegroundName));
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
@@ -171,7 +177,7 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
         connection.close();
         long totalTime = System.currentTimeMillis() - startTime;
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
-        player.sendMessage(String.format("&7Successfully saved the volume. &8(&33%db.&8, &3%ds.&8)", i, totalTime / 1000));
+        player.sendMessage(String.format(volumeSavedMessage, i, totalTime / 1000));
         completeBar.cleanViewers().visible(false);
         editor.editSession(player).resetCorners();
         editor.setSaving(false);
@@ -237,5 +243,14 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable {
 
         return obj.toString();
     }
+
+    @TranslationKey(section = "editor-info-messages", name = "save-state-boss-bar-title", value = "#fcd617%s&7: &eSaving blocks...")
+    private String saveStateBarTitle;
+
+    @TranslationKey(section = "editor-info-messages", name = "battleground-volume-successfully-saved", value = "&7Successfully saved the volume. &8(&33%db.&8, &3%ds.&8)")
+    private String volumeSavedMessage;
+
+    @TranslationKey(section = "editor-error-messages", name = "select-two-corners", value = "&cYou must select two corners before saving the battleground volume. Use &lRMB/LMB &cwhile holding a &e&lgolden sword &cin your main hand.")
+    private String selectTwoCornersMessage;
 
 }

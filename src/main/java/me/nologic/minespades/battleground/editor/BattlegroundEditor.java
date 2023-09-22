@@ -317,7 +317,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     public void removeNeutralFlag(Player player, final int x, final int y, final int z) {
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(this.editSession(player).getTargetBattleground());
         driver.executeUpdate("DELETE FROM objects WHERE x = ? AND y = ? AND z = ?;", x, y, z).closeConnection();
-        player.sendMessage(String.format(neutralFlagRemoved, String.format("&ex&b%s&f, &ey&b%s&f, &ez&b%s&f", x, y, z)));
+        player.sendMessage(String.format(neutralFlagRemoved, String.format("§ex§b%s§f, §ey§b%s§f, §ez§b%s§f", x, y, z)));
     }
 
     public List<PlayerEditSession> getEditSessionList() {

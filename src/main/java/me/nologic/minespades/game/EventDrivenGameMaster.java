@@ -21,9 +21,12 @@ import me.nologic.minority.annotations.*;
 
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -36,6 +39,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
@@ -45,6 +49,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,52 +60,21 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
-    private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler();
+    private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler(this);
 
-    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use &3/ms q&r to quit.")
-    private String autoConnectedToBattlegroundMessage;
-
-    @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
-    private String successfullyConnectedTitle;
-
-    @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s!")
-    private String successfullyConnectedSubtitle;
-
-    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
-    private String battlegroundConnectionCancelled;
-
-    @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
-    private String battlegroundLaunchedBroadcastMessage;
-
-    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s has carried the flag of team %s!")
-    private String teamFlagCarriedMessage;
-
-    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s has carried the flag!")
-    private String neutralFlagCarriedMessage;
-
-    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
-    private String teamLostLivesMessage;
-
-    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s lose!")
-    private String teamLoseGameMessage;
-
-    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
-    private String moneyRewardForWinningMessage;
-
-    @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
-    private Sound broadcastSound;
-
-    @ConfigurationKey(name = "show-reward-message", value = "true", type = Type.BOOLEAN)
-    private boolean rewardMessageEnabled;
-
-    @ConfigurationKey(name = "win-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for winning the game. Will work only if Vault is installed.")
-    private double rewardForWinning;
-
-    @ConfigurationKey(name = "blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
-    private double rewardPerKill;
+    private final HashMap<Player, Player> lastAttackerMap = new HashMap<>();
 
     public EventDrivenGameMaster() {
         this.init(this, this.getClass(), Minespades.getInstance());
+    }
+
+    @Nullable
+    public Player getLastAttacker(final Player victim) {
+        return this.lastAttackerMap.get(victim);
+    }
+
+    public void resetAttacker(final Player victim) {
+        this.lastAttackerMap.remove(victim);
     }
 
     @EventHandler
@@ -139,9 +113,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         final Player player = event.getVictim().getBukkitPlayer();
 
+        // Обработка смерти происходит в другом классе
         this.playerKDA.handlePlayerDeath(event);
 
-        // Довольно простая механика лайфпулов. После смерти игрока лайфпул команды уменьшается.
+        // Довольно простая механика лайфпулов. После смерти игрока, лайфпул его команды уменьшается.
         // Если игрок умер, а очков жизней больше нет — игрок становится спектатором.
         // Если в команде умершего игрока все игроки в спеке, то значит команда проиграла.
         int lifepool = event.getVictim().getTeam().getLifepool();
@@ -160,7 +135,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                     event.getVictim().getFlag().drop();
 
                 player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
-                player.setNoDamageTicks(40);
+                player.setNoDamageTicks(20);
                 player.setHealth(20);
                 player.setFoodLevel(20);
                 player.setFireTicks(0);
@@ -255,48 +230,35 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         } else battlegrounder.resetBattleground(battleground);
     }
 
-    // TODO: Need some testing. It may not work..?
     @EventHandler
-    private void onPlayerDamagePlayer(EntityDamageByEntityEvent event) {
+    private void onPlayerDamagePlayer(final EntityDamageByEntityEvent event) {
         if (!event.isCancelled() && event.getEntity() instanceof Player victim) {
 
             // If victim is not a battleground player, return
-            if (BattlegroundPlayer.getBattlegroundPlayer(victim) != null) return;
+            if (BattlegroundPlayer.getBattlegroundPlayer(victim) == null) return;
 
-            // Killer is a player
-            if (event.getDamager() instanceof Player killer) {
-                if (victim.getHealth() <= event.getFinalDamage()) {
-                    EntityDamageEvent.DamageCause cause = event.getCause();
-                    BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
-                    Bukkit.getServer().getPluginManager().callEvent(bpde);
-                    event.setCancelled(true);
-                }
-            }
-
-            // Killer is a projectile like arrow or etc.
-            if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player killer) {
-                if (victim.getHealth() <= event.getFinalDamage()) {
-                    EntityDamageEvent.DamageCause cause = event.getCause();
-                    BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(victim, killer, cause,true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
-                    Bukkit.getServer().getPluginManager().callEvent(bpde);
-                    event.setCancelled(true);
-                }
+            // We should store last attacked player
+            if (event.getDamager() instanceof Player killer && BattlegroundPlayer.getBattlegroundPlayer(killer) != null) {
+                this.lastAttackerMap.put(victim, killer);
+            } else if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player killer) {
+                this.lastAttackerMap.put(victim, killer);
+            } else if (event.getDamager() instanceof TNTPrimed tnt && tnt.getSource() instanceof Player killer) {
+                this.lastAttackerMap.put(victim, killer);
             }
 
         }
     }
 
     @EventHandler
-    private void onPlayerDamage(EntityDamageEvent event) {
-        if (!event.isCancelled() && event.getEntity() instanceof Player player && BattlegroundPlayer.getBattlegroundPlayer(player) != null && player.getHealth() <= event.getFinalDamage() && player.getLastDamageCause() != null) {
+    private void onPlayerDamage(final EntityDamageEvent event) {
+        if (!event.isCancelled() && event.getEntity() instanceof Player player) {
 
-            switch (player.getLastDamageCause().getCause()) {
-                case ENTITY_ATTACK, ENTITY_SWEEP_ATTACK, PROJECTILE, MAGIC, THORNS: return;
+            if (BattlegroundPlayer.getBattlegroundPlayer(player) != null && player.getHealth() <= event.getFinalDamage()) {
+                BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(player, event.getCause(),BattlegroundPlayer.getBattlegroundPlayer(player).getBattleground().getPreference(Preference.KEEP_INVENTORY), BattlegroundPlayerDeathEvent.RespawnStrategy.QUICK);
+                Bukkit.getServer().getPluginManager().callEvent(bpde);
+                event.setCancelled(true);
             }
 
-            BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(player, null, event.getCause(),true, BattlegroundPlayerDeathEvent.RespawnMethod.QUICK);
-            Bukkit.getServer().getPluginManager().callEvent(bpde);
-            event.setCancelled(true);
         }
     }
 
@@ -304,9 +266,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @EventHandler // Отмена телепортации на арене в режиме наблюдателя
     private void onPlayerTeleport(PlayerTeleportEvent event) {
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE) {
-            BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
-            if (bgPlayer != null && event.getTo() != null) {
-                if (!Objects.equals(event.getTo().getWorld(), bgPlayer.getBattleground().getWorld())) {
+            BattlegroundPlayer battlegroundPlayer = BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer());
+            if (battlegroundPlayer != null && event.getTo() != null) {
+                if (!Objects.equals(event.getTo().getWorld(), battlegroundPlayer.getBattleground().getWorld())) {
                     event.setCancelled(true);
                 }
             }
@@ -316,9 +278,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     @EventHandler
     private void whenPlayerQuitServer(PlayerQuitEvent event) {
-        BattlegroundPlayer bgPlayer = Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(event.getPlayer());
-        if (bgPlayer != null)
-            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), event.getPlayer()));
+        BattlegroundPlayer battlegroundPlayer = BattlegroundPlayer.getBattlegroundPlayer(event.getPlayer());
+        if (battlegroundPlayer != null)
+            Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(battlegroundPlayer.getBattleground(), battlegroundPlayer.getTeam(), event.getPlayer()));
     }
 
     /**
@@ -336,6 +298,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
          * Лёгкий способ получить обёртку игрока.
          * @return BattlegroundPlayer или null, если игрок не на арене
          * */
+        @Nullable
         public BattlegroundPlayer getBattlegroundPlayer(Player player) {
             for (BattlegroundPlayer bgPlayer : playersInGame) {
                 if (bgPlayer.getBukkitPlayer().equals(player)) {
@@ -542,5 +505,47 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         }
 
     }
+
+    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use &3/ms q&r to quit.")
+    private String autoConnectedToBattlegroundMessage;
+
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
+    private String successfullyConnectedTitle;
+
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s!")
+    private String successfullyConnectedSubtitle;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
+    private String battlegroundConnectionCancelled;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
+    private String battlegroundLaunchedBroadcastMessage;
+
+    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s has carried the flag of team %s!")
+    private String teamFlagCarriedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s has carried the flag!")
+    private String neutralFlagCarriedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
+    private String teamLostLivesMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s lose!")
+    private String teamLoseGameMessage;
+
+    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
+    private String moneyRewardForWinningMessage;
+
+    @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
+    private Sound broadcastSound;
+
+    @ConfigurationKey(name = "show-reward-message", value = "true", type = Type.BOOLEAN)
+    private boolean rewardMessageEnabled;
+
+    @ConfigurationKey(name = "win-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for winning the game. Will work only if Vault is installed.")
+    private double rewardForWinning;
+
+    @ConfigurationKey(name = "blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
+    private double rewardPerKill;
 
 }

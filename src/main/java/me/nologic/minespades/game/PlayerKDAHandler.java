@@ -1,6 +1,7 @@
 package me.nologic.minespades.game;
 
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
@@ -15,7 +16,7 @@ import org.bukkit.scoreboard.Scoreboard;
  * Специализированный класс, который крайне подробно обрабатывает событие смерти игрока.
  * Учёт KDA, киллфид (отправление сообщений об убийстве и пр.) — всё это происходит тут.
  */
-@Configurable(file = "killfeed.yml", path = "killfeed-output", comment = { "Here you can change the killfeed settings and symbols.", "If you are playing on 1.20+ then you can use emoji." })
+@Configurable(file = "killfeed.yml", path = "killfeed-output", comment = { "Here you can change killfeed settings and death symbols.", "If you are playing on 1.20+, you can use all existing emojis!" })
 public class PlayerKDAHandler implements MinorityFeature {
 
     @ConfigurationKey(name = "DEFAULT", value = "⚔")
@@ -30,30 +31,37 @@ public class PlayerKDAHandler implements MinorityFeature {
     @ConfigurationKey(name = "MAGIC", value = "⚡")
     private String magic;
 
+    @ConfigurationKey(name = "ENTITY_EXPLOSION", value = "✴", comment = "Works only with tnt which was primed by a player")
+    private String tnt;
+
     @ConfigurationKey(name = "death-without-killer-message", value = "&f☠ %s &f☠", comment = "This message will be displayed if the player died due to his own fault.")
     private String deathWithoutKiller;
 
-    public PlayerKDAHandler() {
+    private final EventDrivenGameMaster gameMaster;
+
+    public PlayerKDAHandler(final EventDrivenGameMaster gameMaster) {
         this.init(this, this.getClass(), Minespades.getInstance());
+        this.gameMaster = gameMaster;
     }
 
-    public void handlePlayerDeath(BattlegroundPlayerDeathEvent event) {
+    public void handlePlayerDeath(final BattlegroundPlayerDeathEvent event) {
 
-        Player killer = null;
-        if (event.getKiller() != null) killer = event.getKiller().getBukkitPlayer();
+        final Player             victim = event.getVictim().getBukkitPlayer();
+        final BattlegroundPlayer killer = BattlegroundPlayer.getBattlegroundPlayer(this.gameMaster.getLastAttacker(victim));
+
         event.getVictim().setDeaths(event.getVictim().getDeaths() + 1);
 
         String deathMessage;
         if (killer != null) {
             String symbol = this.getDeathSymbol(event);
-            deathMessage = String.format(event.getKiller().getDisplayName() + " &f%s " + event.getVictim().getDisplayName(), symbol);
-            event.getKiller().setKills(event.getKiller().getKills() + 1);
+            deathMessage = String.format(killer.getDisplayName() + " §f%s " + event.getVictim().getDisplayName(), symbol);
+            killer.setKills(killer.getKills() + 1);
 
             // Обновляем счётчик киллов для убийцы в таблисте
             Scoreboard scoreboard = event.getBattleground().getScoreboard();
             Objective objective = scoreboard.getObjective("kill_counter");
             if (objective != null) {
-                objective.getScore(killer.getName()).setScore(event.getKiller().getKills());
+                objective.getScore(killer.getBukkitPlayer().getName()).setScore(killer.getKills());
             }
 
         } else {
@@ -62,12 +70,22 @@ public class PlayerKDAHandler implements MinorityFeature {
 
         // Sending message
         event.getBattleground().getPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(deathMessage)));
+        this.gameMaster.resetAttacker(victim);
     }
     
-    private String getDeathSymbol(BattlegroundPlayerDeathEvent event) {
+    private String getDeathSymbol(final BattlegroundPlayerDeathEvent event) {
 
-        if (event.getKiller() != null) {
-            String itemName = event.getKiller().getBukkitPlayer().getInventory().getItemInMainHand().getType().toString().toLowerCase();
+        switch (event.getDamageCause()) {
+            case PROJECTILE: return projectile;
+            case LAVA, FIRE, FIRE_TICK: return burning;
+            case MAGIC: return magic;
+            case ENTITY_EXPLOSION: return tnt;
+        };
+
+        // little easter egg :D
+        final BattlegroundPlayer killer = BattlegroundPlayer.getBattlegroundPlayer(this.gameMaster.getLastAttacker(event.getVictim().getBukkitPlayer()));
+        if (killer != null) {
+            String itemName = killer.getBukkitPlayer().getInventory().getItemInMainHand().getType().toString().toLowerCase();
             if (itemName.contains("pickaxe")) {
                 return "⛏";
             }
@@ -76,12 +94,7 @@ public class PlayerKDAHandler implements MinorityFeature {
             }
         }
 
-        return switch (event.getDamageCause()) {
-            case PROJECTILE -> projectile;
-            case LAVA, FIRE, FIRE_TICK -> burning;
-            case MAGIC -> magic;
-            default -> basic;
-        };
+        return basic;
     }
 
 }
