@@ -3,7 +3,6 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import org.bukkit.Bukkit;
@@ -92,7 +91,7 @@ public final class Battleground {
         return this.teams.stream().filter(b -> b.getTeamName().equals(name)).findFirst().orElse(null);
     }
 
-    public List<BattlegroundPlayer> getPlayers() {
+    public List<BattlegroundPlayer> getBattlegroundPlayers() {
         final List<BattlegroundPlayer> players = new ArrayList<>();
         for (BattlegroundTeam team : teams) {
             for (Player player : team.getPlayers()) {
@@ -103,7 +102,7 @@ public final class Battleground {
     }
 
     public void broadcast(String message) {
-        this.getPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
+        this.getBattlegroundPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
     public boolean getPreference(Preference preference) {

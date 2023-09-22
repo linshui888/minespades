@@ -91,7 +91,7 @@ public class BattlegroundManager {
         battleground.setEnabled(false);
 
         // Кикаем всех игроков с арены
-        for (BattlegroundPlayer player : battleground.getPlayers()) {
+        for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
             player.disconnect();
         }
 

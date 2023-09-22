@@ -21,12 +21,10 @@ import me.nologic.minority.annotations.*;
 
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -171,8 +169,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             final BattlegroundTeam team          = flag.getTeam();
             final ChatColor        flagTeamColor = flag.getTeam().getColor();
 
-            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName  + "&r", flagTeamColor + flag.getTeam().getTeamName()  + "&r"));
-            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flagTeamColor + flag.getTeam().getTeamName() + "&r", team.getFlagLifepoolPenalty()));
+            event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName + "§r", flagTeamColor + flag.getTeam().getTeamName()));
+            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flag.getTeam().getDisplayName() + "§r", team.getFlagLifepoolPenalty()));
             team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
             event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
         }
@@ -180,7 +178,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         // Neutral flag behaviour
         if (event.getFlag() instanceof NeutralBattlegroundFlag) {
             final int score = carrier.getTeam().getFlagLifepoolPenalty();
-            event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName  + "&r"));
+            event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName));
             carrier.getTeam().setLifepool(carrier.getTeam().getLifepool() + score);
             carrier.addKills(score);
         }
@@ -209,7 +207,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         // Денежная награда за завершение игры и её вычисление
         if (battlegrounder.getEconomyManager() != null) {
-            for (BattlegroundPlayer player : battleground.getPlayers()) {
+            for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
                 final boolean isWinner   = !player.getTeam().isDefeated();
                 final double  killReward = player.getKills() * rewardPerKill;
 

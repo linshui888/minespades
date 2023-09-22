@@ -92,13 +92,14 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
      * Когда игрок входит в box, должен вызываться этот метод.
      */
     @Override
-    protected void pickup(BattlegroundPlayer carrier) {
+    protected void pickup(final BattlegroundPlayer carrier) {
         this.carrier = carrier;
 
         super.playFlagEquipSound();
 
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
+        battleground.broadcast(String.format(teamFlagStolenMessage, carrier.getDisplayName(), this.team.getDisplayName()));
 
         if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
             carrier.getBukkitPlayer().setGlowing(true);
@@ -146,6 +147,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
 
         carrier.setFlag(null);
         carrier.setCarryingFlag(false);
+        battleground.broadcast(String.format(teamFlagDropMessage, carrier.getDisplayName(), this.team.getDisplayName()));
 
         currentPosition = player.getLocation().getBlock().getLocation();
         this.updateBoundingBox();
@@ -175,7 +177,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
                 }
 
                 if (timer <= 100 && timer != 0) {
-                    for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
+                    for (BattlegroundPlayer bgPlayer : battleground.getBattlegroundPlayers()) {
                         bgPlayer.getBukkitPlayer().playSound(bgPlayer.getBukkitPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2 / (timer / 10f));
                     }
                 }
@@ -212,11 +214,8 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
                     this.cancel();
                 }
 
-                for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
-                    Player player = bgPlayer.getBukkitPlayer();
-                    bossBar.addViewer(player);
-                }
 
+                battleground.getBattlegroundPlayers().forEach(battlegroundPlayer -> bossBar.addViewer(battlegroundPlayer.getBukkitPlayer()));
                 bossBar.visible(true);
             }
 
@@ -247,10 +246,16 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
         }
     }
 
-    @TranslationKey(section = "regular-messages", name = "team-flag-restoration-count", value = "A dropped team %s &rflag will be restored in &e%ss&r!..")
+    @TranslationKey(section = "regular-messages", name = "player-stole-team-flag", value = "%s &rstole the flag of team %s&r!")
+    private String teamFlagStolenMessage;
+
+    @TranslationKey(section = "regular-messages", name = "player-drop-team-flag", value = "%s &rdrop the flag of team %s&r!")
+    private String teamFlagDropMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-flag-restoration-counter", value = "Team %s &rflag will be restored in &e%ss&r!..")
     private String restorationCount;
 
-    @TranslationKey(section = "regular-messages", name = "flag-is-restored", value = "&lFlag was restored!")
+    @TranslationKey(section = "regular-messages", name = "flag-is-restored", value = "&lFlag has restored!")
     private String flagRestoredTitle;
 
 }

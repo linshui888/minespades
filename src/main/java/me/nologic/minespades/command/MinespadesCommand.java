@@ -280,7 +280,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     @TranslationKey(section = "editor-info-messages", name = "how-to-select-corners", value = "Hold a golden sword and use &lRMB/LMB &rto select two corners, then use &3/ms save &rto save the volume.")
     private String howToSelectCornersMessage;
 
-    @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team &3%s &rnew color: ")
+    @TranslationKey(section = "editor-info-messages", name = "team-color-updated", value = "Team %s new color is %s!")
     private String teamColorUpdatedMessage;
 
     @Subcommand("remove")
@@ -374,8 +374,10 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 battlegrounder.getEditor().setTeamColor(player, hexColor);
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
 
-                final String team = battlegrounder.getEditor().editSession(player).getTargetTeam();
-                player.sendMessage(String.format(teamColorUpdatedMessage, ChatColor.of("#" + hexColor + team)));
+                final ChatColor color = ChatColor.of("#" + hexColor);
+                final String    team  = battlegrounder.getEditor().editSession(player).getTargetTeam();
+
+                player.sendMessage(String.format(teamColorUpdatedMessage, color + team + "§r", color + hexColor + "§r"));
             }
         }
 
@@ -475,7 +477,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         }
 
         battleground.broadcast(String.format(battlegroundForceResetMessage, name, player.getName()));
-        battleground.getPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
+        battleground.getBattlegroundPlayers().stream().toList().forEach(bgPlayer -> Bukkit.getServer().getPluginManager().callEvent(new PlayerQuitBattlegroundEvent(bgPlayer.getBattleground(), bgPlayer.getTeam(), player)));
         battlegrounder.resetBattleground(battleground);
     }
 

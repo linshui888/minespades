@@ -277,7 +277,7 @@ public class BattlegroundPreferences implements Listener {
             @Override
             public void run() {
                 if (!preferences.get(Preference.PUNISH_COWARDS)) return;
-                for (BattlegroundPlayer player : battleground.getPlayers()) {
+                for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
                     if (!battleground.getBoundingBox().contains(player.getBukkitPlayer().getLocation().toVector())) {
                         if (!player.getBukkitPlayer().isOp() && player.getBukkitPlayer().getGameMode() == GameMode.SURVIVAL) {
 

@@ -69,7 +69,7 @@ public class PlayerKDAHandler implements MinorityFeature {
         }
 
         // Sending message
-        event.getBattleground().getPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(deathMessage)));
+        event.getBattleground().getBattlegroundPlayers().forEach(battlegroundPlayer -> battlegroundPlayer.getBukkitPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(deathMessage)));
         this.gameMaster.resetAttacker(victim);
     }
     

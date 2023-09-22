@@ -50,7 +50,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LoadBattlegroundTask extends BukkitRunnable {
 
-    private static final int BLOCKS_PER_TICK = 20 * 1000;
+    private static final int BLOCKS_PER_TICK = 15 * 1000;
     private final Minespades plugin = Minespades.getInstance();
 
     private final Battleground battleground;
@@ -159,7 +159,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     for (int z = minZ; z <= maxZ; z++) {
 
                         blocks.add(battleground.getWorld().getBlockAt(x, y, z));
-                        if (blocks.size() < BLOCKS_PER_TICK * 2) continue;
+                        if (blocks.size() < BLOCKS_PER_TICK) continue;
 
                         final List<Block> clearable = List.copyOf(blocks);
                         Bukkit.getScheduler().runTask(plugin, () -> {
@@ -168,7 +168,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                             }
                         });
                         blocks = new ArrayList<>();
-                        Thread.sleep(50);
+                        Thread.sleep(25);
 
                     }
                 }

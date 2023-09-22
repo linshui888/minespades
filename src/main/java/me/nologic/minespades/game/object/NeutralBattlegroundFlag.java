@@ -91,6 +91,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
         carrier.setFlag(this);
         carrier.setCarryingFlag(true);
+        battleground.broadcast(String.format(neutralFlagStolenMessage, carrier.getDisplayName()));
 
         if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
             carrier.getBukkitPlayer().setGlowing(true);
@@ -137,6 +138,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
         carrier.setFlag(null);
         carrier.setCarryingFlag(false);
+        battleground.broadcast(String.format(neutralFlagDropMessage, carrier.getDisplayName()));
 
         currentPosition = player.getLocation().getBlock().getLocation();
         this.updateBoundingBox();
@@ -166,7 +168,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                 }
 
                 if (timer <= 100 && timer != 0) {
-                    for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
+                    for (BattlegroundPlayer bgPlayer : battleground.getBattlegroundPlayers()) {
                         bgPlayer.getBukkitPlayer().playSound(bgPlayer.getBukkitPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2 / (timer / 10f));
                     }
                 }
@@ -203,7 +205,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                     this.cancel();
                 }
 
-                for (BattlegroundPlayer bgPlayer : battleground.getPlayers()) {
+                for (BattlegroundPlayer bgPlayer : battleground.getBattlegroundPlayers()) {
                     Player player = bgPlayer.getBukkitPlayer();
                     bossBar.addViewer(player);
                 }
@@ -237,7 +239,13 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
         });
     }
 
-    @TranslationKey(section = "regular-messages", name = "neutral-flag-restoration-count", value = "A dropped &cneutral &rflag will be restored in &e%ss&r!..")
+    @TranslationKey(section = "regular-messages", name = "player-stole-neutral-flag", value = "%s &rstole the neutral flag!")
+    private String neutralFlagStolenMessage;
+
+    @TranslationKey(section = "regular-messages", name = "player-drop-neutral-flag", value = "%s &rdrop the neutral flag!")
+    private String neutralFlagDropMessage;
+
+    @TranslationKey(section = "regular-messages", name = "neutral-flag-restoration-counter", value = "&cNeutral &rflag will be restored in &e%ss&r!..")
     private String restorationCount;
 
     @TranslationKey(section = "regular-messages", name = "flag-is-restored", value = "&lFlag was restored!")
