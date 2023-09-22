@@ -24,7 +24,7 @@ public class PlayerKDAHandler implements MinorityFeature {
     @ConfigurationKey(name = "PROJECTILE", value = "➸")
     private String projectile;
 
-    @ConfigurationKey(name = "LAVA, FIRE, FIRE_TICK", value = "♨")
+    @ConfigurationKey(name = "LAVA, FIRE, FIRE_TICK", value = "🔥")
     private String burning;
 
     @ConfigurationKey(name = "MAGIC", value = "⚡")
