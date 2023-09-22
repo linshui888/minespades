@@ -6,6 +6,9 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.util.BossBar;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
@@ -21,7 +24,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
 
-public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listener {
+@Translatable
+public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listener, MinorityFeature {
 
     private boolean particle = false;
     private BukkitRunnable flagRecoveryTimer;
@@ -31,6 +35,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
     public NeutralBattlegroundFlag(final Battleground battleground, final Location base, final ItemStack flag) {
         super(battleground, base, flag);
+        this.init(this, this.getClass(), Minespades.getInstance());
 
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
 
@@ -148,13 +153,13 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(String.format("Нейтральный флаг пропадёт через &e%sс&f..", timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
+            final BossBar bossBar = BossBar.bossBar(String.format(restorationCount, timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
 
             @Override
             public void run() {
                 NeutralBattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.title(String.format("Нейтральный флаг пропадёт через &e%sс&f..", timer / 20));
+                bossBar.title(String.format(restorationCount, timer / 20));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -169,7 +174,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                 if (timer == 0) {
 
                     // Попытаемся сделать всё красиво, нам нужно заполнить боссбар, изменить сообщение на ФЛАГ ВОССТАНОВЛЕН! и сменить цвет
-                    bossBar.title("Флаг восстановлен!");
+                    bossBar.title(flagRestoredTitle);
                     bossBar.color(BarColor.RED);
                     bossBar.progress(0);
 
@@ -231,5 +236,11 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
             }
         });
     }
+
+    @TranslationKey(section = "regular-messages", name = "neutral-flag-restoration-count", value = "A dropped &cneutral &rflag will be restored in &e%ss&r!..")
+    private String restorationCount;
+
+    @TranslationKey(section = "regular-messages", name = "flag-is-restored", value = "&lFlag was restored!")
+    private String flagRestoredTitle;
 
 }

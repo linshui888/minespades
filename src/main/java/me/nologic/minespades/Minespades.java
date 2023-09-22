@@ -16,6 +16,8 @@ import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.game.PlayerKDAHandler;
 import me.nologic.minespades.game.object.BattlegroundFlag;
+import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minespades.util.MinespadesPlaceholderExpansion;
 import me.nologic.minority.MinorityExtension;
 import me.nologic.minority.MinorityFeature;
@@ -54,6 +56,8 @@ public final class Minespades extends MinorityExtension implements MinorityFeatu
         super.getConfigurationWizard().generate(AddNeutralFlagTask.class);
         super.getConfigurationWizard().generate(BattlegroundFlag.class);
         super.getConfigurationWizard().generate(SaveVolumeTask.class);
+        super.getConfigurationWizard().generate(NeutralBattlegroundFlag.class);
+        super.getConfigurationWizard().generate(TeamBattlegroundFlag.class);
     }
 
     @Override

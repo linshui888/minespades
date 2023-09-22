@@ -7,6 +7,9 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.util.BossBar;
+import me.nologic.minority.MinorityFeature;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
@@ -22,7 +25,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
 
-public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
+@Translatable
+public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, MinorityFeature {
 
     @Getter
     private final BattlegroundTeam team;
@@ -35,6 +39,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
 
     public TeamBattlegroundFlag(final Battleground battleground, final BattlegroundTeam team, final Location base, final ItemStack flag) {
         super(battleground, base, flag);
+        this.init(this, this.getClass(), Minespades.getInstance());
         this.team = team;
 
         Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
@@ -157,13 +162,13 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
             final int timeToReset = 45;
             int timer = timeToReset * 20;
 
-            final BossBar bossBar = BossBar.bossBar(String.format("Флаг %s пропадёт через &e%sс&f...", team.getDisplayName(), timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
+            final BossBar bossBar = BossBar.bossBar(String.format(restorationCount, team.getDisplayName(), timer / 20), 1.0f, BarColor.BLUE, BarStyle.SEGMENTED_20);
 
             @Override
             public void run() {
                 TeamBattlegroundFlag.this.recoveryBossBar = bossBar;
                 timer = timer - 20;
-                bossBar.title(String.format("Флаг %s пропадёт через &e%sс&f...", team.getDisplayName(), timer / 20));
+                bossBar.title(String.format(restorationCount, team.getDisplayName(), timer / 20));
 
                 if (timer != 0) {
                     bossBar.progress(bossBar.progress() - 1.0f / timeToReset);
@@ -178,7 +183,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
                 if (timer == 0) {
 
                     // Попытаемся сделать всё красиво, нам нужно заполнить боссбар, изменить сообщение на ФЛАГ ВОССТАНОВЛЕН! и сменить цвет
-                    bossBar.title("&lФлаг восстановлен!");
+                    bossBar.title(flagRestoredTitle);
                     bossBar.color(BarColor.RED);
                     bossBar.progress(0);
 
@@ -241,5 +246,11 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener {
             recoveryBossBar = null;
         }
     }
+
+    @TranslationKey(section = "regular-messages", name = "team-flag-restoration-count", value = "A dropped team %s &rflag will be restored in &e%ss&r!..")
+    private String restorationCount;
+
+    @TranslationKey(section = "regular-messages", name = "flag-is-restored", value = "&lFlag was restored!")
+    private String flagRestoredTitle;
 
 }
