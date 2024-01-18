@@ -3,7 +3,7 @@ version: '${project.version}'
 main: me.nologic.minespades.Minespades
 api-version: 1.18
 authors: [ NoLogic ]
-description: "TDM/CTF PvP minigame with some unique features and modern implementation."
+description: "Clever and customizable TDM/CTF PvP battlegrounds for your sever."
 
 depend:
   - ProtocolLib
@@ -12,3 +12,4 @@ softdepend:
   - PlaceholderAPI
   - AuthMe
   - Vault
+  - Citizens
