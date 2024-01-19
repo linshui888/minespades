@@ -12,4 +12,4 @@ SpigotMC: https://www.spigotmc.org/resources/minespades.110959/
 - Create **multigrounds**, which alternate different battlegrounds! Never play on the same map again!
 - **Customize** your battlegrounds to exactly match your preferences! (**14+** battleground preferences at this moment)
 - **Clever use of information displays** instead of endless chat spam: kill messages are displayed in the **actionbar**, player KDA and arena information are displayed in the **sidebar**, various game information is displayed in the **bossbar** (for example, the time until the flag is restored), as well as kill scores display in the **tablist**!
-- **Async battleground loading** that never will be cause lag on your server!
+- **Async battleground loading** that never will cause lag on your server!

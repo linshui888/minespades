@@ -4,14 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
-import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import me.nologic.minespades.battleground.util.DatabaseTableHelper;
 import me.nologic.minespades.util.BossBar;
 import me.nologic.minority.MinorityFeature;
-import me.nologic.minority.annotations.ConfigurationKey;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -146,25 +148,25 @@ public class SaveVolumeTask extends BaseEditorTask implements Runnable, Minority
         PreparedStatement tSt = connection.prepareStatement("UPDATE volume SET content = ? WHERE x = ? AND y = ? AND z = ?;");
         for (BlockState state : future.get()) {
             if (state instanceof Container container) {
-                tSt.setString(1, this.save(container.getInventory()));
+                tSt.setString(1,  Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> this.save(container.getInventory())).get());
                 tSt.setInt(2, container.getX());
                 tSt.setInt(3, container.getY());
                 tSt.setInt(4, container.getZ());
                 tSt.addBatch();
             } else if (state instanceof Sign sign) {
-                tSt.setString(1, this.save(sign));
+                tSt.setString(1, Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> this.save(sign)).get());
                 tSt.setInt(2, sign.getX());
                 tSt.setInt(3, sign.getY());
                 tSt.setInt(4, sign.getZ());
                 tSt.addBatch();
             } else if (state instanceof Skull skull) {
-                tSt.setString(1, this.save(skull));
+                tSt.setString(1, Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> this.save(skull)).get());
                 tSt.setInt(2, skull.getX());
                 tSt.setInt(3, skull.getY());
                 tSt.setInt(4, skull.getZ());
                 tSt.addBatch();
             } else if (state instanceof Jukebox jukebox) {
-                tSt.setString(1, this.save(jukebox));
+                tSt.setString(1, Bukkit.getServer().getScheduler().callSyncMethod(plugin, () -> this.save(jukebox)).get());
                 tSt.setInt(2, jukebox.getX());
                 tSt.setInt(3, jukebox.getY());
                 tSt.setInt(4, jukebox.getZ());
