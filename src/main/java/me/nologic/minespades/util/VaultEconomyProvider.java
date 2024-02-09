@@ -6,9 +6,10 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 
+@Getter
 public class VaultEconomyProvider {
 
-    @Getter @Nullable
+    @Nullable
     private Economy economy;
 
     public VaultEconomyProvider() {

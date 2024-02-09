@@ -1,5 +1,6 @@
 package me.nologic.minespades.battleground.util;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
@@ -34,6 +35,7 @@ public class BattlegroundDataDriver {
         return this;
     }
 
+    @Getter
     private Connection connection; @SneakyThrows
     public BattlegroundDataDriver connect(final String battlegroundName) {
         this.connection = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + "/battlegrounds/" + battlegroundName + ".db");
@@ -54,10 +56,6 @@ public class BattlegroundDataDriver {
     @SneakyThrows
     public void closeConnection() {
         this.connection.close();
-    }
-
-    public Connection getConnection() {
-        return this.connection;
     }
 
 }

@@ -1,5 +1,8 @@
 package me.nologic.minespades.battleground.util;
 
+import lombok.Getter;
+
+@Getter
 public enum DatabaseTableHelper {
 
     VOLUME("CREATE TABLE IF NOT EXISTS volume (x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material VARCHAR(64) NOT NULL, data TEXT, content TEXT);",
@@ -24,18 +27,6 @@ public enum DatabaseTableHelper {
         this.createStatement = createStatement;
         this.insertStatement = insertStatement;
         this.selectStatement = selectStatement;
-    }
-
-    public String getCreateStatement() {
-        return createStatement;
-    }
-
-    public String getInsertStatement() {
-        return insertStatement;
-    }
-
-    public String getSelectStatement() {
-        return selectStatement;
     }
 
 }

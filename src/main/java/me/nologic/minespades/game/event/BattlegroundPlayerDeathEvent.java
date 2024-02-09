@@ -9,7 +9,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class BattlegroundPlayerDeathEvent extends Event {
@@ -24,8 +23,8 @@ public class BattlegroundPlayerDeathEvent extends Event {
 
     private final EntityDamageEvent.DamageCause damageCause;
 
-    public BattlegroundPlayerDeathEvent(Player player, EntityDamageEvent.DamageCause damageCause, boolean keepInventory, RespawnStrategy respawnMethod) {
-        this.victim = plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
+    public BattlegroundPlayerDeathEvent(BattlegroundPlayer victim, EntityDamageEvent.DamageCause damageCause, boolean keepInventory, RespawnStrategy respawnMethod) {
+        this.victim          = victim;
         this.damageCause     = damageCause;
         this.battleground    = victim.getBattleground();
         this.keepInventory   = keepInventory;

@@ -80,7 +80,7 @@ public class PlayerKDAHandler implements MinorityFeature {
             case LAVA, FIRE, FIRE_TICK: return burning;
             case MAGIC: return magic;
             case ENTITY_EXPLOSION: return tnt;
-        };
+        }
 
         // little easter egg :D
         final BattlegroundPlayer killer = BattlegroundPlayer.getBattlegroundPlayer(this.gameMaster.getLastAttacker(event.getVictim().getBukkitPlayer()));

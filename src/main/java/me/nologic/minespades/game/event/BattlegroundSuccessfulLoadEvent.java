@@ -7,10 +7,10 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 @RequiredArgsConstructor
 public class BattlegroundSuccessfulLoadEvent extends Event {
 
-    @Getter
     private final Battleground battleground;
 
     @Override

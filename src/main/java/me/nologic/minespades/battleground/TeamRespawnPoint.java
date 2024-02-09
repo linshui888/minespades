@@ -22,7 +22,6 @@ public class TeamRespawnPoint implements Listener {
     private final Minespades plugin = Minespades.getPlugin(Minespades.class);
 
     private final Battleground battleground;
-    private final BattlegroundTeam team;
 
     @Getter
     private final Location position;
@@ -35,7 +34,6 @@ public class TeamRespawnPoint implements Listener {
 
     public TeamRespawnPoint(BattlegroundTeam team, Location position) {
         this.battleground = team.getBattleground();
-        this.team = team;
         this.position = position;
         boundingBox = BoundingBox.of(position.getBlock().getLocation().add(0.5, 0.5, 0.5), 1.5, 2.5, 1.5);
         this.tick = new BukkitRunnable() {

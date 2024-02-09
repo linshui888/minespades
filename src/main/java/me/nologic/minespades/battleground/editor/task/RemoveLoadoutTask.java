@@ -2,18 +2,13 @@ package me.nologic.minespades.battleground.editor.task;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
-import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.PlayerEditSession;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Objects;
 

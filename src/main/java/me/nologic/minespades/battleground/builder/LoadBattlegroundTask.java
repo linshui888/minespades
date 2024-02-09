@@ -130,17 +130,16 @@ public class LoadBattlegroundTask extends BukkitRunnable {
         try (final ResultSet objects = driver.executeQuery("SELECT * FROM objects;")) {
             while(objects.next()) {
                 int x = objects.getInt("x"), y = objects.getInt("y"), z = objects.getInt("z");
-                switch (objects.getString("type")) {
-                    case "NEUTRAL_FLAG" -> {
-                        final ItemStack flagItem = this.deserializeItemStack(JsonParser.parseString(objects.getString("data")).getAsJsonObject().get("item").getAsString());
-                        ItemMeta meta = flagItem.getItemMeta();
-                        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                        meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
-                        flagItem.setItemMeta(meta);
-                        final NeutralBattlegroundFlag flag = new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem);
-                        battleground.getNeutralFlags().add(flag);
-                        flag.reset();
-                    }
+                if (objects.getString("type").equals("NEUTRAL_FLAG")) {
+                    final ItemStack flagItem = this.deserializeItemStack(JsonParser.parseString(objects.getString("data")).getAsJsonObject().get("item").getAsString());
+                    ItemMeta meta = flagItem.getItemMeta();
+                    assert meta != null;
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                    meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+                    flagItem.setItemMeta(meta);
+                    final NeutralBattlegroundFlag flag = new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem);
+                    battleground.getNeutralFlags().add(flag);
+                    flag.reset();
                 }
             }
         }
@@ -199,6 +198,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     int x = jsonFlag.get("x").getAsInt(), y = jsonFlag.get("y").getAsInt(), z = jsonFlag.get("z").getAsInt();
                     ItemStack itemFlag = this.deserializeItemStack(jsonFlag.get("item").getAsString());
                     ItemMeta meta = itemFlag.getItemMeta();
+                    assert meta != null;
                     meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                     meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     itemFlag.setItemMeta(meta);

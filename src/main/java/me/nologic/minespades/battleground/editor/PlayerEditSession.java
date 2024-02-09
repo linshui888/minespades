@@ -134,15 +134,15 @@ public class PlayerEditSession implements MinorityFeature {
     }
 
     public boolean isBattlegroundSelected() {
-        return targetBattleground != null;
+        return targetBattleground == null;
     }
 
     public boolean isTeamSelected() {
-        return targetTeam != null;
+        return targetTeam == null;
     }
 
     public boolean isLoadoutSelected() {
-        return targetLoadout != null;
+        return targetLoadout == null;
     }
 
 }

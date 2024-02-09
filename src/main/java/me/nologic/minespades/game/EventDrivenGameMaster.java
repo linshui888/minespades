@@ -195,7 +195,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         event.getBattleground().broadcast(teamLoseMessage);
 
         // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
-        if (event.getBattleground().getTeams().stream().filter(team -> !team.isDefeated()).count() <= 1) {
+        if (event.getBattleground().getTeams().stream().filter(BattlegroundTeam::isDefeated).count() <= 1) {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
         }
     }
@@ -208,7 +208,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         // Денежная награда за завершение игры и её вычисление
         if (battlegrounder.getEconomyManager() != null) {
             for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
-                final boolean isWinner   = !player.getTeam().isDefeated();
+                final boolean isWinner   = player.getTeam().isDefeated();
                 final double  killReward = player.getKills() * rewardPerKill;
 
                 double reward = 0.0;
@@ -251,9 +251,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     private void onPlayerDamage(final EntityDamageEvent event) {
         if (!event.isCancelled() && event.getEntity() instanceof Player player) {
 
-            if (BattlegroundPlayer.getBattlegroundPlayer(player) != null && player.getHealth() <= event.getFinalDamage()) {
-                BattlegroundPlayerDeathEvent bpde = new BattlegroundPlayerDeathEvent(player, event.getCause(),BattlegroundPlayer.getBattlegroundPlayer(player).getBattleground().getPreference(Preference.KEEP_INVENTORY), BattlegroundPlayerDeathEvent.RespawnStrategy.QUICK);
-                Bukkit.getServer().getPluginManager().callEvent(bpde);
+            final BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
+            if (bgPlayer != null && player.getHealth() <= event.getFinalDamage()) {
+                BattlegroundPlayerDeathEvent battlegroundPlayerDeathEvent = new BattlegroundPlayerDeathEvent(bgPlayer, event.getCause(), bgPlayer.getBattleground().getPreference(Preference.KEEP_INVENTORY), BattlegroundPlayerDeathEvent.RespawnStrategy.QUICK);
+                Bukkit.getServer().getPluginManager().callEvent(battlegroundPlayerDeathEvent);
                 event.setCancelled(true);
             }
 
@@ -306,8 +307,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             return null;
         }
 
-        /** Подключает игроков к баттлграунду. */
-        public BattlegroundPlayer connect(Player player, Battleground battleground, BattlegroundTeam team) {
+        /**
+         * Подключает игроков к баттлграунду.
+         */
+        public void connect(Player player, Battleground battleground, BattlegroundTeam team) {
             if (battleground.isValid() && this.getBattlegroundPlayer(player) == null) {
                 this.save(player);
                 BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
@@ -331,10 +334,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
                 // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
-                return bgPlayer;
             } else {
                 player.sendMessage(battlegroundConnectionCancelled);
-                return null;
             }
         }
 

@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.game.object.BattlegroundFlag;
-import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;

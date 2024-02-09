@@ -43,6 +43,7 @@ public final class Battleground {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.neutralFlags = new ArrayList<>();
+        assert Bukkit.getScoreboardManager() != null;
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
@@ -61,7 +62,9 @@ public final class Battleground {
 
     public void kick(BattlegroundPlayer player) {
         player.getTeam().kick(player.getBukkitPlayer());
-        player.getBukkitPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        if (Bukkit.getScoreboardManager() != null) {
+            player.getBukkitPlayer().setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        }
     }
 
     public void addTeam(BattlegroundTeam team) {

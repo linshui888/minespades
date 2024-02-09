@@ -119,7 +119,7 @@ public class CommandCompletions {
 
         final List<String> supplies = new ArrayList<>();
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
-        if (!session.isBattlegroundSelected() || !session.isTeamSelected() || !session.isLoadoutSelected()) {
+        if (session.isBattlegroundSelected() || session.isTeamSelected() || session.isLoadoutSelected()) {
             return supplies;
         }
 

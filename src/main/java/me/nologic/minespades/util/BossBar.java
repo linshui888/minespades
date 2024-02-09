@@ -51,7 +51,7 @@ public class BossBar {
     }
 
     public BossBar addViewers(final List<Player> players) {
-        players.forEach(player -> this.bar.addPlayer(player));
+        players.forEach(this.bar::addPlayer);
         return this;
     }
 
@@ -61,7 +61,7 @@ public class BossBar {
     }
 
     public BossBar removeViewers(final List<Player> players) {
-        players.forEach(player -> this.bar.removePlayer(player));
+        players.forEach(this.bar::removePlayer);
         return this;
     }
 

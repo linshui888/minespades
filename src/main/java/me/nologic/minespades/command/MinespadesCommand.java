@@ -516,21 +516,21 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 }
 
                 case BATTLEGROUND -> {
-                    if (!session.isBattlegroundSelected()) {
+                    if (session.isBattlegroundSelected()) {
                         player.sendMessage(battlegroundNotSelectedMessage);
                         return false;
                     }
                 }
 
                 case TEAM -> {
-                    if (!session.isTeamSelected()) {
+                    if (session.isTeamSelected()) {
                         player.sendMessage(teamNotSelectedMessage);
                         return false;
                     }
                 }
 
                 case LOADOUT -> {
-                    if (!session.isLoadoutSelected()) {
+                    if (session.isLoadoutSelected()) {
                         player.sendMessage(loadoutNotSelectedMessage);
                         return false;
                     }

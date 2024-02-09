@@ -94,7 +94,7 @@ public class BattlegroundTeam implements MinorityFeature {
      * 2. All players in the team having a spectator mode OR there are just no players.
      */
     public boolean isDefeated() {
-        return lifepool <= 0 && players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR) || players.size() == 0;
+        return (lifepool > 0 || !players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR)) && !players.isEmpty();
     }
 
 }

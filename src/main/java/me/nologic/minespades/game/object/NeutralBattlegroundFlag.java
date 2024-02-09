@@ -194,7 +194,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                                 // Скрываем боссбар через полторы секунды после заполнения
                                 bossBar.progress(1.0f);
                                 bossBar.color(BarColor.GREEN);
-                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), () -> bossBar.cleanViewers(), 30);
+                                Bukkit.getScheduler().runTaskLater(Minespades.getPlugin(Minespades.class), bossBar::cleanViewers, 30);
                                 this.cancel();
                             }
                         }

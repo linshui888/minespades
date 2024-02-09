@@ -185,7 +185,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
     }
 
     @SneakyThrows
-    public boolean removeSupply(final Player player, final String targetSupply) {
+    public void removeSupply(final Player player, final String targetSupply) {
         final PlayerEditSession session = plugin.getBattlegrounder().getEditor().editSession(player);
         final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
         try (final ResultSet result = driver.executeQuery("SELECT * FROM teams WHERE name = ?;", session.getTargetTeam())) {
@@ -212,7 +212,6 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         }
         driver.closeConnection();
         player.sendMessage(String.format(supplyRemovedMessage, targetSupply, session.getTargetTeam()));
-        return false;
     }
 
     @SneakyThrows
