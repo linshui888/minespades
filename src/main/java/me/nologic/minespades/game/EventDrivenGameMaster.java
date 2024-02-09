@@ -14,6 +14,7 @@ import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.*;
+import me.nologic.minespades.game.object.BattlegroundObjectManager;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
@@ -57,6 +58,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     private final Minespades          plugin         = Minespades.getInstance();
     private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
+    private final @Getter BattlegroundObjectManager objectManager = new BattlegroundObjectManager();
     private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
     private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler(this);
 
@@ -348,6 +350,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 battlegroundPlayer.getFlag().drop();
             }
 
+            // todo neutral flag sidebar fix
             battlegroundPlayer.removeSidebar();
             for (BattlegroundTeam team : battlegroundPlayer.getBattleground().getTeams()) {
                 if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {

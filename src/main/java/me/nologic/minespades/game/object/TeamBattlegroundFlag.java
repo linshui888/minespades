@@ -6,19 +6,15 @@ import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import me.nologic.minespades.util.BossBar;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.*;
-import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -26,65 +22,32 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Objects;
 
 @Translatable
-public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, MinorityFeature {
+public class TeamBattlegroundFlag extends BattlegroundFlag implements MinorityFeature {
 
     @Getter
     private final BattlegroundTeam team;
 
-    private boolean particle = false;
     private BukkitRunnable flagRecoveryTimer;
 
     @Getter
     private BossBar recoveryBossBar;
 
-    public TeamBattlegroundFlag(final Battleground battleground, final BattlegroundTeam team, final Location base, final ItemStack flag) {
-        super(battleground, base, flag);
+    public TeamBattlegroundFlag(final Battleground battleground, final BattlegroundTeam team, final Location base, final ItemStack flagBannerItem) {
+        super(battleground, base, flagBannerItem, new Particle.DustOptions(Color.fromRGB(team.getColor().getColor().getRed(), team.getColor().getColor().getGreen(), team.getColor().getColor().getBlue()), 1.2F)); // todo particles from config
         this.init(this, this.getClass(), Minespades.getInstance());
         this.team = team;
-
-        Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
-        Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(team.getColor().getColor().getRed(), team.getColor().getColor().getGreen(), team.getColor().getColor().getBlue()), 1.2F);
-        this.tick = new BukkitRunnable() {
-
-            // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
-            // Если энтитя == игрок, скорборды совпадают, но разные команды, то pickup
-            @Override
-            public void run() {
-                if (currentPosition != null && boundingBox != null && particle) {
-                    battleground.getWorld().spawnParticle(Particle.REDSTONE, currentPosition.clone().add(0.5, 0.5, 0.5), 9, 0.5, 1, 0.5, options);
-                    for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
-                        if (entity instanceof Player player) {
-                            if (battleground.getScoreboard().equals(player.getScoreboard())) {
-                                if (!Objects.equals(player.getScoreboard().getEntryTeam(player.getName()), team.getBukkitTeam())) {
-                                    if (player.getGameMode().equals(GameMode.SURVIVAL)) {
-                                        pickup(BattlegroundPlayer.getBattlegroundPlayer(player));
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        };
-
-        tick.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 5);
+        Bukkit.getServer().getScheduler().runTaskTimer(plugin, (task) -> {
+            if (!battleground.isEnabled()) task.cancel();
+            this.tick(this);
+        }, 0, 5L);
     }
 
-    @EventHandler
-    private void onBlockBreak(BlockBreakEvent event) {
-
-        // Флаг должен быть неразрушаемым
-        if (Objects.equals(event.getBlock().getLocation(), currentPosition)) {
-            event.setCancelled(true);
-        }
-
-        // Блок под флагом тоже должен быть неразрушаемым
-        if (currentPosition != null) {
-            if (Objects.equals(event.getBlock().getLocation(), currentPosition.getBlock().getRelative(BlockFace.DOWN).getLocation())) {
-                event.setCancelled(true);
-            }
+    /* A team flag may be carried only by a player from opposite team. */
+    @Override
+    protected void tick(final BattlegroundFlag flag) {
+        if (flag.isOnGround()) {
+            flag.playParticles();
+            flag.getCollidingPlayers().stream().filter(player -> !player.isCarryingFlag() && player.getTeam() != this.team).findFirst().ifPresent(flag::pickup);
         }
     }
 
@@ -92,7 +55,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
      * Когда игрок входит в box, должен вызываться этот метод.
      */
     @Override
-    protected void pickup(final BattlegroundPlayer carrier) {
+    public void pickup(final BattlegroundPlayer carrier) {
         this.carrier = carrier;
 
         super.playFlagEquipSound();
@@ -106,7 +69,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
         }
 
         Player player = carrier.getBukkitPlayer();
-        player.getInventory().setHelmet(flagItem);
+        player.getInventory().setHelmet(flagBannerItem);
 
         if (currentPosition != null) {
             currentPosition.getBlock().setType(Material.AIR);
@@ -238,7 +201,6 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements Listener, 
         }
         updateBoundingBox();
         validateBannerData();
-        particle = true;
 
         if (flagRecoveryTimer != null) {
             flagRecoveryTimer.cancel();

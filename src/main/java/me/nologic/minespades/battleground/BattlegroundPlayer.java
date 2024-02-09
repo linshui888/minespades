@@ -7,7 +7,7 @@ import me.catcoder.sidebar.Sidebar;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
-import me.nologic.minespades.game.object.BattlegroundFlag;
+import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.*;
 

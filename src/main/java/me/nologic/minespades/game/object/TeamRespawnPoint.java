@@ -1,7 +1,10 @@
-package me.nologic.minespades.battleground;
+package me.nologic.minespades.game.object;
 
 import lombok.Getter;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.Battleground;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.PlayerCarriedFlagEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;

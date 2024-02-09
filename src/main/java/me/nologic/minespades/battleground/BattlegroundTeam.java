@@ -5,6 +5,7 @@ import lombok.Setter;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamRespawnPoint;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
 import me.nologic.minority.annotations.ConfigurationKey;

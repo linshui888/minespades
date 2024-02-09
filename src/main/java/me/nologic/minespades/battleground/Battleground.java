@@ -39,7 +39,7 @@ public final class Battleground {
     private BoundingBox boundingBox;
 
     @SneakyThrows
-    public Battleground(String battlegroundName) {
+    public Battleground(final String battlegroundName) {
         this.battlegroundName = battlegroundName;
         this.teams = new ArrayList<>();
         this.neutralFlags = new ArrayList<>();

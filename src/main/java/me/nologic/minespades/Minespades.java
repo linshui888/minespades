@@ -15,7 +15,7 @@ import me.nologic.minespades.battleground.util.BattlegroundValidator;
 import me.nologic.minespades.command.MinespadesCommand;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.game.PlayerKDAHandler;
-import me.nologic.minespades.game.object.BattlegroundFlag;
+import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minespades.util.MinespadesPlaceholderExpansion;

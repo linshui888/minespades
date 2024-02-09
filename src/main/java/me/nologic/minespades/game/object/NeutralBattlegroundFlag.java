@@ -5,19 +5,15 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.Battleground;
 import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
+import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import me.nologic.minespades.util.BossBar;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
 import org.bukkit.*;
-import org.bukkit.block.BlockFace;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -25,68 +21,33 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Objects;
 
 @Translatable
-public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listener, MinorityFeature {
+public class NeutralBattlegroundFlag extends BattlegroundFlag implements MinorityFeature {
 
-    private boolean particle = false;
     private BukkitRunnable flagRecoveryTimer;
 
     @Getter
     private BossBar recoveryBossBar;
 
-    public NeutralBattlegroundFlag(final Battleground battleground, final Location base, final ItemStack flag) {
-        super(battleground, base, flag);
+    public NeutralBattlegroundFlag(final Battleground battleground, final Location base, final ItemStack flagBannerItem) {
+        super(battleground, base, flagBannerItem, new Particle.DustOptions(Color.fromRGB(220, 20, 60), 1.4F)); // todo particles from config
         this.init(this, this.getClass(), Minespades.getInstance());
-
-        Bukkit.getPluginManager().registerEvents(this, Minespades.getPlugin(Minespades.class));
-
-        final Particle.DustOptions options = new Particle.DustOptions(Color.fromRGB(220, 20, 60), 1.4F);
-        this.tick = new BukkitRunnable() {
-
-            // Каждые 5 тиков внутри BoundingBox'а проверяются энтити.
-            // Если энтитя == игрок, скорборды совпадают, но разные команды, то pickup
-            @Override
-            public void run() {
-                if (currentPosition != null && boundingBox != null && particle) {
-
-                    battleground.getWorld().spawnParticle(Particle.REDSTONE, currentPosition.clone().add(0.5, 0.5, 0.5), 2, 0.5, 1, 0.5, options);
-                    for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
-                        if (entity instanceof Player player) {
-                            if (battleground.getScoreboard().equals(player.getScoreboard())) {
-                                if (!BattlegroundPlayer.getBattlegroundPlayer(player).isCarryingFlag()) {
-                                    if (player.getGameMode().equals(GameMode.SURVIVAL)) {
-                                        pickup(BattlegroundPlayer.getBattlegroundPlayer(player));
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        };
-
-        tick.runTaskTimer(Minespades.getPlugin(Minespades.class), 0, 5);
+        Bukkit.getServer().getScheduler().runTaskTimer(plugin, (task) -> {
+            if (!battleground.isEnabled()) task.cancel();
+            this.tick(this);
+        }, 0, 5L);
     }
 
-    @EventHandler
-    private void onBlockBreak(BlockBreakEvent event) {
-
-        // Флаг должен быть неразрушаемым
-        if (Objects.equals(event.getBlock().getLocation(), currentPosition)) {
-            event.setCancelled(true);
-        }
-
-        // Блок под флагом тоже должен быть неразрушаемым
-        if (currentPosition != null) {
-            if (Objects.equals(event.getBlock().getLocation(), currentPosition.getBlock().getRelative(BlockFace.DOWN).getLocation())) {
-                event.setCancelled(true);
-            }
+    /* A neutral flag may be carried by a player from any team. */
+    @Override
+    protected void tick(final BattlegroundFlag flag) {
+        if (flag.isOnGround()) {
+            flag.playParticles();
+            flag.getCollidingPlayers().stream().filter(player -> !player.isCarryingFlag()).findFirst().ifPresent(flag::pickup);
         }
     }
 
     @Override
-    protected void pickup(final BattlegroundPlayer carrier) {
+    public void pickup(final BattlegroundPlayer carrier) {
         this.carrier = carrier;
 
         carrier.setFlag(this);
@@ -100,7 +61,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
         super.playFlagEquipSound();
 
         Player player = carrier.getBukkitPlayer();
-        player.getInventory().setHelmet(flagItem);
+        player.getInventory().setHelmet(flagBannerItem);
 
         if (currentPosition != null) {
             currentPosition.getBlock().setType(Material.AIR);
@@ -109,13 +70,9 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
 
         boundingBox = null;
         if (flagRecoveryTimer != null) {
-            flagRecoveryTimer.cancel();
-
-            // Не забываем скрывать таймер, если флаг был поднят
-            Bukkit.getScheduler().runTask(Minespades.getPlugin(Minespades.class), () -> {
-                this.recoveryBossBar.cleanViewers();
-                recoveryBossBar = null;
-            });
+            this.flagRecoveryTimer.cancel();
+            this.recoveryBossBar.cleanViewers();
+            recoveryBossBar = null;
             flagRecoveryTimer = null;
         }
     }
@@ -228,9 +185,9 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Listene
                 carrier.setCarryingFlag(false);
                 carrier = null;
             }
+
             updateBoundingBox();
             validateBannerData();
-            particle = true;
 
             if (flagRecoveryTimer != null) {
                 flagRecoveryTimer.cancel();

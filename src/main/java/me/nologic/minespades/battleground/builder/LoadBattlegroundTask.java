@@ -138,7 +138,6 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     flagItem.setItemMeta(meta);
                     final NeutralBattlegroundFlag flag = new NeutralBattlegroundFlag(battleground, new Location(battleground.getWorld(), x, y, z), flagItem);
-                    battleground.getNeutralFlags().add(flag);
                     flag.reset();
                 }
             }
@@ -203,7 +202,8 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     itemFlag.setItemMeta(meta);
 
-                    team.setFlag(new TeamBattlegroundFlag(battleground, team, new Location(battleground.getWorld(), x, y, z), itemFlag));
+                    final TeamBattlegroundFlag flag = new TeamBattlegroundFlag(battleground, team, new Location(battleground.getWorld(), x, y, z), itemFlag);
+                    team.setFlag(flag);
                 }
 
 

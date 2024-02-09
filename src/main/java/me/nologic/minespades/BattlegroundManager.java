@@ -1,12 +1,15 @@
 package me.nologic.minespades;
 
 import lombok.Getter;
-import me.nologic.minespades.battleground.*;
+import me.nologic.minespades.battleground.Battleground;
+import me.nologic.minespades.battleground.BattlegroundPlayer;
+import me.nologic.minespades.battleground.BattlegroundTeam;
+import me.nologic.minespades.battleground.Multiground;
 import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
-import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamRespawnPoint;
 import me.nologic.minespades.util.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -86,9 +89,9 @@ public class BattlegroundManager {
         return battleground;
     }
 
-    public void disable(Battleground battleground) {
+    public void disable(final Battleground battleground) {
 
-        battleground.setEnabled(false);
+        plugin.getGameMaster().getObjectManager().getFlags().removeIf(flag -> flag.getBattleground().equals(battleground));
 
         // Кикаем всех игроков с арены
         for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
@@ -101,9 +104,6 @@ public class BattlegroundManager {
         // Останавливаем все BukkitRunnable из правил автовыдачи
         for (final BattlegroundTeam team : battleground.getTeams()) {
 
-            if (team.getFlag() != null)
-                team.getFlag().getTick().cancel();
-
             for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
                 respawnPoint.getTick().cancel();
             }
@@ -115,9 +115,8 @@ public class BattlegroundManager {
             }
         }
 
-        for (final NeutralBattlegroundFlag flag : battleground.getNeutralFlags()) {
-            flag.getTick().cancel();
-        }
+        battleground.setEnabled(false);
+
     }
 
     @Nullable

@@ -6,6 +6,7 @@ import fr.xephi.authme.events.LoginEvent;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
+import me.nologic.minespades.game.object.TeamRespawnPoint;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
