@@ -39,9 +39,9 @@ public class BattlegroundTeam implements MinorityFeature {
     private @Getter int flagLifepoolPenalty;
 
     @Getter
-    private final List<TeamRespawnPoint>     respawnPoints = new ArrayList<>();
-    private final List<BattlegroundLoadout>  loadouts = new ArrayList<>();
-    private final Set<Player>                players = new HashSet<>();
+    private final List<TeamRespawnPoint>    respawnPoints = new ArrayList<>();
+    private final List<BattlegroundLoadout> loadouts      = new ArrayList<>();
+    private final Set<Player>               players       = new HashSet<>();
 
     @Setter @Nullable
     private TeamBattlegroundFlag flag;
@@ -67,7 +67,7 @@ public class BattlegroundTeam implements MinorityFeature {
     }
 
     public Location getRandomRespawnLocation() {
-        return respawnPoints.get((int) (Math.random() * respawnPoints.size())).getPosition();
+        return respawnPoints.get((int) (Math.random() * respawnPoints.size())).getRespawnPosition();
     }
 
     @NotNull

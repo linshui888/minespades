@@ -86,6 +86,10 @@ public class BattlegroundPlayer implements MinorityFeature {
         return Minespades.getPlugin(Minespades.class).getGameMaster().getPlayerManager().getBattlegroundPlayer(player);
     }
 
+    public static boolean isBattlegroundPlayer(final Player player) {
+        return getBattlegroundPlayer(player) != null;
+    }
+
     public String getDisplayName() {
         return team.getColor() + bukkitPlayer.getName();
     }

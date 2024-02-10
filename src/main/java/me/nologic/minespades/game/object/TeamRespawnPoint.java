@@ -7,89 +7,47 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundTeam;
 import me.nologic.minespades.game.event.PlayerCarriedFlagEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 
-import java.util.Objects;
+@Getter
+public class TeamRespawnPoint {
 
-public class TeamRespawnPoint implements Listener {
+    private static final Minespades plugin = Minespades.getInstance();
 
-    private final Minespades plugin = Minespades.getPlugin(Minespades.class);
+    private final Battleground     battleground;
+    private final BattlegroundTeam team;
+    private final BoundingBox      boundingBox;
+    private final Location         respawnPosition;
 
-    private final Battleground battleground;
-
-    @Getter
-    private final Location position;
-
-    @Getter
-    private final BoundingBox boundingBox;
-
-    @Getter
-    private final BukkitRunnable tick;
-
-    public TeamRespawnPoint(BattlegroundTeam team, Location position) {
+    public TeamRespawnPoint(final BattlegroundTeam team, final Location position) {
+        plugin.getGameMaster().getObjectManager().getRespawnPoints().add(this);
         this.battleground = team.getBattleground();
-        this.position = position;
-        boundingBox = BoundingBox.of(position.getBlock().getLocation().add(0.5, 0.5, 0.5), 1.5, 2.5, 1.5);
-        this.tick = new BukkitRunnable() {
+        this.respawnPosition = position;
+        this.team = team;
+        this.boundingBox = BoundingBox.of(position.getBlock().getLocation().add(0.5, 0.5, 0.5), 2.5, 2.5, 2.5);
 
-            @Override
-            public void run() {
-                for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
-                    if (entity instanceof Player player) {
-                        if (battleground.getScoreboard().equals(player.getScoreboard())) {
-                            if (Objects.equals(player.getScoreboard().getPlayerTeam(player), team.getBukkitTeam())) {
-                                BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
-                                if (bgPlayer.isCarryingFlag()) {
-                                    Bukkit.getServer().getPluginManager().callEvent(new PlayerCarriedFlagEvent(battleground, bgPlayer, bgPlayer.getFlag()));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        };
-        tick.runTaskTimer(plugin, 0, 10);
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        Bukkit.getServer().getScheduler().runTaskTimer(plugin, (task) -> {
+            if (!battleground.isEnabled()) task.cancel();
+            this.tick();;
+        }, 0, 10L);
     }
 
-    /**
-     * С целью безопасности игроков, разрушать блоки на точке возрождения запрещено.
-     */
-    @EventHandler
-    private void preventBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        if (plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player) != null) {
-            if (!player.getGameMode().equals(GameMode.CREATIVE)) {
-                if (boundingBox.contains(event.getBlock().getLocation().toVector())) {
-                    event.setCancelled(true);
-                }
+    private void tick() {
+        for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
+            BattlegroundPlayer battlegroundPlayer;
+            if (entity instanceof Player player && (battlegroundPlayer = BattlegroundPlayer.getBattlegroundPlayer(player)) != null) {
+                if (this.team == battlegroundPlayer.getTeam() && battlegroundPlayer.isCarryingFlag())
+                    Bukkit.getServer().getPluginManager().callEvent(new PlayerCarriedFlagEvent(battleground, battlegroundPlayer, battlegroundPlayer.getFlag()));
             }
         }
     }
 
-    /**
-     * С целью безопасности игроков, ставить блоки на точке возрождения запрещено.
-     */
-    @EventHandler
-    private void preventBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        if (plugin.getGameMaster().getPlayerManager().getBattlegroundPlayer(player) != null) {
-            if (!player.getGameMode().equals(GameMode.CREATIVE)) {
-                if (boundingBox.contains(event.getBlock().getLocation().toVector())) {
-                    event.setCancelled(true);
-                }
-            }
-        }
+    public boolean contains(final Block block) {
+        return boundingBox.contains(block.getLocation().toVector());
     }
 
 }
