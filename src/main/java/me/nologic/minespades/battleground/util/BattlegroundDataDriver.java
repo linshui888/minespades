@@ -12,8 +12,10 @@ public class BattlegroundDataDriver {
     private final Minespades plugin = Minespades.getInstance();
 
     @SneakyThrows
-    public ResultSet executeQuery(String sql) {
-        return this.connection.createStatement().executeQuery(sql);
+    public ResultSet executeQuery(final String sql, final boolean next) {
+        final ResultSet result = this.connection.createStatement().executeQuery(sql);
+        if (next) result.next();
+        return result;
     }
 
     @SneakyThrows

@@ -92,7 +92,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
 
         // Инициализация параметров арены
         JsonObject parameters = new JsonObject();
-        for (Preference preference : Preference.values()) parameters.addProperty(preference.toString(), preference.getDefaultValue());
+        for (Preference preference : Preference.values()) parameters.addProperty(preference.toString(), preference.getDefaultValue().getAsString());
         driver.executeUpdate("INSERT INTO preferences (world, parameters) VALUES (?, ?);", player.getWorld().getName(), parameters.toString());
 
         // TODO: Это вообще в другом месте должно быть.

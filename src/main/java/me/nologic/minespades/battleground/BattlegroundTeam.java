@@ -34,7 +34,6 @@ public class BattlegroundTeam implements MinorityFeature {
     private final String         teamName;
     private @Setter int          lifepool;
 
-    // Количество очков, забираемое в случае потери флага
     @ConfigurationKey(name = "flag-lifepool-penalty", type = Type.INTEGER, value = "15", comment = "How many lifepoints will lost if team flag is stolen?")
     private @Getter int flagLifepoolPenalty;
 
@@ -46,12 +45,27 @@ public class BattlegroundTeam implements MinorityFeature {
     @Setter @Nullable
     private TeamBattlegroundFlag flag;
 
-    public BattlegroundTeam(Battleground battleground, String name, String color, int lifepool) {
+    @Getter
+    private final int scoresRequiredToWin;
+
+    /* The team's current score. Scores are obtained for successfully capturing flags. */
+    @Getter
+    private int score;
+
+    public BattlegroundTeam(final Battleground battleground, final String teamName, final String teamHexColor, final  int startLifepool, final int scoresRequiredToWin) {
         this.battleground = battleground;
-        this.teamName = name;
-        this.color = ChatColor.of("#" + color);
-        this.lifepool = lifepool;
+        this.teamName = teamName;
+        this.color = ChatColor.of("#" + teamHexColor);
+        this.lifepool = startLifepool;
+        this.scoresRequiredToWin = scoresRequiredToWin;
         this.init(this, this.getClass(), Minespades.getInstance());
+    }
+
+    // TODO: flag score and game complete
+    public void addScore(final int score) {
+        if ((this.score += score) >= this.scoresRequiredToWin) {
+
+        }
     }
 
     public String getDisplayName() {

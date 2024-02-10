@@ -129,7 +129,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             }
 
             // Если не сделать задержку в 1 тик, то некоторые изменения состояния игрока не применятся (fireTicks, tp)
-            Bukkit.getScheduler().runTaskLater(playerManager.plugin, () -> {
+            Bukkit.getScheduler().runTask(playerManager.plugin, () -> {
 
                 if (event.getVictim().isCarryingFlag())
                     event.getVictim().getFlag().drop();
@@ -140,7 +140,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 player.setFoodLevel(20);
                 player.setFireTicks(0);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-            }, 1L);
+                player.setGameMode(GameMode.SURVIVAL);
+            });
         } else {
             if (event.getVictim().isCarryingFlag())
                 event.getVictim().getFlag().drop();
