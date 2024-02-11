@@ -34,7 +34,7 @@ public class CommandCompletions {
     public List<String> getEnabledBattlegrounds() {
         List<String> battlegroundNames = new ArrayList<>();
         battlegrounder.getLoadedBattlegrounds().forEach(b -> {
-            if (!b.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
+            if (!b.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND).getAsBoolean()) {
                 battlegroundNames.add(b.getBattlegroundName());
             } else if (b.getMultiground() != null) battlegroundNames.add(b.getMultiground().getName());
         });
@@ -150,9 +150,9 @@ public class CommandCompletions {
 
         Battleground battleground = battlegrounder.getBattlegroundByName(battlegroundName);
         Multiground multiground = battlegrounder.getMultiground(battlegroundName);
-        if (battleground != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN)) {
+        if (battleground != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN).getAsBoolean()) {
             battleground.getTeams().forEach(team -> teams.add(team.getTeamName()));
-        } else if (multiground != null && !multiground.getBattleground().getPreference(Preference.FORCE_AUTO_ASSIGN)) {
+        } else if (multiground != null && !multiground.getBattleground().getPreference(Preference.FORCE_AUTO_ASSIGN).getAsBoolean()) {
             multiground.getBattleground().getTeams().forEach(team -> teams.add(team.getTeamName()));
         }
 

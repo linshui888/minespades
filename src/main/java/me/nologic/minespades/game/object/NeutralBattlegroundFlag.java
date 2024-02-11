@@ -54,7 +54,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Minorit
         carrier.setCarryingFlag(true);
         battleground.broadcast(String.format(neutralFlagStolenMessage, carrier.getDisplayName()));
 
-        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW).getAsBoolean()) {
             carrier.getBukkitPlayer().setGlowing(true);
         }
 
@@ -89,7 +89,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Minorit
             return;
         }
 
-        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW).getAsBoolean()) {
             carrier.getBukkitPlayer().setGlowing(false);
         }
 

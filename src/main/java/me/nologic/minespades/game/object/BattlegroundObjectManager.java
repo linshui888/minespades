@@ -49,7 +49,7 @@ public class BattlegroundObjectManager implements Listener {
 
         /* If a non-creative player tries to break respawn, and if battleground has respawn protection enabled, cancel. */
         if (event.getPlayer().getGameMode() != GameMode.CREATIVE && respawnPoints.stream().anyMatch(respawn -> respawn.contains(block)))
-            if (battlegroundPlayer.getBattleground().getPreference(BattlegroundPreferences.Preference.PROTECT_RESPAWN))
+            if (battlegroundPlayer.getBattleground().getPreference(BattlegroundPreferences.Preference.PROTECT_RESPAWN).getAsBoolean())
                 event.setCancelled(true);
 
     }
@@ -69,7 +69,7 @@ public class BattlegroundObjectManager implements Listener {
 
         /* If a non-creative player tries to place block on respawn, and if battleground has respawn protection enabled, cancel. */
         if (event.getPlayer().getGameMode() != GameMode.CREATIVE && respawnPoints.stream().anyMatch(respawn -> respawn.contains(block)))
-            if (battlegroundPlayer.getBattleground().getPreference(BattlegroundPreferences.Preference.PROTECT_RESPAWN))
+            if (battlegroundPlayer.getBattleground().getPreference(BattlegroundPreferences.Preference.PROTECT_RESPAWN).getAsBoolean())
                 event.setCancelled(true);
 
     }

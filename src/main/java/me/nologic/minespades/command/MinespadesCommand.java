@@ -192,7 +192,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 final BattlegroundPreferences preferences = BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName));
 
                 // Проверяем баттлграунд на мультиграундность
-                if (preferences.get(Preference.IS_MULTIGROUND)) {
+                if (preferences.get(Preference.IS_MULTIGROUND).getAsBoolean()) {
                     player.sendMessage(String.format(battlegroundIsPartOfMultigroundMessage, battlegroundName));
                     return;
                 }
@@ -425,7 +425,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         if (multiground != null) {
             BattlegroundTeam targetTeam = multiground.getBattleground().getTeamByName(targetTeamName);
             Battleground battleground = multiground.getBattleground();
-            multiground.connect(player, targetTeam != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN) ? targetTeam : battleground.getSmallestTeam());
+            multiground.connect(player, targetTeam != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN).getAsBoolean() ? targetTeam : battleground.getSmallestTeam());
             return;
         }
 
@@ -435,14 +435,14 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             return;
         }
 
-        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND)) {
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.IS_MULTIGROUND).getAsBoolean()) {
             player.sendMessage(isMultigroundMessage);
             return;
         }
 
         // Если targetTeam != null, то подключаем плеера к указанной команде
         // Если включено принудительное автораспределение, то кидаем игрока в команду с наименьшим кол-вом игроков
-        BattlegroundTeam team = targetTeamName != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN) ? battleground.getTeamByName(targetTeamName) : battleground.getSmallestTeam();
+        BattlegroundTeam team = targetTeamName != null && !battleground.getPreference(Preference.FORCE_AUTO_ASSIGN).getAsBoolean() ? battleground.getTeamByName(targetTeamName) : battleground.getSmallestTeam();
         plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 
@@ -471,7 +471,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
             return;
         }
 
-        if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
+        if (battleground.getPreference(Preference.IS_MULTIGROUND).getAsBoolean()) {
             player.sendMessage(isMultigroundMessage);
             return;
         }
@@ -503,7 +503,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
      * Smart check for nulls.
      * @param player the player whose session will be validated
      */
-    protected boolean validated(final Player player, final Selection... selections) {
+    public boolean validated(final Player player, final Selection... selections) {
         final PlayerEditSession session = this.battlegrounder.getEditor().editSession(player);
         for (Selection selection : selections) {
             switch (selection) {
@@ -541,7 +541,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         return true;
     }
 
-    private enum Selection {
+    public enum Selection {
         SESSION, BATTLEGROUND, TEAM, LOADOUT
     }
 

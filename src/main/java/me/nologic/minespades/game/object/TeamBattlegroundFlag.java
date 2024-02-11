@@ -64,7 +64,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements MinorityFe
         carrier.setCarryingFlag(true);
         battleground.broadcast(String.format(teamFlagStolenMessage, carrier.getDisplayName(), this.team.getDisplayName()));
 
-        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW).getAsBoolean()) {
             carrier.getBukkitPlayer().setGlowing(true);
         }
 
@@ -98,7 +98,7 @@ public class TeamBattlegroundFlag extends BattlegroundFlag implements MinorityFe
         if (carrier == null)
             return;
 
-        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW)) {
+        if (battleground.getPreferences().get(BattlegroundPreferences.Preference.FLAG_CARRIER_GLOW).getAsBoolean()) {
             carrier.getBukkitPlayer().setGlowing(false);
         }
 

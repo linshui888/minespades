@@ -15,7 +15,7 @@ public class BattlegroundBuilder {
     public Battleground build(String battlegroundName, @Nullable Multiground multiground) {
         Battleground battleground = new Battleground(battlegroundName);
 
-        if (battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) && multiground == null) {
+        if (battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND).getAsBoolean() && multiground == null) {
             return null;
         }
 

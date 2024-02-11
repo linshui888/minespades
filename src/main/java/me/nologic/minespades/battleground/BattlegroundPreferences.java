@@ -46,9 +46,9 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @SneakyThrows
-    public void set(Preference preference, final String value) {
+    public void set(Preference preference, final Object value) {
         BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
-        this.preferences.put(preference, new Preference.PreferenceValue(value));
+        this.preferences.put(preference, new Preference.PreferenceValue(String.valueOf(value)));
         try (ResultSet result = driver.executeQuery("SELECT parameters FROM preferences;", true)) {
             JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
             parameters.remove(preference.toString());
