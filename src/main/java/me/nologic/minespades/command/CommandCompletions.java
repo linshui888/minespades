@@ -96,18 +96,24 @@ public class CommandCompletions {
     public List<String> getPreferenceTypes(final String preference) {
 
         final List<String> completions = new ArrayList<>();
-        switch (Preference.valueOf(preference).getType()) {
 
-            case INT -> {
-                completions.add("0");
+        try {
+            switch (Preference.valueOf(preference).getType()) {
+
+                case INT -> {
+                    completions.add("0");
+                }
+
+                case BOOLEAN -> {
+                    completions.add("true");
+                    completions.add("false");
+                }
+
             }
-
-            case BOOLEAN -> {
-                completions.add("true");
-                completions.add("false");
-            }
-
+        } catch (final IllegalArgumentException exception) {
+            completions.add("ERROR_PREFERENCE_NOT_FOUND");
         }
+
 
         return completions;
 

@@ -8,9 +8,6 @@ import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minespades.game.object.TeamRespawnPoint;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Configurable;
-import me.nologic.minority.annotations.ConfigurationKey;
-import me.nologic.minority.annotations.Type;
-
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -34,10 +31,8 @@ public class BattlegroundTeam implements MinorityFeature {
     private final String         teamName;
     private @Setter int          lifepool;
 
-    @ConfigurationKey(name = "flag-lifepool-penalty", type = Type.INTEGER, value = "15", comment = "How many lifepoints will lost if team flag is stolen?")
-    private @Getter int flagLifepoolPenalty;
+    private final int flagLifepoolPenalty;
 
-    @Getter
     private final List<TeamRespawnPoint>    respawnPoints = new ArrayList<>();
     private final List<BattlegroundLoadout> loadouts      = new ArrayList<>();
     private final Set<Player>               players       = new HashSet<>();
@@ -46,7 +41,6 @@ public class BattlegroundTeam implements MinorityFeature {
     private TeamBattlegroundFlag flag;
 
     /* Team's current score. Scores are obtained for successfully capturing flags. */
-    @Getter
     private int score;
 
     public BattlegroundTeam(final Battleground battleground, final String teamName, final String teamHexColor, final  int startLifepool) {
@@ -54,10 +48,10 @@ public class BattlegroundTeam implements MinorityFeature {
         this.teamName = teamName;
         this.color = ChatColor.of("#" + teamHexColor);
         this.lifepool = startLifepool;
+        this.flagLifepoolPenalty = battleground.getPreference(BattlegroundPreferences.Preference.FLAG_LIFEPOOL_PENALTY).getAsInteger();
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
-    // TODO: flag score and game complete
     public int addScore(final int score) {
         return this.score += score;
     }

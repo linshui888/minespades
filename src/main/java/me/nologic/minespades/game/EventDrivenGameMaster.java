@@ -98,7 +98,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         // Автоматическое подключение после запуска арены
         if (battleground.getPreference(Preference.FORCE_AUTOJOIN).getAsBoolean()) {
             Bukkit.getOnlinePlayers().forEach(p -> {
-                p.sendMessage(autoConnectedToBattlegroundMessage);
                 Minespades.getInstance().getGameMaster().getPlayerManager().connect(p, battleground, battleground.getSmallestTeam());
             });
         }
@@ -179,9 +178,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         // Neutral flag behaviour
         if (event.getFlag() instanceof NeutralBattlegroundFlag) {
-            final int score = carrier.getTeam().getFlagLifepoolPenalty();
             event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName));
-            carrier.getTeam().setLifepool(carrier.getTeam().getLifepool() + score);
             // todo: change it
         }
 
@@ -306,6 +303,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 }
 
                 player.sendTitle(successfullyConnectedTitle, String.format(successfullyConnectedSubtitle, team.getDisplayName()), 20, 20, 20);
+                player.sendMessage(connectedToBattlegroundMessage);
 
                 // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
                 Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
@@ -481,13 +479,13 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     }
 
-    @TranslationKey(section = "regular-messages", name = "auto-connected-to-battleground", value = "You are automatically connected to the battleground. Use &3/ms q&r to quit.")
-    private String autoConnectedToBattlegroundMessage;
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-to-battleground-message", value = "You are connected to the battleground. Use &e/ms q&r to quit.")
+    private String connectedToBattlegroundMessage;
 
     @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
     private String successfullyConnectedTitle;
 
-    @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s!")
+    @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s&r!")
     private String successfullyConnectedSubtitle;
 
     @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
@@ -496,19 +494,19 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
     private String battlegroundLaunchedBroadcastMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s has carried the flag of team %s!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rhas carried the flag of team %s&f!")
     private String teamFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s has carried the flag!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag!")
     private String neutralFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
+    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rlost %s lives!")
     private String teamLostLivesMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s wins this battle!")
+    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s &rwins this battle!")
     private String teamWinGameMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s lose!")
+    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s &rlose!")
     private String teamLoseGameMessage;
 
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")

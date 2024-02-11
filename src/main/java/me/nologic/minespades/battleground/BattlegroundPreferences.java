@@ -318,7 +318,8 @@ public class BattlegroundPreferences implements Listener {
         IS_MULTIGROUND(PreferenceValue.Type.BOOLEAN, false),
         FORCE_AUTOJOIN(PreferenceValue.Type.BOOLEAN, false),
         FLAG_CARRIER_GLOW(PreferenceValue.Type.BOOLEAN, true),
-        TEAM_WIN_SCORE(PreferenceValue.Type.INT, 10);
+        TEAM_WIN_SCORE(PreferenceValue.Type.INT, 10),
+        FLAG_LIFEPOOL_PENALTY(PreferenceValue.Type.INT, 15);
 
         private final PreferenceValue.Type type;
         private final PreferenceValue defaultValue;

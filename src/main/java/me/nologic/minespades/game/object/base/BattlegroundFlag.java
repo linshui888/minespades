@@ -113,7 +113,7 @@ public abstract class BattlegroundFlag implements MinorityFeature {
     }
 
     public boolean isOnGround() {
-        return currentPosition != null && boundingBox != null;
+        return currentPosition != null;
     }
 
     public List<@NotNull BattlegroundPlayer> getCollidingPlayers() throws IllegalStateException {
