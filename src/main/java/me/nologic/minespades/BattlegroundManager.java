@@ -104,10 +104,6 @@ public class BattlegroundManager {
         // Останавливаем все BukkitRunnable из правил автовыдачи
         for (final BattlegroundTeam team : battleground.getTeams()) {
 
-            for (TeamRespawnPoint respawnPoint : team.getRespawnPoints()) {
-                respawnPoint.getTick().cancel();
-            }
-
             for (BattlegroundLoadout loadout : team.getLoadouts()) {
                 for (BukkitRunnable task : loadout.getTasks()) {
                     task.cancel();

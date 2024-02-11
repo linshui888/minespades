@@ -3,7 +3,10 @@ package me.nologic.minespades.battleground;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import me.nologic.minespades.BattlegroundManager;
+import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
+import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -19,6 +22,9 @@ import java.util.List;
 
 @Getter
 public final class Battleground {
+
+    private final Minespades          plugin         = Minespades.getInstance();
+    private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
     private @Setter boolean  enabled = false;
 
@@ -50,6 +56,37 @@ public final class Battleground {
         this.preferences = BattlegroundPreferences.loadPreferences(this);
     }
 
+    /**
+     * Ends the game on the battleground. All players will be kicked and will receive rewards depending on the configuration.
+     * After that, a new game will be started.*/
+    public void gameOver(final BattlegroundTeam winnerTeam) {
+
+        /* Vault support. */
+        if (battlegrounder.getEconomyManager() != null) {
+            for (BattlegroundPlayer player : this.getBattlegroundPlayers()) {
+
+                final EventDrivenGameMaster gameMaster = plugin.getGameMaster();
+                final boolean isWinner   = player.getTeam().equals(winnerTeam);
+                final double  killReward = player.getKills() * gameMaster.getRewardPerKill();
+
+                double reward = 0.0;
+                if (isWinner) reward += gameMaster.getRewardForWinning();
+
+                reward += killReward;
+                battlegrounder.getEconomyManager().depositPlayer(player.getBukkitPlayer(), reward);
+
+                if (plugin.getGameMaster().isRewardMessageEnabled() || reward > 0)
+                    player.getBukkitPlayer().sendMessage(String.format(gameMaster.getMoneyRewardForWinningMessage(), reward));
+            }
+        }
+
+        /* Multiground support. */
+        if (this.getPreference(Preference.IS_MULTIGROUND).getAsBoolean()) {
+            battlegrounder.disable(this);
+            this.getMultiground().launchNextInOrder();
+        } else battlegrounder.resetBattleground(this);
+    }
+
     public static BattlegroundPreferences getPreferences(final String battlegroundName) {
         return new Battleground(battlegroundName).getPreferences();
     }
@@ -69,7 +106,7 @@ public final class Battleground {
 
     public void addTeam(BattlegroundTeam team) {
         Team bukkitTeam = scoreboard.registerNewTeam(team.getTeamName());
-        bukkitTeam.setAllowFriendlyFire(this.getPreference(Preference.FRIENDLY_FIRE));
+        bukkitTeam.setAllowFriendlyFire(this.getPreference(Preference.FRIENDLY_FIRE).getAsBoolean());
         bukkitTeam.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
         bukkitTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
         team.setBukkitTeam(bukkitTeam);
@@ -108,7 +145,7 @@ public final class Battleground {
         this.getBattlegroundPlayers().forEach(p -> p.getBukkitPlayer().sendMessage(message));
     }
 
-    public boolean getPreference(Preference preference) {
+    public Preference.PreferenceValue getPreference(Preference preference) {
         return this.preferences.get(preference);
     }
 

@@ -89,7 +89,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                     }
                 });
 
-                data = new ArrayList<>(); Thread.sleep(50);
+                data = new ArrayList<>(); Thread.sleep(100);
             }
 
             // Last chance for blocks that might be skipped
@@ -166,7 +166,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
                             }
                         });
                         blocks = new ArrayList<>();
-                        Thread.sleep(25);
+                        Thread.sleep(50);
 
                     }
                 }

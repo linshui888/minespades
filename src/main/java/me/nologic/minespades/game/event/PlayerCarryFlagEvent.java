@@ -10,7 +10,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor @Getter
-public class PlayerCarriedFlagEvent extends Event {
+public class PlayerCarryFlagEvent extends Event {
 
     private final Battleground battleground;
     private final BattlegroundPlayer player;

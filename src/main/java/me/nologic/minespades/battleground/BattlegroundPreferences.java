@@ -316,7 +316,7 @@ public class BattlegroundPreferences implements Listener {
         IS_MULTIGROUND(false),
         FORCE_AUTOJOIN(false),
         FLAG_CARRIER_GLOW(true),
-        TEAM_WIN_SCORE(1);
+        TEAM_WIN_SCORE(10);
 
         private final PreferenceValue defaultValue;
 

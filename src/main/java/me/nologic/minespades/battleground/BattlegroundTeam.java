@@ -45,27 +45,21 @@ public class BattlegroundTeam implements MinorityFeature {
     @Setter @Nullable
     private TeamBattlegroundFlag flag;
 
-    @Getter
-    private final int scoresRequiredToWin;
-
-    /* The team's current score. Scores are obtained for successfully capturing flags. */
+    /* Team's current score. Scores are obtained for successfully capturing flags. */
     @Getter
     private int score;
 
-    public BattlegroundTeam(final Battleground battleground, final String teamName, final String teamHexColor, final  int startLifepool, final int scoresRequiredToWin) {
+    public BattlegroundTeam(final Battleground battleground, final String teamName, final String teamHexColor, final  int startLifepool) {
         this.battleground = battleground;
         this.teamName = teamName;
         this.color = ChatColor.of("#" + teamHexColor);
         this.lifepool = startLifepool;
-        this.scoresRequiredToWin = scoresRequiredToWin;
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
     // TODO: flag score and game complete
-    public void addScore(final int score) {
-        if ((this.score += score) >= this.scoresRequiredToWin) {
-
-        }
+    public int addScore(final int score) {
+        return this.score += score;
     }
 
     public String getDisplayName() {

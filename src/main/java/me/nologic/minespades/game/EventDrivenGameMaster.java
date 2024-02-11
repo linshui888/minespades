@@ -52,15 +52,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-@Translatable @Configurable(path = "game-master-settings")
+@Getter @Translatable @Configurable(path = "game-master-settings")
 public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     private final Minespades          plugin         = Minespades.getInstance();
     private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
 
-    private final @Getter BattlegroundObjectManager objectManager = new BattlegroundObjectManager();
-    private final @Getter BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
-    private final @Getter PlayerKDAHandler          playerKDA     = new PlayerKDAHandler(this);
+    private final BattlegroundObjectManager objectManager = new BattlegroundObjectManager();
+    private final BattlegroundPlayerManager playerManager = new BattlegroundPlayerManager();
+    private final PlayerKDAHandler          playerKDA     = new PlayerKDAHandler(this);
 
     private final HashMap<Player, Player> lastAttackerMap = new HashMap<>();
 
@@ -92,11 +92,11 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         battleground.getTeams().stream().filter(t -> t.getFlag() != null).forEach(t -> t.getFlag().reset());
 
         // Если арена является частью мультиграунда, то вместо настоящего названия арены мы используем название мультиграунда
-        final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND) ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
+        final String name = battleground.getPreference(BattlegroundPreferences.Preference.IS_MULTIGROUND).getAsBoolean() ? battleground.getMultiground().getName() : battleground.getBattlegroundName();
 
         // TODO: Добавить игрокам возможность отказываться от авто-коннекта
         // Автоматическое подключение после запуска арены
-        if (battleground.getPreference(Preference.FORCE_AUTOJOIN)) {
+        if (battleground.getPreference(Preference.FORCE_AUTOJOIN).getAsBoolean()) {
             Bukkit.getOnlinePlayers().forEach(p -> {
                 p.sendMessage(autoConnectedToBattlegroundMessage);
                 Minespades.getInstance().getGameMaster().getPlayerManager().connect(p, battleground, battleground.getSmallestTeam());
@@ -160,7 +160,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     }
 
     @EventHandler
-    private void onPlayerCarriedFlagEvent(final PlayerCarriedFlagEvent event) {
+    private void onPlayerCarryFlag(final PlayerCarryFlagEvent event) {
 
         final ChatColor          carrierTeamColor = event.getPlayer().getTeam().getColor();
         final String             carrierName      = event.getPlayer().getBukkitPlayer().getName();
@@ -175,7 +175,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName + "§r", flagTeamColor + flag.getTeam().getTeamName()));
             event.getBattleground().broadcast(String.format(teamLostLivesMessage, flag.getTeam().getDisplayName() + "§r", team.getFlagLifepoolPenalty()));
             team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
-            event.getPlayer().setKills(event.getPlayer().getKills() + team.getFlagLifepoolPenalty());
         }
 
         // Neutral flag behaviour
@@ -183,52 +182,24 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             final int score = carrier.getTeam().getFlagLifepoolPenalty();
             event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName));
             carrier.getTeam().setLifepool(carrier.getTeam().getLifepool() + score);
-            carrier.addKills(score);
+            // todo: change it
         }
 
         event.getPlayer().getBukkitPlayer().setGlowing(false);
         event.getFlag().reset();
 
-    }
-
-    @EventHandler
-    private void onBattlegroundTeamLose(BattlegroundTeamLoseEvent event) {
-
-        final String teamLoseMessage = String.format(teamLoseGameMessage, event.getTeam().getDisplayName());
-        event.getBattleground().broadcast(teamLoseMessage);
-
-        // Если на арене осталась только одна непроигравшая команда, то игра считается оконченой
-        if (event.getBattleground().getTeams().stream().filter(BattlegroundTeam::isDefeated).count() <= 1) {
-            Bukkit.getServer().getPluginManager().callEvent(new BattlegroundGameOverEvent(event.getBattleground()));
+        /* Adding scores and victory handling. */
+        if (carrier.getTeam().addScore(1) >= event.getBattleground().getPreference(Preference.TEAM_WIN_SCORE).getAsInteger()) {
+            event.getBattleground().getTeams().stream().filter(team -> team != carrier.getTeam()).forEach(team -> Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), team)));
         }
+
     }
 
-    /* Конец игры. На этом этапе игроки-победители награждаются деньгами и происходит перезагрузка арены. */
     @EventHandler
-    private void onBattlegroundGameOver(final BattlegroundGameOverEvent event) {
+    private void onBattlegroundTeamLose(final BattlegroundTeamLoseEvent event) {
         final Battleground battleground = event.getBattleground();
-
-        // Денежная награда за завершение игры и её вычисление
-        if (battlegrounder.getEconomyManager() != null) {
-            for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
-                final boolean isWinner   = player.getTeam().isDefeated();
-                final double  killReward = player.getKills() * rewardPerKill;
-
-                double reward = 0.0;
-                if (isWinner) reward += rewardForWinning;
-
-                reward += killReward;
-                battlegrounder.getEconomyManager().depositPlayer(player.getBukkitPlayer(), reward);
-
-                // Отображение сообщения о награде
-                if (rewardMessageEnabled || reward > 0) player.getBukkitPlayer().sendMessage(String.format(moneyRewardForWinningMessage, reward));
-            }
-        }
-
-        if (battleground.getPreference(Preference.IS_MULTIGROUND)) {
-            battlegrounder.disable(battleground);
-            battleground.getMultiground().launchNextInOrder();
-        } else battlegrounder.resetBattleground(battleground);
+        battleground.broadcast(String.format(teamLoseGameMessage, event.getTeam().getDisplayName()));
+        battleground.getTeams().stream().filter(team -> !team.isDefeated()).findFirst().ifPresent(battleground::gameOver);
     }
 
     @EventHandler
@@ -256,7 +227,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
             final BattlegroundPlayer bgPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
             if (bgPlayer != null && player.getHealth() <= event.getFinalDamage()) {
-                BattlegroundPlayerDeathEvent battlegroundPlayerDeathEvent = new BattlegroundPlayerDeathEvent(bgPlayer, event.getCause(), bgPlayer.getBattleground().getPreference(Preference.KEEP_INVENTORY), BattlegroundPlayerDeathEvent.RespawnStrategy.QUICK);
+                BattlegroundPlayerDeathEvent battlegroundPlayerDeathEvent = new BattlegroundPlayerDeathEvent(bgPlayer, event.getCause(), bgPlayer.getBattleground().getPreference(Preference.KEEP_INVENTORY).getAsBoolean(), BattlegroundPlayerDeathEvent.RespawnStrategy.QUICK);
                 Bukkit.getServer().getPluginManager().callEvent(battlegroundPlayerDeathEvent);
                 event.setCancelled(true);
             }
@@ -320,6 +291,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 this.getPlayersInGame().add(bgPlayer);
 
                 final String name = bgPlayer.getDisplayName();
+                player.setGameMode(GameMode.SURVIVAL);
                 player.setDisplayName(name);
                 player.setPlayerListName(name);
                 player.setHealth(20);
@@ -533,10 +505,13 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s lost %s lives!")
     private String teamLostLivesMessage;
 
+    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s wins this battle!")
+    private String teamWinGameMessage;
+
     @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s lose!")
     private String teamLoseGameMessage;
 
-    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s for ending the game!")
+    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
     private String moneyRewardForWinningMessage;
 
     @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
