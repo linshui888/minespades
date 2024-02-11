@@ -179,7 +179,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         // Neutral flag behaviour
         if (event.getFlag() instanceof NeutralBattlegroundFlag) {
             event.getBattleground().broadcast(String.format(neutralFlagCarriedMessage, carrierTeamColor + carrierName));
-            // todo: change it
         }
 
         event.getPlayer().getBukkitPlayer().setGlowing(false);
@@ -312,10 +311,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 }
 
                 player.sendTitle(successfullyConnectedTitle, String.format(successfullyConnectedSubtitle, team.getDisplayName()), 20, 20, 20);
-                player.sendMessage(connectedToBattlegroundMessage);
+                player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2F);
+                connectedToBattlegroundMessage.forEach(player::sendMessage);
 
-                // PlayerEnterBattlegroundEvent вызывается когда игрок уже присоединился к арене, получил вещи и был телепортирован.
-                Bukkit.getServer().getPluginManager().callEvent(new PlayerEnterBattlegroundEvent(battleground, team, player));
             } else {
                 player.sendMessage(battlegroundConnectionCancelled);
             }
@@ -488,9 +486,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     }
 
-    @TranslationKey(section = "regular-messages", name = "successfully-connected-to-battleground-message", value = "You are connected to the battleground. Use &e/ms q&r to quit.")
-    private String connectedToBattlegroundMessage;
-
     @TranslationKey(section = "regular-messages", name = "successfully-connected-title", value = "&6Successfully connected!")
     private String successfullyConnectedTitle;
 
@@ -500,13 +495,13 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
     private String battlegroundConnectionCancelled;
 
-    @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground %s!")
+    @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground #ed18c6%s&f!")
     private String battlegroundLaunchedBroadcastMessage;
 
     @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rhas carried the flag of team %s&f!")
     private String teamFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag! His team is one step closer to victory!")
     private String neutralFlagCarriedMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rlost %s lives!")
@@ -515,7 +510,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s &rwins this battle!")
     private String teamWinGameMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s &rlose!")
+    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s &rlose, vae victis!")
     private String teamLoseGameMessage;
 
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
@@ -532,5 +527,11 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
     @ConfigurationKey(name = "blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
     private double rewardPerKill;
+
+    @ConfigurationKey(name = "game-settings.battleground-join-message", type = Type.LIST_OF_STRINGS, comment = "A multi-line message that will be sent to players after they connect to battleground.", value = {
+            "#2fd4a8&l[⁉] &7You are in the battleground. In order to lead your team to victory, you must get rid of all enemy teams. You can do this by lowering their &elifepool &7to zero &8(killing them)&7, or by &ecapturing flags&7.",
+            "#2fd4b8&l[⁉] &7Flags are usually somewhere in the center of the battleground &8(or sometimes on enemy bases)&7, to pick up a flag you need to &estep on it&7. Flags fall out after death, and also give a &3glow effect &7to the carrier!",
+            "#2fd4a8&l[⁉] &7If you want to &3disconnect &7from the game, use &3/ms q&7."})
+    private List<String> connectedToBattlegroundMessage;
 
 }
