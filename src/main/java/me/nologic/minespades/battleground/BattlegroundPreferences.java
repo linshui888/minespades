@@ -46,15 +46,17 @@ public class BattlegroundPreferences implements Listener {
     }
 
     @SneakyThrows
-    public void set(Preference preference, final Object value) {
-        BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+    public void set(Preference preference, final Object value, final boolean writeChangesToDatabaseInstantly) {
         this.preferences.put(preference, new Preference.PreferenceValue(String.valueOf(value)));
-        try (ResultSet result = driver.executeQuery("SELECT parameters FROM preferences;", true)) {
-            JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
-            parameters.remove(preference.toString());
-            parameters.addProperty(preference.toString(), preferences.get(preference).getAsString());
-            driver.executeUpdate("UPDATE preferences SET parameters = ?;", parameters.toString());
-            driver.closeConnection();
+        if (writeChangesToDatabaseInstantly) {
+            BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
+            try (ResultSet result = driver.executeQuery("SELECT parameters FROM preferences;", true)) {
+                JsonObject parameters = JsonParser.parseString(result.getString("parameters")).getAsJsonObject();
+                parameters.remove(preference.toString());
+                parameters.addProperty(preference.toString(), preferences.get(preference).getAsString());
+                driver.executeUpdate("UPDATE preferences SET parameters = ?;", parameters.toString());
+                driver.closeConnection();
+            }
         }
     }
 
@@ -84,10 +86,10 @@ public class BattlegroundPreferences implements Listener {
             /* Lazy loop initialization followed by serialization to JSON and saving to the database. */
             for (final Preference preference : Preference.values()) {
                 if (parameters.get(preference.toString()) == null) {
-                    battlegroundPreferences.set(preference, preference.getDefaultValue().getAsString());
+                    battlegroundPreferences.set(preference, preference.getDefaultValue().getAsString(), false);
                     parameters.addProperty(preference.toString(), preference.getDefaultValue().getAsString());
                 } else {
-                    battlegroundPreferences.set(preference, parameters.get(preference.toString()).getAsString());
+                    battlegroundPreferences.set(preference, parameters.get(preference.toString()).getAsString(), false);
                 }
             }
 
@@ -300,25 +302,31 @@ public class BattlegroundPreferences implements Listener {
     @Getter
     public enum Preference {
 
-        FORCE_AUTO_ASSIGN(true),
-        FRIENDLY_FIRE(false),
-        KEEP_INVENTORY(true),
-        REMOVE_EMPTY_BOTTLES(true),
-        COLORFUL_ENDING(true),
-        FLAG_PARTICLES(true),
-        DISABLE_PORTALS(true),
-        NO_DAMAGE_COOLDOWN(true),
-        PREVENT_ITEM_DAMAGE(true),
-        BLOCK_LAVA_USAGE(true),
-        PROTECT_RESPAWN(true),
-        DENY_BED_SLEEP(true),
-        PUNISH_COWARDS(true),
-        IS_MULTIGROUND(false),
-        FORCE_AUTOJOIN(false),
-        FLAG_CARRIER_GLOW(true),
-        TEAM_WIN_SCORE(10);
+        FORCE_AUTO_ASSIGN(PreferenceValue.Type.BOOLEAN, true),
+        FRIENDLY_FIRE(PreferenceValue.Type.BOOLEAN, false),
+        KEEP_INVENTORY(PreferenceValue.Type.BOOLEAN, true),
+        REMOVE_EMPTY_BOTTLES(PreferenceValue.Type.BOOLEAN, true),
+        COLORFUL_ENDING(PreferenceValue.Type.BOOLEAN, true),
+        FLAG_PARTICLES(PreferenceValue.Type.BOOLEAN, true),
+        DISABLE_PORTALS(PreferenceValue.Type.BOOLEAN, true),
+        NO_DAMAGE_COOLDOWN(PreferenceValue.Type.BOOLEAN, true),
+        PREVENT_ITEM_DAMAGE(PreferenceValue.Type.BOOLEAN, true),
+        BLOCK_LAVA_USAGE(PreferenceValue.Type.BOOLEAN, true),
+        PROTECT_RESPAWN(PreferenceValue.Type.BOOLEAN, true),
+        DENY_BED_SLEEP(PreferenceValue.Type.BOOLEAN, true),
+        PUNISH_COWARDS(PreferenceValue.Type.BOOLEAN, true),
+        IS_MULTIGROUND(PreferenceValue.Type.BOOLEAN, false),
+        FORCE_AUTOJOIN(PreferenceValue.Type.BOOLEAN, false),
+        FLAG_CARRIER_GLOW(PreferenceValue.Type.BOOLEAN, true),
+        TEAM_WIN_SCORE(PreferenceValue.Type.INT, 10);
 
+        private final PreferenceValue.Type type;
         private final PreferenceValue defaultValue;
+
+        Preference(PreferenceValue.Type type, final Object defaultValue) {
+            this.defaultValue = new PreferenceValue(String.valueOf(defaultValue));
+            this.type = type;
+        }
 
         public static boolean isValid(String preference) {
             try {
@@ -327,10 +335,6 @@ public class BattlegroundPreferences implements Listener {
             } catch (IllegalArgumentException ex) {
                 return false;
             }
-        }
-
-        Preference(final Object defaultValue) {
-            this.defaultValue = new PreferenceValue(String.valueOf(defaultValue));
         }
 
         public record PreferenceValue(String value) {
@@ -344,10 +348,18 @@ public class BattlegroundPreferences implements Listener {
             }
 
             public String getAsString() {
-                return String.valueOf(value);
+                return value;
+            }
+
+            public enum Type {
+
+                INT, BOOLEAN, STRING;
+
             }
 
         }
+
+
 
     }
 

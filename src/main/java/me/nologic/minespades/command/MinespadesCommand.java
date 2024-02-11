@@ -44,6 +44,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegrounds", c -> completions.getBattlegroundFileList());
         plugin.getCommandManager().getCommandCompletions().registerCompletion("loadouts", c -> completions.getTargetTeamLoadouts(c.getPlayer()));
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferences", c -> completions.getBattlegroundPreferences());
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundPreferenceTypes", c -> completions.getPreferenceTypes(c.getContextValue(String.class, 1)));
         plugin.getCommandManager().getCommandCompletions().registerCompletion("battlegroundTeamsOnJoin", c -> completions.getBattlegroundTeamsOnJoinCommand(c.getPlayer(), c.getContextValue(String.class, 1)));
         plugin.getCommandManager().getCommandCompletions().registerCompletion("teams", c -> completions.getTargetedBattlegroundTeams(c.getPlayer()));
         plugin.getCommandManager().getCommandCompletions().registerCompletion("supplies", c -> completions.getTargetTeamSupplies(c.getPlayer()));
@@ -68,13 +69,13 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
     private String parameterChangedMessage;
 
     @Subcommand("config")
-    @CommandCompletion("@battlegroundPreferences")
+    @CommandCompletion("@battlegroundPreferences @battlegroundPreferenceTypes")
     @CommandPermission("minespades.editor")
-    public void onConfig(Player player, String preference, boolean value) {
+    public void onConfig(final Player player, final String preference, final String value) {
         if (validated(player, Selection.BATTLEGROUND)) {
             var preferences = Battleground.getPreferences(battlegrounder.getEditor().editSession(player).getTargetBattleground());
             if (Preference.isValid(preference)) {
-                preferences.set(Preference.valueOf(preference), value);
+                preferences.set(Preference.valueOf(preference), value, true);
                 player.sendMessage(String.format(parameterChangedMessage, preference, value));
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }
@@ -203,7 +204,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 yaml.save(path);
 
                 // Имеет смысл автоматически менять значение IS_MULTIGROUND на true
-                preferences.set(Preference.IS_MULTIGROUND, true);
+                preferences.set(Preference.IS_MULTIGROUND, true, false);
                 player.sendMessage(String.format(battlegroundAddedToMultigroundMessage, battlegroundName, multigroundName));
             }
         }
@@ -223,7 +224,7 @@ public class MinespadesCommand extends BaseCommand implements MinorityFeature {
                 battlegrounds.remove(battlegroundName);
                 section.set("battlegrounds", battlegrounds);
                 yaml.save(path);
-                BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName)).set(Preference.IS_MULTIGROUND, false);
+                BattlegroundPreferences.loadPreferences(new Battleground(battlegroundName)).set(Preference.IS_MULTIGROUND, false, true);
                 player.sendMessage(String.format(battlegroundDeletedFromMultiground, battlegroundName, multigroundName));
             } else player.sendMessage(String.format(battlegroundNotFoundMessage, multigroundName, battlegroundName));
         }

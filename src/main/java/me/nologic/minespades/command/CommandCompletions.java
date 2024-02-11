@@ -93,6 +93,26 @@ public class CommandCompletions {
         return prefs;
     }
 
+    public List<String> getPreferenceTypes(final String preference) {
+
+        final List<String> completions = new ArrayList<>();
+        switch (Preference.valueOf(preference).getType()) {
+
+            case INT -> {
+                completions.add("0");
+            }
+
+            case BOOLEAN -> {
+                completions.add("true");
+                completions.add("false");
+            }
+
+        }
+
+        return completions;
+
+    }
+
     @SneakyThrows
     public List<String> getTargetedBattlegroundTeams(final Player player) {
 
