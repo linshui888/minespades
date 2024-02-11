@@ -283,18 +283,27 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
          */
         public void connect(Player player, Battleground battleground, BattlegroundTeam team) {
             if (battleground.isValid() && this.getBattlegroundPlayer(player) == null) {
-                this.save(player);
-                BattlegroundPlayer bgPlayer = battleground.connectPlayer(player, team);
-                this.getPlayersInGame().add(bgPlayer);
 
-                final String name = bgPlayer.getDisplayName();
+                this.save(player);
+                final BattlegroundPlayer battlegroundPlayer = battleground.connectPlayer(player, team);
+                this.getPlayersInGame().add(battlegroundPlayer);
+
+                final String name = battlegroundPlayer.getDisplayName();
                 player.setGameMode(GameMode.SURVIVAL);
                 player.setDisplayName(name);
                 player.setPlayerListName(name);
                 player.setHealth(20);
                 player.setFoodLevel(20);
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-                bgPlayer.showSidebar();
+
+                /* ProtocolSidebar check. */
+                if (battlegroundPlayer.isSidebarEnabled()) {
+                    if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                        battlegroundPlayer.showSidebar();
+                    } else {
+                        plugin.getLogger().warning("Player sidebar enabled but no PlaceholderAPI found, personal sidebar support is disabled.");
+                    }
+                }
 
                 for (BattlegroundTeam t : battleground.getTeams()) {
                     if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {

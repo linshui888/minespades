@@ -41,22 +41,24 @@ public class BattlegroundPlayer implements MinorityFeature {
         this.init(this, this.getClass(), Minespades.getInstance());
     }
 
-    @ConfigurationKey(name = "enabled", type = Type.BOOLEAN, value = "true")
-    private boolean enabled;
+    @Getter @ConfigurationKey(name = "enabled", type = Type.BOOLEAN, value = "true")
+    private boolean sidebarEnabled;
 
     @ConfigurationKey(name = "update-period", type = Type.INTEGER, value = "10", comment = "Ticks between each sidebar update")
     private int updateTicks;
 
-    @ConfigurationKey(name = "label", value = "#fcd617Minespades")
+    @ConfigurationKey(name = "label", value = "#dbb623🏹 #c97a1e&lMINESPADES #dbb623🏹")
     private String sidebarLabel;
 
     @ConfigurationKey(name = "lines", type = Type.LIST_OF_STRINGS, comment = "Battleground sidebar lines, use placeholders to provide information.", value = {
-            "K/D/A: &c%minespades_player_current_kill_score%/%minespades_player_current_death_score%/%minespades_player_current_assist_score%",
             "",
-            "Team %minespades_player_current_team%",
-            "Lifepool %minespades_player_current_lifepool%",
+            "#e02424🗡 &8| #c9b31eK/D/A &8| &c%minespades_player_current_kill_score%&7/&c%minespades_player_current_death_score%&7/&c%minespades_player_current_assist_score%",
             "",
-            "Map %minespades_player_current_map%" })
+            "#c97a1e⭐ &8| #c9b31eTeam %minespades_player_current_team%",
+            "#e02424❤ &8| #c9b31eLifepool #db1456%minespades_player_current_lifepool%",
+            "#c97a1e⚑ &8| #c9b31eFlags &8| &c%minespades_player_current_team_score%&7/&4%minespades_player_current_battleground_score_required_to_win%",
+            "",
+            "#e02424🛡 &8| #c9b31eMap #c97a1e%minespades_player_current_map%" })
     private List<String> sidebarLines;
 
     public void showSidebar() {
