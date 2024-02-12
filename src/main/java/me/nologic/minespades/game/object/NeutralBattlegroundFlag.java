@@ -48,6 +48,7 @@ public class NeutralBattlegroundFlag extends BattlegroundFlag implements Minorit
 
     @Override
     public void pickup(final BattlegroundPlayer carrier) {
+
         this.carrier = carrier;
 
         carrier.setFlag(this);

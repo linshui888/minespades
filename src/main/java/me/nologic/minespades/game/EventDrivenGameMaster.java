@@ -529,7 +529,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     private double rewardPerKill;
 
     @ConfigurationKey(name = "game-settings.battleground-join-message", type = Type.LIST_OF_STRINGS, comment = "A multi-line message that will be sent to players after they connect to battleground.", value = {
-            "#2fd4a8&l[⁉] &7You are in the battleground. In order to lead your team to victory, you must get rid of all enemy teams. You can do this by lowering their &elifepool &7to zero &8(killing them)&7, or by &ecapturing flags&7.",
+            "#2fd4a8&l[⁉] &7You are on the battleground. In order to lead your team to victory, you must get rid of all enemy teams. You can do this by lowering their &elifepool &7to zero &8(killing them)&7, or by &ecapturing flags&7.",
             "#2fd4b8&l[⁉] &7Flags are usually somewhere in the center of the battleground &8(or sometimes on enemy bases)&7, to pick up a flag you need to &estep on it&7. Flags fall out after death, and also give a &3glow effect &7to the carrier!",
             "#2fd4a8&l[⁉] &7If you want to &3disconnect &7from the game, use &3/ms q&7."})
     private List<String> connectedToBattlegroundMessage;

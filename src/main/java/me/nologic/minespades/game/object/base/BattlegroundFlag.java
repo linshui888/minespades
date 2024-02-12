@@ -113,15 +113,17 @@ public abstract class BattlegroundFlag implements MinorityFeature {
     }
 
     public boolean isOnGround() {
-        return currentPosition != null;
+        return currentPosition != null && carrier == null && boundingBox != null;
     }
 
     public List<@NotNull BattlegroundPlayer> getCollidingPlayers() throws IllegalStateException {
 
-        if (boundingBox == null || currentPosition == null || carrier != null)
+        if (!this.isOnGround())
             throw new IllegalStateException("Trying to get the colliding players when the flag is not on the ground!");
 
+        assert boundingBox != null;
         final List<BattlegroundPlayer> players = new ArrayList<>();
+
         for (Entity entity : battleground.getWorld().getNearbyEntities(boundingBox)) {
             if (entity instanceof Player player) {
                 final BattlegroundPlayer battlegroundPlayer = BattlegroundPlayer.getBattlegroundPlayer(player);
