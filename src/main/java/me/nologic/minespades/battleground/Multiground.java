@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.nologic.minespades.Minespades;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class Multiground {
     @Getter
     private Battleground battleground;
 
-    public void connect(Player player, @NotNull BattlegroundTeam team) {
+    public void connect(Player player, @Nullable BattlegroundTeam team) {
         plugin.getGameMaster().getPlayerManager().connect(player, battleground, team);
     }
 

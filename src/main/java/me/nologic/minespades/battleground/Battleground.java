@@ -113,13 +113,17 @@ public final class Battleground {
         this.teams.add(team);
     }
 
-    // Валидация арены. Если арена невалидна, то к ней нельзя подключиться.
-    public boolean isValid() {
-        return teams.size() >= 2;
+    // TODO Checking if a player can connect. A player cannot connect to a filled arena (or if the defeated team is specified).
+    public boolean isConnectable(final BattlegroundTeam team) {
+
+        if (team.isDefeated())
+            return false;
+
+        return team.getPlayers().size() < this.getPreference(Preference.MAX_PLAYERS_PER_TEAM).getAsInteger();
     }
 
-    public BattlegroundTeam getSmallestTeam() {
-        return teams.stream().min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
+    public @Nullable BattlegroundTeam getSmallestTeam() {
+        return teams.stream().filter(this::isConnectable).min(Comparator.comparingInt(BattlegroundTeam::size)).orElse(null);
     }
 
     /**

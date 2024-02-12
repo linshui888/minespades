@@ -56,9 +56,9 @@ public class BattlegroundManager {
         return this.enabledMultigrounds.get(name);
     }
 
-    public void resetBattleground(Battleground battleground) {
-        disable(battleground);
-        enable(battleground.getBattlegroundName());
+    public void resetBattleground(final Battleground battleground) {
+        this.disable(battleground);
+        this.enable(battleground.getBattlegroundName());
     }
 
     public void launchMultiground(String name, List<String> battlegrounds) {

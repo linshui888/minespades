@@ -153,7 +153,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 }
             }
             if (everyPlayerInTeamIsSpectator)
-                Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), event.getVictim().getTeam()));
+                event.getBattleground().broadcast(String.format(teamLoseGameMessage, event.getVictim().getTeam().getDisplayName()));
         }
 
     }
@@ -184,18 +184,12 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         event.getPlayer().getBukkitPlayer().setGlowing(false);
         event.getFlag().reset();
 
-        /* Adding scores and victory handling. */
+        /* Scores and victory handling. */
         if (carrier.getTeam().addScore(1) >= event.getBattleground().getPreference(Preference.TEAM_WIN_SCORE).getAsInteger()) {
-            event.getBattleground().getTeams().stream().filter(team -> team != carrier.getTeam()).forEach(team -> Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(event.getBattleground(), team)));
+            event.getBattleground().broadcast(teamWinGameMessage.formatted(carrier.getTeam().getDisplayName()));
+            event.getBattleground().gameOver(carrier.getTeam());
         }
 
-    }
-
-    @EventHandler
-    private void onBattlegroundTeamLose(final BattlegroundTeamLoseEvent event) {
-        final Battleground battleground = event.getBattleground();
-        battleground.broadcast(String.format(teamLoseGameMessage, event.getTeam().getDisplayName()));
-        battleground.getTeams().stream().filter(team -> !team.isDefeated()).findFirst().ifPresent(battleground::gameOver);
     }
 
     @EventHandler
@@ -205,7 +199,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             // If victim is not a battleground player, return
             if (BattlegroundPlayer.getBattlegroundPlayer(victim) == null) return;
 
-            // We should store last attacked player
+            // We must store last attacker!
             if (event.getDamager() instanceof Player killer && BattlegroundPlayer.getBattlegroundPlayer(killer) != null) {
                 this.lastAttackerMap.put(victim, killer);
             } else if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player killer) {
@@ -230,7 +224,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         }
     }
-
 
     @EventHandler // Отмена телепортации на арене в режиме наблюдателя
     private void onPlayerTeleport(PlayerTeleportEvent event) {
@@ -280,43 +273,57 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         /**
          * Подключает игроков к баттлграунду.
          */
-        public void connect(Player player, Battleground battleground, BattlegroundTeam team) {
-            if (battleground.isValid() && this.getBattlegroundPlayer(player) == null) {
+        public void connect(final Player player, final Battleground battleground, @Nullable final BattlegroundTeam team) {
 
-                this.save(player);
-                final BattlegroundPlayer battlegroundPlayer = battleground.connectPlayer(player, team);
-                this.getPlayersInGame().add(battlegroundPlayer);
-
-                final String name = battlegroundPlayer.getDisplayName();
-                player.setGameMode(GameMode.SURVIVAL);
-                player.setDisplayName(name);
-                player.setPlayerListName(name);
-                player.setHealth(20);
-                player.setFoodLevel(20);
-                player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-
-                /* ProtocolSidebar check. */
-                if (battlegroundPlayer.isSidebarEnabled()) {
-                    if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                        battlegroundPlayer.showSidebar();
-                    } else {
-                        plugin.getLogger().warning("Player sidebar enabled but no PlaceholderAPI found, personal sidebar support is disabled.");
-                    }
-                }
-
-                for (BattlegroundTeam t : battleground.getTeams()) {
-                    if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {
-                        t.getFlag().getRecoveryBossBar().addViewer(player);
-                    }
-                }
-
-                player.sendTitle(successfullyConnectedTitle, String.format(successfullyConnectedSubtitle, team.getDisplayName()), 20, 20, 20);
-                player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2F);
-                connectedToBattlegroundMessage.forEach(player::sendMessage);
-
-            } else {
-                player.sendMessage(battlegroundConnectionCancelled);
+            /* In case the player is already playing on some battleground. */
+            if (this.getBattlegroundPlayer(player) != null) {
+                player.sendMessage(battlegroundConnectionCancelledAlreadyInTheGameMessage);
+                return;
             }
+
+            /* In case AUTO_ASSIGN is enabled but no proper command is found. */
+            if (team == null) {
+                player.sendMessage(battlegroundConnectionCancelledAutoAssignIsFuckedUp);
+                return;
+            }
+
+            /* In case a player tries to connect by hand, but he has selected a defeated or full team. */
+            if (!battleground.isConnectable(team)) {
+                player.sendMessage(battlegroundConnectionCancelledTeamFullOrDefeatedMessage.formatted(team.getDisplayName()));
+                return;
+            }
+
+            this.save(player);
+            final BattlegroundPlayer battlegroundPlayer = battleground.connectPlayer(player, team);
+            this.getPlayersInGame().add(battlegroundPlayer);
+
+            final String name = battlegroundPlayer.getDisplayName();
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setDisplayName(name);
+            player.setPlayerListName(name);
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+
+            /* ProtocolSidebar check. */
+            if (battlegroundPlayer.isSidebarEnabled()) {
+                if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                    battlegroundPlayer.showSidebar();
+                } else {
+                    plugin.getLogger().warning("Player sidebar enabled but no PlaceholderAPI found, personal sidebar support is disabled.");
+                }
+            }
+
+            for (BattlegroundTeam t : battleground.getTeams()) {
+                if (t.getFlag() != null && t.getFlag().getRecoveryBossBar() != null) {
+                    t.getFlag().getRecoveryBossBar().addViewer(player);
+                }
+            }
+
+            player.sendTitle(successfullyConnectedTitle, String.format(successfullyConnectedSubtitle, team.getDisplayName()), 20, 20, 20);
+            player.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2F);
+            connectedToBattlegroundMessage.forEach(player::sendMessage);
+
         }
 
         /** Отключает игрока от баттлграунда. */
@@ -356,7 +363,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                     }
                 }
                 if (everyPlayerInTeamIsSpectator)
-                    Bukkit.getServer().getPluginManager().callEvent(new BattlegroundTeamLoseEvent(battlegroundPlayer.getBattleground(), battlegroundPlayer.getTeam()));
+                    battlegroundPlayer.getBattleground().broadcast(String.format(teamLoseGameMessage, battlegroundPlayer.getTeam().getDisplayName()));
             }
         }
 
@@ -492,8 +499,14 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "successfully-connected-subtitle", value = "&fYour team is %s&r!")
     private String successfullyConnectedSubtitle;
 
-    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled", value = "&cYou can not connect to this battleground because it is full or you're already in game.")
-    private String battlegroundConnectionCancelled;
+    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled.already-in-the-game", value = "&cYou can not connect to this battleground because you're already in game.")
+    private String battlegroundConnectionCancelledAlreadyInTheGameMessage;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled.full-or-defeated-team", value = "&cYou can not connect to this battleground because team %s &cis full or defeated.")
+    private String battlegroundConnectionCancelledTeamFullOrDefeatedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "battleground-connection-cancelled.no-playable-team", value = "&cYou can't connect to this battleground because the auto-assigner can't find a playable team.")
+    private String battlegroundConnectionCancelledAutoAssignIsFuckedUp;
 
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground #ed18c6%s&f!")
     private String battlegroundLaunchedBroadcastMessage;
@@ -504,10 +517,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag! His team is one step closer to victory!")
     private String neutralFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rlost %s lives!")
+    @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rhas lost %s lives because they lost their flag!")
     private String teamLostLivesMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s &rwins this battle!")
+    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s &rwins this battle! Congratulations!")
     private String teamWinGameMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s &rlose, vae victis!")
