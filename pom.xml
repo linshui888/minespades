@@ -6,12 +6,12 @@
 
     <groupId>me.nologic</groupId>
     <artifactId>minespades</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <packaging>jar</packaging>
 
     <name>Minespades</name>
 
-    <description>TDM/CTF PvP minigame with some unique features and modern implementation.</description>
+    <description>Modern and very customizable TDM/CTF/1CTF PvP arenas with some unique features.</description>
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
