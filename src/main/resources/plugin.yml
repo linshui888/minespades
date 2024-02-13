@@ -3,7 +3,7 @@ version: '${project.version}'
 main: me.nologic.minespades.Minespades
 api-version: 1.18
 authors: [ NoLogic ]
-description: "Clever and customizable TDM/CTF PvP battlegrounds for your sever."
+description: "Modern and very customizable TDM/CTF/1CTF PvP arenas with some unique features."
 
 depend:
   - ProtocolLib
