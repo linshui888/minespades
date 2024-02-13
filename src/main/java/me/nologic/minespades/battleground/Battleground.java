@@ -8,10 +8,15 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.game.EventDrivenGameMaster;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
+import me.nologic.minespades.game.object.TeamBattlegroundFlag;
+import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.*;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,13 +64,28 @@ public final class Battleground {
     /**
      * Ends the game on the battleground. All players will be kicked and will receive rewards depending on the configuration.
      * After that, a new game will be started.*/
-    public void gameOver(final BattlegroundTeam winnerTeam) {
+    public void gameOver(final BattlegroundTeam winnerTeam, final @Nullable BattlegroundPlayer completionist, final @Nullable BattlegroundFlag capturedFlag) {
+
+        final EventDrivenGameMaster gameMaster = plugin.getGameMaster();
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), gameMaster.getBroadcastSoundGameOver(), 1F, 2F));
+
+        /* Sending a message that the game is over. */
+        if (completionist != null && capturedFlag != null) {
+
+            if (capturedFlag instanceof TeamBattlegroundFlag flag)
+                this.broadcast(gameMaster.getTeamWinGameTeamFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), flag.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
+
+            if (capturedFlag instanceof NeutralBattlegroundFlag)
+                this.broadcast(gameMaster.getTeamWinGameNeutralFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
+
+        } else {
+            this.broadcast(gameMaster.getTeamWinGameLastStand().formatted(winnerTeam.getDisplayName()));
+        }
 
         /* Vault support. */
         if (battlegrounder.getEconomyManager() != null) {
             for (BattlegroundPlayer player : this.getBattlegroundPlayers()) {
 
-                final EventDrivenGameMaster gameMaster = plugin.getGameMaster();
                 final boolean isWinner   = player.getTeam().equals(winnerTeam);
                 final double  killReward = player.getKills() * gameMaster.getRewardPerKill();
 

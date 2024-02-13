@@ -9,7 +9,6 @@ import me.nologic.minespades.battleground.builder.BattlegroundBuilder;
 import me.nologic.minespades.battleground.editor.BattlegroundEditor;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.battleground.util.BattlegroundValidator;
-import me.nologic.minespades.game.object.TeamRespawnPoint;
 import me.nologic.minespades.util.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -91,10 +90,12 @@ public class BattlegroundManager {
 
     public void disable(final Battleground battleground) {
 
+        battleground.setEnabled(false);
+
         plugin.getGameMaster().getObjectManager().getFlags().removeIf(flag -> flag.getBattleground().equals(battleground));
 
         // Кикаем всех игроков с арены
-        for (BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
+        for (final BattlegroundPlayer player : battleground.getBattlegroundPlayers()) {
             player.disconnect();
         }
 
@@ -110,8 +111,6 @@ public class BattlegroundManager {
                 }
             }
         }
-
-        battleground.setEnabled(false);
 
     }
 

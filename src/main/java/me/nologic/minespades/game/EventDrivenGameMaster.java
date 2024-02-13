@@ -13,13 +13,15 @@ import me.nologic.minespades.battleground.BattlegroundPlayer;
 import me.nologic.minespades.battleground.BattlegroundPreferences;
 import me.nologic.minespades.battleground.BattlegroundPreferences.Preference;
 import me.nologic.minespades.battleground.BattlegroundTeam;
-import me.nologic.minespades.game.event.*;
+import me.nologic.minespades.game.event.BattlegroundPlayerDeathEvent;
+import me.nologic.minespades.game.event.BattlegroundSuccessfulLoadEvent;
+import me.nologic.minespades.game.event.PlayerCarryFlagEvent;
+import me.nologic.minespades.game.event.PlayerQuitBattlegroundEvent;
 import me.nologic.minespades.game.object.BattlegroundObjectManager;
 import me.nologic.minespades.game.object.NeutralBattlegroundFlag;
 import me.nologic.minespades.game.object.TeamBattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.*;
-
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -102,15 +104,16 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             });
         }
 
-        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), broadcastSound, 1F, 1F));
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), broadcastSoundGameStart, 1F, 1F));
 
         plugin.broadcast(String.format(battlegroundLaunchedBroadcastMessage, name));
     }
 
     @EventHandler
-    private void onBattlegroundPlayerDeath(BattlegroundPlayerDeathEvent event) {
+    private void onBattlegroundPlayerDeath(final BattlegroundPlayerDeathEvent event) {
 
-        final Player player = event.getVictim().getBukkitPlayer();
+        final Battleground battleground = event.getBattleground();
+        final Player       player       = event.getVictim().getBukkitPlayer();
 
         // Обработка смерти происходит в другом классе
         this.playerKDA.handlePlayerDeath(event);
@@ -127,12 +130,11 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 event.getVictim().setRandomLoadout();
             }
 
+            if (event.getVictim().isCarryingFlag())
+                event.getVictim().getFlag().drop();
+
             // Если не сделать задержку в 1 тик, то некоторые изменения состояния игрока не применятся (fireTicks, tp)
             Bukkit.getScheduler().runTask(playerManager.plugin, () -> {
-
-                if (event.getVictim().isCarryingFlag())
-                    event.getVictim().getFlag().drop();
-
                 player.teleport(event.getVictim().getTeam().getRandomRespawnLocation());
                 player.setNoDamageTicks(20);
                 player.setHealth(20);
@@ -141,19 +143,17 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
                 player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
                 player.setGameMode(GameMode.SURVIVAL);
             });
+
         } else {
-            if (event.getVictim().isCarryingFlag())
-                event.getVictim().getFlag().drop();
             event.getVictim().getBukkitPlayer().setGameMode(GameMode.SPECTATOR);
-            boolean everyPlayerInTeamIsSpectator = true;
-            for (Player p : event.getVictim().getTeam().getPlayers()) {
-                if (p.getGameMode() == GameMode.SURVIVAL) {
-                    everyPlayerInTeamIsSpectator = false;
-                    break;
+            final boolean everyPlayerInTeamIsSpectator = event.getVictim().getTeam().getPlayers().stream().allMatch(p -> p.getGameMode().equals(GameMode.SPECTATOR));
+            if (everyPlayerInTeamIsSpectator) {
+                event.getBattleground().broadcast(String.format(teamLoseGameMessageLifepoolIsZero, event.getVictim().getDisplayName(), event.getVictim().getTeam().getDisplayName()));
+                final List<BattlegroundTeam> notDefeatedTeams = battleground.getTeams().stream().filter(team -> !team.isDefeated()).toList();
+                if (notDefeatedTeams.size() == 1) {
+                    battleground.gameOver(notDefeatedTeams.get(0), null, null);
                 }
             }
-            if (everyPlayerInTeamIsSpectator)
-                event.getBattleground().broadcast(String.format(teamLoseGameMessage, event.getVictim().getTeam().getDisplayName()));
         }
 
     }
@@ -165,6 +165,12 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         final String             carrierName      = event.getPlayer().getBukkitPlayer().getName();
         final BattlegroundPlayer carrier          = event.getPlayer();
 
+        /* If a player brings in the last flag and their team wins, end the game. */
+        if (carrier.getTeam().addScore(1) >= event.getBattleground().getPreference(Preference.TEAM_WIN_SCORE).getAsInteger()) {
+            event.getBattleground().gameOver(carrier.getTeam(), carrier, event.getFlag());
+            return;
+        }
+
         // Team flag behaviour
         if (event.getFlag() instanceof final TeamBattlegroundFlag flag) {
 
@@ -172,8 +178,12 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             final ChatColor        flagTeamColor = flag.getTeam().getColor();
 
             event.getBattleground().broadcast(String.format(teamFlagCarriedMessage, carrierTeamColor + carrierName + "§r", flagTeamColor + flag.getTeam().getTeamName()));
-            event.getBattleground().broadcast(String.format(teamLostLivesMessage, flag.getTeam().getDisplayName() + "§r", team.getFlagLifepoolPenalty()));
-            team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
+
+            /* If the penalty is zero in the settings, it is not worth sending a loss of lives message. */
+            if (team.getFlagLifepoolPenalty() > 0) {
+                event.getBattleground().broadcast(String.format(teamLostLivesMessage, flag.getTeam().getDisplayName() + "§r", team.getFlagLifepoolPenalty()));
+                team.setLifepool(team.getLifepool() - team.getFlagLifepoolPenalty());
+            }
         }
 
         // Neutral flag behaviour
@@ -183,12 +193,6 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         event.getPlayer().getBukkitPlayer().setGlowing(false);
         event.getFlag().reset();
-
-        /* Scores and victory handling. */
-        if (carrier.getTeam().addScore(1) >= event.getBattleground().getPreference(Preference.TEAM_WIN_SCORE).getAsInteger()) {
-            event.getBattleground().broadcast(teamWinGameMessage.formatted(carrier.getTeam().getDisplayName()));
-            event.getBattleground().gameOver(carrier.getTeam());
-        }
 
     }
 
@@ -327,24 +331,24 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
         }
 
         /** Отключает игрока от баттлграунда. */
-        public void disconnect(@NotNull BattlegroundPlayer battlegroundPlayer) {
+        public void disconnect(final @NotNull BattlegroundPlayer battlegroundPlayer) {
 
-            Player player = battlegroundPlayer.getBukkitPlayer();
+            final Battleground battleground = battlegroundPlayer.getBattleground();
+            final Player       player = battlegroundPlayer.getBukkitPlayer();
 
             if (battlegroundPlayer.isCarryingFlag() && !plugin.isDisabling()) {
                 battlegroundPlayer.getFlag().drop();
             }
 
-            // todo neutral flag sidebar fix
             battlegroundPlayer.removeSidebar();
-            for (BattlegroundTeam team : battlegroundPlayer.getBattleground().getTeams()) {
+            for (final BattlegroundTeam team : battleground.getTeams()) {
                 if (team.getFlag() != null && team.getFlag().getRecoveryBossBar() != null) {
                     team.getFlag().getRecoveryBossBar().removeViewer(player);
                 }
             }
 
             this.getPlayersInGame().remove(battlegroundPlayer);
-            battlegroundPlayer.getBattleground().kick(battlegroundPlayer);
+            battleground.kick(battlegroundPlayer);
             this.load(player);
 
             final String name = ChatColor.WHITE + player.getName();
@@ -354,17 +358,17 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
             // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
-            if (battlegroundPlayer.getTeam().getLifepool() == 0 && battlegroundPlayer.getTeam().getPlayers().size() > 1) {
-                boolean everyPlayerInTeamIsSpectator = true;
-                for (Player p : battlegroundPlayer.getTeam().getPlayers()) {
-                    if (p.getGameMode() == GameMode.SURVIVAL) {
-                        everyPlayerInTeamIsSpectator = false;
-                        break;
+            if (battlegroundPlayer.getBattleground().isEnabled() && battlegroundPlayer.getTeam().getLifepool() <= 0 && battlegroundPlayer.getTeam().getPlayers().size() > 1) {
+                final boolean everyPlayerInTeamIsSpectator = battlegroundPlayer.getTeam().getPlayers().stream().allMatch(p -> p.getGameMode().equals(GameMode.SPECTATOR));
+                if (everyPlayerInTeamIsSpectator) {
+                    battleground.broadcast(String.format(teamLoseGameMessageLifepoolIsZero, battlegroundPlayer.getTeam().getDisplayName()));
+                    final List<BattlegroundTeam> notDefeatedTeams = battleground.getTeams().stream().filter(team -> !team.isDefeated()).toList();
+                    if (notDefeatedTeams.size() == 1) {
+                        battleground.gameOver(notDefeatedTeams.get(0), null, null);
                     }
                 }
-                if (everyPlayerInTeamIsSpectator)
-                    battlegroundPlayer.getBattleground().broadcast(String.format(teamLoseGameMessage, battlegroundPlayer.getTeam().getDisplayName()));
             }
+
         }
 
         /**
@@ -511,26 +515,35 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground #ed18c6%s&f!")
     private String battlegroundLaunchedBroadcastMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rhas carried the flag of team %s&f!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rcarried the flag of team %s&f.")
     private String teamFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag! His team is one step closer to victory!")
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rcarried the neutral flag.")
     private String neutralFlagCarriedMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rhas lost %s lives because they lost their flag!")
     private String teamLostLivesMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game", value = "Team %s &rwins this battle! Congratulations!")
-    private String teamWinGameMessage;
+    @TranslationKey(section = "regular-messages", name = "team-win-game.team-flag-captured", value = "%s &rcarried the last flag of team %s&r, and team %s &rwin in this battle! Well done, %s&r!")
+    private String teamWinGameTeamFlagCapturedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "Team %s &rlose, vae victis!")
-    private String teamLoseGameMessage;
+    @TranslationKey(section = "regular-messages", name = "team-win-game.neutral-flag-captured", value = "%s &rcarried the last neutral flag, and team %s &rwin in this battle! Well done, %s&r!")
+    private String teamWinGameNeutralFlagCapturedMessage;
+
+    @TranslationKey(section = "regular-messages", name = "team-win-game.last-stand", value = "Team %s &rremains the last team in the battleground that still has lives, thus winning this battle! Congratulations!")
+    private String teamWinGameLastStand;
+
+    @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "%s &rdies, causing team %s &rto no longer have any lives and lose!")
+    private String teamLoseGameMessageLifepoolIsZero;
 
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
     private String moneyRewardForWinningMessage;
 
-    @ConfigurationKey(name = "broadcast-sound", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
-    private Sound broadcastSound;
+    @ConfigurationKey(name = "broadcast-sound.game-start", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
+    private Sound broadcastSoundGameStart;
+
+    @ConfigurationKey(name = "broadcast-sound.game-over", value = "ITEM_GOAT_HORN_SOUND_2", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
+    private Sound broadcastSoundGameOver;
 
     @ConfigurationKey(name = "show-reward-message", value = "true", type = Type.BOOLEAN)
     private boolean rewardMessageEnabled;
