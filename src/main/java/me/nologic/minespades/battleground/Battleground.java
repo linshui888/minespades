@@ -28,8 +28,9 @@ import java.util.List;
 @Getter
 public final class Battleground {
 
-    private final Minespades          plugin         = Minespades.getInstance();
-    private final BattlegroundManager battlegrounder = plugin.getBattlegrounder();
+    private final Minespades            plugin         = Minespades.getInstance();
+    private final BattlegroundManager   battlegrounder = plugin.getBattlegrounder();
+    private final EventDrivenGameMaster gameMaster     = plugin.getGameMaster();
 
     private @Setter boolean  enabled = false;
 
@@ -40,8 +41,8 @@ public final class Battleground {
     @NotNull
     private final BattlegroundPreferences preferences;
 
-    private final List<BattlegroundTeam>  teams;
-    private final List<NeutralBattlegroundFlag> neutralFlags;
+    private final List<NeutralBattlegroundFlag> neutralFlags = new ArrayList<>();
+    private final List<BattlegroundTeam>        teams        = new ArrayList<>();
 
     @Setter
     private Multiground multiground;
@@ -52,39 +53,65 @@ public final class Battleground {
     @SneakyThrows
     public Battleground(final String battlegroundName) {
         this.battlegroundName = battlegroundName;
-        this.teams = new ArrayList<>();
-        this.neutralFlags = new ArrayList<>();
         assert Bukkit.getScoreboardManager() != null;
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
         this.preferences = BattlegroundPreferences.loadPreferences(this);
+        this.startGameTick();
     }
 
-    /**
-     * Ends the game on the battleground. All players will be kicked and will receive rewards depending on the configuration.
-     * After that, a new game will be started.*/
-    public void gameOver(final BattlegroundTeam winnerTeam, final @Nullable BattlegroundPlayer completionist, final @Nullable BattlegroundFlag capturedFlag) {
+    private void startGameTick() {
+        plugin.getServer().getScheduler().runTaskTimer(plugin, (task) -> {
+            final List<BattlegroundTeam> undefeatedTeams = this.teams.stream().filter(team -> !team.isDefeated()).toList();
+            if (undefeatedTeams.size() == 1) {
+                task.cancel();
+                this.handleGameOver(undefeatedTeams.get(0));
+            }
+        }, 0, 20L);
+    }
 
-        final EventDrivenGameMaster gameMaster = plugin.getGameMaster();
+    /* Game over due to last stand. */
+    public void handleGameOver(final BattlegroundTeam winnerTeam) {
+        Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player.getLocation(), gameMaster.getBroadcastSoundGameOver(), 1F, 2F));
+        this.broadcast(gameMaster.getTeamWinGameLastStand().formatted(winnerTeam.getDisplayName()));
+        this.handleRewards(winnerTeam);
+        this.shutdown();
+    }
+
+    /* Game over due to capturing the flag and getting the required number of scores. */
+    public void handleGameOver(final BattlegroundTeam winnerTeam, final BattlegroundPlayer completionist, final BattlegroundFlag capturedFlag) {
+
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), gameMaster.getBroadcastSoundGameOver(), 1F, 2F));
 
-        /* Sending a message that the game is over. */
-        if (completionist != null && capturedFlag != null) {
+        if (capturedFlag instanceof TeamBattlegroundFlag flag)
+            this.broadcast(gameMaster.getTeamWinGameTeamFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), flag.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
 
-            if (capturedFlag instanceof TeamBattlegroundFlag flag)
-                this.broadcast(gameMaster.getTeamWinGameTeamFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), flag.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
+        if (capturedFlag instanceof NeutralBattlegroundFlag)
+            this.broadcast(gameMaster.getTeamWinGameNeutralFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
 
-            if (capturedFlag instanceof NeutralBattlegroundFlag)
-                this.broadcast(gameMaster.getTeamWinGameNeutralFlagCapturedMessage().formatted(completionist.getTeam().getDisplayName(), completionist.getTeam().getDisplayName(), completionist.getDisplayName()));
+        this.handleRewards(winnerTeam);
+        this.shutdown();
+    }
 
-        } else {
-            this.broadcast(gameMaster.getTeamWinGameLastStand().formatted(winnerTeam.getDisplayName()));
+    private void shutdown() {
+        if (this.getPreference(Preference.IS_MULTIGROUND).getAsBoolean()) {
+            battlegrounder.disable(this);
+            this.getMultiground().launchNextInOrder();
+        } else battlegrounder.resetBattleground(this);
+    }
+
+    private void handleRewards(final BattlegroundTeam winnerTeam) {
+
+        /* Execution of commands at the end of the battle. */
+        if (gameMaster.isRewardCommandsEnabled()) {
+            this.getBattlegroundPlayers().forEach(battlegroundPlayer -> gameMaster.getRewardCommandsForEveryone().forEach(commandLine -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandLine.formatted(battlegroundPlayer.getBukkitPlayer().getName()))));
+            winnerTeam.getPlayers().forEach(winner -> gameMaster.getRewardCommandsForWinners().forEach(commandLine -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandLine.formatted(winner.getName()))));
         }
 
-        /* Vault support. */
+        /* Money giveaway at the end of the battle. */
         if (battlegrounder.getEconomyManager() != null) {
-            for (BattlegroundPlayer player : this.getBattlegroundPlayers()) {
+            for (final BattlegroundPlayer player : this.getBattlegroundPlayers()) {
 
                 final boolean isWinner   = player.getTeam().equals(winnerTeam);
                 final double  killReward = player.getKills() * gameMaster.getRewardPerKill();
@@ -95,16 +122,11 @@ public final class Battleground {
                 reward += killReward;
                 battlegrounder.getEconomyManager().depositPlayer(player.getBukkitPlayer(), reward);
 
-                if (plugin.getGameMaster().isRewardMessageEnabled() || reward > 0)
-                    player.getBukkitPlayer().sendMessage(String.format(gameMaster.getMoneyRewardForWinningMessage(), reward));
+                if (plugin.getGameMaster().isMoneyRewardMessageEnabled() || reward > 0)
+                    player.getBukkitPlayer().sendMessage(String.format(gameMaster.getMoneyRewardForPlayingMessage(), reward));
             }
         }
 
-        /* Multiground support. */
-        if (this.getPreference(Preference.IS_MULTIGROUND).getAsBoolean()) {
-            battlegrounder.disable(this);
-            this.getMultiground().launchNextInOrder();
-        } else battlegrounder.resetBattleground(this);
     }
 
     public static BattlegroundPreferences getPreferences(final String battlegroundName) {

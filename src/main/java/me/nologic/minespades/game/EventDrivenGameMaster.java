@@ -146,13 +146,8 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         } else {
             event.getVictim().getBukkitPlayer().setGameMode(GameMode.SPECTATOR);
-            final boolean everyPlayerInTeamIsSpectator = event.getVictim().getTeam().getPlayers().stream().allMatch(p -> p.getGameMode().equals(GameMode.SPECTATOR));
-            if (everyPlayerInTeamIsSpectator) {
-                event.getBattleground().broadcast(String.format(teamLoseGameMessageLifepoolIsZero, event.getVictim().getDisplayName(), event.getVictim().getTeam().getDisplayName()));
-                final List<BattlegroundTeam> notDefeatedTeams = battleground.getTeams().stream().filter(team -> !team.isDefeated()).toList();
-                if (notDefeatedTeams.size() == 1) {
-                    battleground.gameOver(notDefeatedTeams.get(0), null, null);
-                }
+            if (event.getVictim().getTeam().isDefeated()) {
+                battleground.broadcast(String.format(teamLoseGameMessageLifepoolIsZero, event.getVictim().getDisplayName(), event.getVictim().getTeam().getDisplayName()));
             }
         }
 
@@ -167,7 +162,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
 
         /* If a player brings in the last flag and their team wins, end the game. */
         if (carrier.getTeam().addScore(1) >= event.getBattleground().getPreference(Preference.TEAM_WIN_SCORE).getAsInteger()) {
-            event.getBattleground().gameOver(carrier.getTeam(), carrier, event.getFlag());
+            event.getBattleground().handleGameOver(carrier.getTeam(), carrier, event.getFlag());
             return;
         }
 
@@ -358,14 +353,9 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
             // Проверяем игроков на спектаторов. Если в команде начали появляться спектаторы, то
             // значит у неё закончились жизни. Если последний живой игрок ливнёт, а мы не обработаем
             // событие выхода, то игра встанет. Поэтому нужно всегда проверять команду.
-            if (battlegroundPlayer.getBattleground().isEnabled() && battlegroundPlayer.getTeam().getLifepool() <= 0 && battlegroundPlayer.getTeam().getPlayers().size() > 1) {
-                final boolean everyPlayerInTeamIsSpectator = battlegroundPlayer.getTeam().getPlayers().stream().allMatch(p -> p.getGameMode().equals(GameMode.SPECTATOR));
-                if (everyPlayerInTeamIsSpectator) {
+            if (battlegroundPlayer.getBattleground().isEnabled() && battlegroundPlayer.getTeam().getLifepool() <= 0) {
+                if (battlegroundPlayer.getTeam().isDefeated()) {
                     battleground.broadcast(String.format(teamLoseGameMessageLifepoolIsZero, battlegroundPlayer.getTeam().getDisplayName()));
-                    final List<BattlegroundTeam> notDefeatedTeams = battleground.getTeams().stream().filter(team -> !team.isDefeated()).toList();
-                    if (notDefeatedTeams.size() == 1) {
-                        battleground.gameOver(notDefeatedTeams.get(0), null, null);
-                    }
                 }
             }
 
@@ -515,19 +505,19 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "battleground-launched-broadcast", value = "A new battle begins on the battleground #ed18c6%s&f!")
     private String battlegroundLaunchedBroadcastMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rcarried the flag of team %s&f.")
+    @TranslationKey(section = "regular-messages", name = "player-carried-team-flag", value = "%s &rhas carried the flag of team %s&f.")
     private String teamFlagCarriedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rcarried the neutral flag.")
+    @TranslationKey(section = "regular-messages", name = "player-carried-neutral-flag", value = "%s &rhas carried the neutral flag.")
     private String neutralFlagCarriedMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-lost-lives", value = "Team %s &rhas lost %s lives because they lost their flag!")
     private String teamLostLivesMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game.team-flag-captured", value = "%s &rcarried the last flag of team %s&r, and team %s &rwin in this battle! Well done, %s&r!")
+    @TranslationKey(section = "regular-messages", name = "team-win-game.team-flag-captured", value = "%s &rhas carried the last flag of team %s&r, and team %s &rwin in this battle! Well done, %s&r!")
     private String teamWinGameTeamFlagCapturedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game.neutral-flag-captured", value = "%s &rcarried the last neutral flag, and team %s &rwin in this battle! Well done, %s&r!")
+    @TranslationKey(section = "regular-messages", name = "team-win-game.neutral-flag-captured", value = "%s &rhas carried the last neutral flag, and team %s &rwin in this battle! Well done, %s&r!")
     private String teamWinGameNeutralFlagCapturedMessage;
 
     @TranslationKey(section = "regular-messages", name = "team-win-game.last-stand", value = "Team %s &rremains the last team in the battleground that still has lives, thus winning this battle! Congratulations!")
@@ -536,23 +526,34 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "%s &rdies, causing team %s &rto no longer have any lives and lose!")
     private String teamLoseGameMessageLifepoolIsZero;
 
-    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
-    private String moneyRewardForWinningMessage;
-
     @ConfigurationKey(name = "broadcast-sound.game-start", value = "ITEM_GOAT_HORN_SOUND_6", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
     private Sound broadcastSoundGameStart;
 
     @ConfigurationKey(name = "broadcast-sound.game-over", value = "ITEM_GOAT_HORN_SOUND_2", type = Type.ENUM, comment = "https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html")
     private Sound broadcastSoundGameOver;
 
-    @ConfigurationKey(name = "show-reward-message", value = "true", type = Type.BOOLEAN)
-    private boolean rewardMessageEnabled;
-
-    @ConfigurationKey(name = "win-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for winning the game. Will work only if Vault is installed.")
+    @ConfigurationKey(name = "game-over.win-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for winning the game. Will work only if Vault is installed.")
     private double rewardForWinning;
 
-    @ConfigurationKey(name = "blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
+    @ConfigurationKey(name = "game-over.blood-money-reward", value = "0.0", type = Type.DOUBLE, comment = "Money reward for one player kill, calculated at the end of the game. Will work only if Vault is installed.")
     private double rewardPerKill;
+
+    @ConfigurationKey(name = "game-over.show-reward-message", value = "true", type = Type.BOOLEAN)
+    private boolean moneyRewardMessageEnabled;
+
+    @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
+    private String moneyRewardForPlayingMessage;
+
+    @ConfigurationKey(name = "game-over.reward-commands.enable", value = "true", type = Type.BOOLEAN)
+    private boolean rewardCommandsEnabled;
+
+    @ConfigurationKey(name = "game-over.reward-commands.for-everyone", type = Type.LIST_OF_STRINGS, comment = "Commands to be executed by the console for each player on the battleground.", value = {
+            "w %s If you see this message, it means someone has enabled the reward commands but hasn't setup them.", "w %s The quick brown fox jumps over the lazy dog."})
+    private List<String> rewardCommandsForEveryone;
+
+    @ConfigurationKey(name = "game-over.reward-commands.for-winners", type = Type.LIST_OF_STRINGS, comment = "Commands to be executed by the console for each player in the winner team.", value = {
+            "w %s You won the game!", "w %s Congratulations!"})
+    private List<String> rewardCommandsForWinners;
 
     @ConfigurationKey(name = "game-settings.battleground-join-message", type = Type.LIST_OF_STRINGS, comment = "A multi-line message that will be sent to players after they connect to battleground.", value = {
             "#2fd4a8&l[⁉] &7You are on the battleground. In order to lead your team to victory, you must get rid of all enemy teams. You can do this by lowering their &elifepool &7to zero &8(killing them)&7, or by &ecapturing flags&7.",

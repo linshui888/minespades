@@ -92,12 +92,10 @@ public class BattlegroundTeam implements MinorityFeature {
     }
 
     /**
-     * Returns the defeated state of the team, team qualified as defeated if:
-     * 1. Lifepool of the team equals or less than zero.
-     * 2. All players in the team having a spectator mode OR there are just no players.
+     * A team is defeated when its lifepool is equal/below zero and all players on the team are spectators (or there are no players in the team at all).
      */
     public boolean isDefeated() {
-        return (lifepool <= 0 || !players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR)) && !players.isEmpty();
+        return (lifepool <= 0) && (players.stream().allMatch(p -> p.getGameMode() == GameMode.SPECTATOR) || players.isEmpty());
     }
 
 }
