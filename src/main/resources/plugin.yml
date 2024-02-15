@@ -1,6 +1,6 @@
-name: Minespades
+name: CastleWars
 version: '${project.version}'
-main: me.nologic.minespades.Minespades
+main: me.nologic.castewars.CastleWars
 api-version: 1.18
 authors: [ NoLogic ]
 description: "Modern and very customizable TDM/CTF/1CTF PvP arenas with some unique features."
