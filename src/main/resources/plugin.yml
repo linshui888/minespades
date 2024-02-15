@@ -1,9 +1,9 @@
 name: CastleWars
 version: '${project.version}'
-main: me.nologic.castewars.CastleWars
+main: me.nologic.castlewars.CastleWars
 api-version: 1.18
 authors: [ NoLogic ]
-description: "Modern and very customizable TDM/CTF/1CTF PvP arenas with some unique features."
+description: "Modern TDM/CTF/1CTF PvP arenas with some unique features."
 
 depend:
   - ProtocolLib
@@ -12,4 +12,3 @@ softdepend:
   - PlaceholderAPI
   - AuthMe
   - Vault
-  - Citizens
