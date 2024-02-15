@@ -54,11 +54,11 @@ public class BattlegroundPlayer implements MinorityFeature {
 
     @ConfigurationKey(name = "lines", type = Type.LIST_OF_STRINGS, comment = "Battleground sidebar lines, use placeholders to provide information.", value = {
             "",
-            "#e02424🗡 &8| #c9b31eK/D/A &8| &c%castlewars_player_current_kill_score%&7/&c%minespades_player_current_death_score%&7/&c%minespades_player_current_assist_score%",
+            "#e02424🗡 &8| #c9b31eK/D/A &8| &c%castlewars_player_current_kill_score%&7/&c%castlewars_player_current_death_score%&7/&c%castlewars_player_current_assist_score%",
             "",
             "#c97a1e⭐ &8| #c9b31eTeam %castlewars_player_current_team%",
             "#e02424❤ &8| #c9b31eLifepool #db1456%castlewars_player_current_lifepool%",
-            "#c97a1e⚑ &8| #c9b31eFlags &8| &c%castlewars_player_current_team_score%&7/&4%minespades_player_current_battleground_score_required_to_win%",
+            "#c97a1e⚑ &8| #c9b31eFlags &8| &c%castlewars_player_current_team_score%&7/&4%castlewars_player_current_battleground_score_required_to_win%",
             "#e02424⌚ &8| #c9b31eTime #dbb623%castlewars_player_current_timer%",
             "",
             "#e02424🛡 &8| #c9b31eMap #c97a1e%castlewars_player_current_map%" })
