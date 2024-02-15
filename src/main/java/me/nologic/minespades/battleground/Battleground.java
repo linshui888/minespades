@@ -50,6 +50,8 @@ public final class Battleground {
     @Setter
     private BoundingBox boundingBox;
 
+    private int timerTicks;
+
     @SneakyThrows
     public Battleground(final String battlegroundName) {
         this.battlegroundName = battlegroundName;
@@ -58,11 +60,25 @@ public final class Battleground {
         Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
         this.preferences = BattlegroundPreferences.loadPreferences(this);
+        this.timerTicks = this.getPreference(Preference.BATTLEGROUND_TIMER).getAsInteger() * 60 * 20;
         this.startGameTick();
     }
 
     private void startGameTick() {
         plugin.getServer().getScheduler().runTaskTimer(plugin, (task) -> {
+
+            /* Timer ticker. */
+            /* When time runs out, the winner is the team with the most captured flags and remains the most life points. */
+            /* Timer does not work when there are no players on the battleground. */
+            if (!this.getBattlegroundPlayers().isEmpty()) {
+                if ((timerTicks -= 20) <= 0) {
+                    task.cancel();
+                    this.teams.stream().max(Comparator.comparingInt(BattlegroundTeam::getScore).thenComparing(BattlegroundTeam::getLifepool)).ifPresent(this::handleGameOver);
+                    return;
+                }
+            }
+
+            /* Lifepool tracker. */
             final List<BattlegroundTeam> undefeatedTeams = this.teams.stream().filter(team -> !team.isDefeated()).toList();
             if (undefeatedTeams.size() == 1) {
                 task.cancel();
@@ -74,7 +90,7 @@ public final class Battleground {
     /* Game over due to last stand. */
     public void handleGameOver(final BattlegroundTeam winnerTeam) {
         Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player.getLocation(), gameMaster.getBroadcastSoundGameOver(), 1F, 2F));
-        this.broadcast(gameMaster.getTeamWinGameLastStand().formatted(winnerTeam.getDisplayName()));
+        this.broadcast(timerTicks <= 0 ? gameMaster.getTeamWinGameTimeOut().formatted(winnerTeam.getDisplayName()) : gameMaster.getTeamWinGameLastStand().formatted(winnerTeam.getDisplayName()));
         this.handleRewards(winnerTeam);
         this.shutdown();
     }

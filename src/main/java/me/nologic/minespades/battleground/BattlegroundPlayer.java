@@ -9,8 +9,10 @@ import me.nologic.minespades.Minespades;
 import me.nologic.minespades.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.minespades.game.object.base.BattlegroundFlag;
 import me.nologic.minority.MinorityFeature;
-import me.nologic.minority.annotations.*;
-
+import me.nologic.minority.annotations.Configurable;
+import me.nologic.minority.annotations.ConfigurationKey;
+import me.nologic.minority.annotations.Translatable;
+import me.nologic.minority.annotations.Type;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
@@ -57,6 +59,7 @@ public class BattlegroundPlayer implements MinorityFeature {
             "#c97a1e⭐ &8| #c9b31eTeam %minespades_player_current_team%",
             "#e02424❤ &8| #c9b31eLifepool #db1456%minespades_player_current_lifepool%",
             "#c97a1e⚑ &8| #c9b31eFlags &8| &c%minespades_player_current_team_score%&7/&4%minespades_player_current_battleground_score_required_to_win%",
+            "#e02424⌚ &8| #c9b31eTime #dbb623%minespades_player_current_timer%",
             "",
             "#e02424🛡 &8| #c9b31eMap #c97a1e%minespades_player_current_map%" })
     private List<String> sidebarLines;

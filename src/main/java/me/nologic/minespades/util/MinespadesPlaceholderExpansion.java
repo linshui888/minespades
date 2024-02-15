@@ -38,6 +38,15 @@ public class MinespadesPlaceholderExpansion extends PlaceholderExpansion {
                 case "player_current_team_score" -> "" + player.getTeam().getScore();
                 case "player_current_battleground_score_required_to_win" -> "" + player.getBattleground().getPreference(BattlegroundPreferences.Preference.TEAM_WIN_SCORE).getAsInteger();
                 case "player_current_map" -> player.getBattleground().getBattlegroundName();
+                case "player_current_timer" -> {
+                    final int totalSecs = player.getBattleground().getTimerTicks() / 20;
+
+                    int hours = totalSecs / 3600;
+                    int minutes = (totalSecs % 3600) / 60;
+                    int seconds = totalSecs % 60;
+
+                    yield String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                }
                 default -> null;
             };
         }

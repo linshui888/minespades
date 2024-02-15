@@ -24,6 +24,9 @@ public class BattlegroundValidator implements MinorityFeature {
 
     private static final Minespades plugin = Minespades.getPlugin(Minespades.class);
 
+    @TranslationKey(section = "validate-error-messages", name = "battleground-is-already-launched", value = "Error. Battleground with name &3%s &ris already launched.")
+    private String battlegroundAlreadyLaunched;
+
     @TranslationKey(section = "validate-error-messages", name = "battleground-does-not-exist", value = "Error. Battleground with name &3%s &rdoesn't exist.")
     private String battlegroundNotExistMessage;
 
@@ -110,6 +113,12 @@ public class BattlegroundValidator implements MinorityFeature {
         // Checking for existence
         if (!this.isBattlegroundExist(battlegroundName)) {
             player.sendMessage(String.format(battlegroundNotExistMessage, battlegroundName));
+            return false;
+        }
+
+        // Already launched check
+        if (plugin.getGameMaster().getBattlegrounder().getLoadedBattlegrounds().stream().anyMatch(battleground -> battleground.getBattlegroundName().equals(battlegroundName))) {
+            player.sendMessage(String.format(battlegroundAlreadyLaunched, battlegroundName));
             return false;
         }
 

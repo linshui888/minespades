@@ -520,7 +520,10 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "team-win-game.neutral-flag-captured", value = "%s &rhas carried the last neutral flag, and team %s &rwin in this battle! Well done, %s&r!")
     private String teamWinGameNeutralFlagCapturedMessage;
 
-    @TranslationKey(section = "regular-messages", name = "team-win-game.last-stand", value = "Team %s &rremains the last team in the battleground that still has lives, thus winning this battle! Congratulations!")
+    @TranslationKey(section = "regular-messages", name = "team-win-game.time-out", value = "Time is up, team %s &rwins this battle as they have captured the most flags and remains the most life points! GG!")
+    private String teamWinGameTimeOut;
+
+    @TranslationKey(section = "regular-messages", name = "team-win-game.last-stand", value = "Team %s &rremains the last team in the battleground that still has lives, thus winning this battle! GG!")
     private String teamWinGameLastStand;
 
     @TranslationKey(section = "regular-messages", name = "team-lose-game", value = "%s &rdies, causing team %s &rto no longer have any lives and lose!")
@@ -544,7 +547,7 @@ public class EventDrivenGameMaster implements MinorityFeature, Listener {
     @TranslationKey(section = "regular-messages", name = "money-reward", value = "Congratulations, you get %s money for ending the game!")
     private String moneyRewardForPlayingMessage;
 
-    @ConfigurationKey(name = "game-over.reward-commands.enable", value = "true", type = Type.BOOLEAN)
+    @ConfigurationKey(name = "game-over.reward-commands.enable", value = "false", type = Type.BOOLEAN)
     private boolean rewardCommandsEnabled;
 
     @ConfigurationKey(name = "game-over.reward-commands.for-everyone", type = Type.LIST_OF_STRINGS, comment = "Commands to be executed by the console for each player on the battleground.", value = {

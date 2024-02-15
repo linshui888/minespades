@@ -6,9 +6,9 @@ import fr.xephi.authme.events.LoginEvent;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.nologic.minespades.Minespades;
+import me.nologic.minespades.battleground.BattlegroundPreferences.Preference.PreferenceValue;
 import me.nologic.minespades.battleground.util.BattlegroundDataDriver;
 import me.nologic.minespades.game.object.TeamRespawnPoint;
-import me.nologic.minespades.battleground.BattlegroundPreferences.Preference.PreferenceValue;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -320,7 +320,8 @@ public class BattlegroundPreferences implements Listener {
         FLAG_CARRIER_GLOW(PreferenceValue.Type.BOOLEAN, true),
         MAX_PLAYERS_PER_TEAM(PreferenceValue.Type.INT, 16),
         TEAM_WIN_SCORE(PreferenceValue.Type.INT, 10),
-        FLAG_LIFEPOOL_PENALTY(PreferenceValue.Type.INT, 15);
+        FLAG_LIFEPOOL_PENALTY(PreferenceValue.Type.INT, 15),
+        BATTLEGROUND_TIMER(PreferenceValue.Type.INT, 30);
 
         private final PreferenceValue.Type type;
         private final PreferenceValue defaultValue;
