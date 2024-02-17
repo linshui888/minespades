@@ -318,13 +318,14 @@ public class BattlegroundPreferences implements Listener {
         FLAG_CARRIER_GLOW(PreferenceValue.Type.BOOLEAN, true),
         MAX_PLAYERS_PER_TEAM(PreferenceValue.Type.INT, 16),
         TEAM_WIN_SCORE(PreferenceValue.Type.INT, 10),
+        TEAM_LIFEPOOL(PreferenceValue.Type.INT, 100),
         FLAG_LIFEPOOL_PENALTY(PreferenceValue.Type.INT, 15),
         BATTLEGROUND_TIMER(PreferenceValue.Type.INT, 30);
 
         private final PreferenceValue.Type type;
         private final PreferenceValue defaultValue;
 
-        Preference(PreferenceValue.Type type, final Object defaultValue) {
+        Preference(final PreferenceValue.Type type, final Object defaultValue) {
             this.defaultValue = new PreferenceValue(String.valueOf(defaultValue));
             this.type = type;
         }

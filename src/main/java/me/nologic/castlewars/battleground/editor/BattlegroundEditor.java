@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import me.nologic.castlewars.CastleWars;
+import me.nologic.castlewars.battleground.Battleground;
 import me.nologic.castlewars.battleground.BattlegroundPreferences.Preference;
 import me.nologic.castlewars.battleground.editor.task.*;
 import me.nologic.castlewars.battleground.util.BattlegroundDataDriver;
@@ -100,6 +101,7 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
         player.sendMessage(String.format(battlegroundCreatedMessage, battlegroundName));
 
         this.editSession(player).setTargetBattleground(battlegroundName);
+        this.editSession(player).setBattlegroundSnippet(new Battleground(battlegroundName));
         this.editSession(player).setActive(true);
         driver.closeConnection();
     }
@@ -259,30 +261,6 @@ public class BattlegroundEditor implements MinorityFeature, Listener {
                 ex.printStackTrace();
             }
             return ChatColor.of("#FFFFFF");
-        });
-    }
-
-    public void setTargetTeamLifepool(final Player player, final int lifepool) {
-        final PlayerEditSession session = this.editSession(player);
-        final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(session.getTargetBattleground());
-        driver.executeUpdate("UPDATE teams SET lifepool = ? WHERE name = ?;", lifepool, session.getTargetTeam());
-        lifepoolData.get(session.getTargetBattleground()).put(session.getTargetTeam(), lifepool);
-    }
-
-    private final HashMap<String, HashMap<String, Integer>> lifepoolData = new HashMap<>();
-    public int getTeamLifepool(final String battleground, final String team) {
-        if (battleground == null) return 0;
-        return lifepoolData.computeIfAbsent(battleground, k -> new HashMap<>()).computeIfAbsent(team, lifepool -> {
-            final BattlegroundDataDriver driver = new BattlegroundDataDriver().connect(battleground);
-            try (final ResultSet result = driver.executeQuery("SELECT lifepool FROM teams WHERE name = ?;", team)) {
-                if (result.next()) {
-                    return result.getInt("lifepool");
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            driver.closeConnection();
-            return 100;
         });
     }
 

@@ -346,6 +346,7 @@ public class CastleWarsCommand extends BaseCommand implements MinorityFeature {
                 battlegrounder.getEditor().editSession(player).setTargetTeam(null);
                 battlegrounder.getEditor().editSession(player).resetCorners();
                 battlegrounder.getEditor().editSession(player).setTargetBattleground(name);
+                battlegrounder.getEditor().editSession(player).setBattlegroundSnippet(new Battleground(name));
                 if (!session.isActive()) session.setActive(true);
             } else player.sendMessage(String.format(battlegroundNotExistMessage, name));
         }
@@ -379,15 +380,6 @@ public class CastleWarsCommand extends BaseCommand implements MinorityFeature {
                 final String    team  = battlegrounder.getEditor().editSession(player).getTargetTeam();
 
                 player.sendMessage(String.format(teamColorUpdatedMessage, color + team + "§r", color + hexColor + "§r"));
-            }
-        }
-
-        @Subcommand("lifepool")
-        @CommandCompletion("100")
-        public void onEditLifepool(Player player, int lifepool) {
-            if (validated(player, Selection.BATTLEGROUND, Selection.TEAM)) {
-                battlegrounder.getEditor().setTargetTeamLifepool(player, lifepool);
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 0F);
             }
         }
 

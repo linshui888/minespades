@@ -6,6 +6,8 @@ import me.catcoder.sidebar.ProtocolSidebar;
 import me.catcoder.sidebar.Sidebar;
 import me.catcoder.sidebar.text.TextIterators;
 import me.nologic.castlewars.CastleWars;
+import me.nologic.castlewars.battleground.Battleground;
+import me.nologic.castlewars.battleground.BattlegroundPreferences;
 import me.nologic.minority.MinorityFeature;
 import me.nologic.minority.annotations.Translatable;
 import me.nologic.minority.annotations.TranslationKey;
@@ -25,6 +27,10 @@ public class PlayerEditSession implements MinorityFeature {
 
     @Setter @Getter
     private String targetBattleground, targetTeam, targetLoadout;
+
+    /* BattlegroundSnippet is basically not launched battleground instance. */
+    @Setter
+    private Battleground battlegroundSnippet;
 
     @Setter @Getter
     private boolean volumeEditor;
@@ -73,7 +79,7 @@ public class PlayerEditSession implements MinorityFeature {
         // Team
         sidebar.addBlankLine().setDisplayCondition(player -> targetTeam != null);
         sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(team + this.getColoredTeam() + " §7≡ " + this.flagState()), player -> targetTeam != null);
-        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(lifepool, CastleWars.getInstance().getBattlegrounder().getEditor().getTeamLifepool(targetBattleground, targetTeam))), player -> targetTeam != null);
+        sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(lifepool, battlegroundSnippet.getPreference(BattlegroundPreferences.Preference.TEAM_LIFEPOOL).getAsInteger())), player -> targetTeam != null);
 
         sidebar.addBlankLine().setDisplayCondition(player -> targetLoadout != null);
         sidebar.addConditionalLine(player -> TextComponent.fromLegacyText(String.format(loadout, targetLoadout)), player -> targetLoadout != null);

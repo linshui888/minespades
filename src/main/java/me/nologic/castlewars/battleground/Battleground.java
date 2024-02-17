@@ -55,11 +55,14 @@ public final class Battleground {
     @SneakyThrows
     public Battleground(final String battlegroundName) {
         this.battlegroundName = battlegroundName;
+        this.preferences = BattlegroundPreferences.loadPreferences(this);
         assert Bukkit.getScoreboardManager() != null;
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    }
+
+    public void launch() {
         Objective tabKillCounter = scoreboard.registerNewObjective("kill_counter", "DUMMY", "0");
         tabKillCounter.setDisplaySlot(DisplaySlot.PLAYER_LIST);
-        this.preferences = BattlegroundPreferences.loadPreferences(this);
         this.timerTicks = this.getPreference(Preference.BATTLEGROUND_TIMER).getAsInteger() * 60 * 20;
         this.startGameTick();
     }

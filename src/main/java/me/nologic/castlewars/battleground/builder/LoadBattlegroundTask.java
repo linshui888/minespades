@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.nologic.castlewars.CastleWars;
 import me.nologic.castlewars.battleground.Battleground;
+import me.nologic.castlewars.battleground.BattlegroundPreferences;
 import me.nologic.castlewars.battleground.BattlegroundTeam;
 import me.nologic.castlewars.battleground.editor.loadout.BattlegroundLoadout;
 import me.nologic.castlewars.battleground.editor.loadout.LoadoutSupplyRule;
@@ -122,6 +123,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             Bukkit.getServer().getPluginManager().callEvent(new BattlegroundSuccessfulLoadEvent(battleground));
         });
 
+        battleground.launch();
     }
 
     @SneakyThrows
@@ -190,7 +192,7 @@ public class LoadBattlegroundTask extends BukkitRunnable {
             ResultSet teams = statement.executeQuery(DatabaseTableHelper.TEAMS.getSelectStatement());
             while (teams.next()) {
 
-                final BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), teams.getInt("lifepool"));
+                final BattlegroundTeam team = new BattlegroundTeam(battleground, teams.getString("name"), teams.getString("color"), battleground.getPreference(BattlegroundPreferences.Preference.TEAM_LIFEPOOL).getAsInteger());
 
                 if (teams.getString("flag") != null) {
                     JsonObject jsonFlag = JsonParser.parseString(teams.getString("flag")).getAsJsonObject();
